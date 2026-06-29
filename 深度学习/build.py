@@ -121,7 +121,7 @@ function inline(t){return t
   .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,function(m,alt,src){return '<img src="'+src.replace(/^(?:\.\.\/)+/,'')+'" alt="'+alt+'">'})
   .replace(/`([^`]+)`/g,'<code>$1</code>')
   .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="#" class="xref" onclick="openNode(\''+nid+'\''+(an?',\''+an+'\'':'')+');return false">'+txt+'</a>';}return '<a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>';});}
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="#" class="xref" onclick="openNode(\''+nid+'\''+(an?',\''+an+'\'':'')+');return false">'+txt+'</a>';}if(!/^(?:[a-z]+:|#)/i.test(url)){url=url.replace(/^(?:\.\.\/)+/,'').replace(/^\.\/+/,'');}return '<a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>';});}
 function md(src){
   src=src.replace(/\r/g,'');
   var M=[];

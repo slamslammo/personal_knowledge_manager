@@ -1105,8 +1105,8 @@ Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Ad
 ### MLP 引入非线性的作用
 配套知识点 [MLP 引入非线性的作用](node:nonlinear)。一份 50 点环形数据、numpy 手写 MLP,演示「线性模型为何分不开环形 → 手工 r² 降维 → 通用 tanh 升维(真实 $(h_1,h_2,h_3)$ + 切面)→ 加大宽度逼近圆」。**该知识点里的全部图都由本项目代码生成,数据统一来自同一份 csv**,故可逐图复现。
 
-- 说明:[实验/MLP非线性可视化/README.md](实验/MLP非线性可视化/README.md)
-- 代码:[nonlinear_demo.ipynb](实验/MLP非线性可视化/nonlinear_demo.ipynb) · [nonlinear_demo.py](实验/MLP非线性可视化/nonlinear_demo.py)(同一份代码,`.ipynb` 由 `.py` 同步,二者一致)
+- 说明:[实验/MLP非线性可视化/README.md](../实验/MLP非线性可视化/README.md)
+- 代码:[nonlinear_demo.ipynb](../实验/MLP非线性可视化/nonlinear_demo.ipynb) · [nonlinear_demo.py](../实验/MLP非线性可视化/nonlinear_demo.py)(同一份代码,`.ipynb` 由 `.py` 同步,二者一致)
 - 数据:`nonlinear_data.csv`(50 点)、`nonlinear_data_hidden.csv`(每点经隐藏层的 $h_1,h_2,h_3$)
 
 ## 实验主线:从零搭建 mini-GPT(规划中)
@@ -1131,7 +1131,7 @@ function inline(t){return t
   .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,function(m,alt,src){return '<img src="'+src.replace(/^(?:\.\.\/)+/,'')+'" alt="'+alt+'">'})
   .replace(/`([^`]+)`/g,'<code>$1</code>')
   .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="#" class="xref" onclick="openNode(\''+nid+'\''+(an?',\''+an+'\'':'')+');return false">'+txt+'</a>';}return '<a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>';});}
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="#" class="xref" onclick="openNode(\''+nid+'\''+(an?',\''+an+'\'':'')+');return false">'+txt+'</a>';}if(!/^(?:[a-z]+:|#)/i.test(url)){url=url.replace(/^(?:\.\.\/)+/,'').replace(/^\.\/+/,'');}return '<a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>';});}
 function md(src){
   src=src.replace(/\r/g,'');
   var M=[];
