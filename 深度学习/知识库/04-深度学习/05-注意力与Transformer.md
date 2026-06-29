@@ -13,7 +13,7 @@ RNN 把整段历史压在一个隐藏状态里逐步传递:远处信息易丢失
 
 📖 **权威详解**:[注意力机制 · Wikipedia](https://zh.wikipedia.org/wiki/注意力机制)
 
-每个位置生成三组向量:**Query**(我要找什么)、**Key**(我能提供什么)、**Value**(我携带的信息)。计算分三步——用 Query 与各 Key 做**点积**得相关度分数,经 softmax 归一化成权重,再对 Value 加权求和:
+每个位置生成三组向量:**Query**(当前要匹配的查询)、**Key**(可被匹配的标识)、**Value**(实际汇总的信息)。计算分三步——用 Query 与各 Key 做**点积**得相关度分数,经 softmax 归一化成权重,再对 Value 加权求和:
 $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V.$$
 除以 $\sqrt{d_k}$ 是防止点积过大把 softmax 推向饱和。两个零件都是旧识:打分核心 $QK^\top$ 就是 [线性代数 · 点积](node:linalg#点积) 的相似度,归一化用的 [softmax](node:softmax) 来自分类那一节——注意力是前面知识的直接组合。
 
