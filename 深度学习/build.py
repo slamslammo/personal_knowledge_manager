@@ -32,7 +32,7 @@ TREE = [
     {"id":"mlp","label":"感知机 → 多层感知机","children":[
       {"id":"geometry","label":"线性分类的几何视角"},
       {"id":"nonlinear","label":"MLP 引入非线性的作用"},
-      {"id":"training","label":"从线性模型训练到深度网络训练"},
+      {"id":"training","label":"训练:线性模型 → 深度网络"},
     ]},
     {"id":"backprop","label":"反向传播与计算图"},
     {"id":"cnn","label":"卷积神经网络 CNN"},

@@ -688,7 +688,7 @@ $K$ 个线性打分把空间切成 $K$ 块,两类得分相等处 $\mathbf w_i\cd
 
 > 背景:深度学习是机器学习的一个**子集**,特指用**多层神经网络**(多层非线性变换的堆叠)来学习数据的表示。它与 [机器学习基础](node:ml) 共享同一套框架(损失 / 优化 / 泛化),此处因内容体量与重要性单独成块。
 
-从 [多层感知机](node:mlp) 起,模型获得隐藏层与非线性,表达力发生质变;[从线性模型训练到深度网络训练](node:training) 说明训练闭环为何不变、梯度来源为何变复杂;[反向传播](node:backprop) 提供了高效计算多层网络梯度的算法。随后是面向不同数据结构的代表架构——[CNN](node:cnn)(图像)、[RNN](node:rnn)(序列)、[注意力 / Transformer](node:attn)(现代主流)。实验主线的终点,是从零实现一个 mini-GPT。
+从 [多层感知机](node:mlp) 起,模型获得隐藏层与非线性,表达力发生质变;[训练:线性模型 → 深度网络](node:training) 说明训练闭环为何不变、梯度来源为何变复杂;[反向传播](node:backprop) 提供了高效计算多层网络梯度的算法。随后是面向不同数据结构的代表架构——[CNN](node:cnn)(图像)、[RNN](node:rnn)(序列)、[注意力 / Transformer](node:attn)(现代主流)。实验主线的终点,是从零实现一个 mini-GPT。
 </script>
 <script type="text/markdown" data-node="mlp">
 # 感知机 → 多层感知机(MLP)
@@ -748,9 +748,9 @@ MLP = 输入层 + 一个或多个**隐藏层** + 输出层,层与层**全连接*
 
 ## 5. 怎么训练:闭环不变,梯度来源变复杂
 
-📌 **训练承接**:[从线性模型训练到深度网络训练](node:training) · [反向传播与计算图](node:backprop)
+📌 **训练承接**:[训练:线性模型 → 深度网络](node:training) · [反向传播与计算图](node:backprop)
 
-MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 或交叉熵算损失,再根据梯度更新所有 $W,\mathbf b$。真正的新问题不是"怎么更新",而是**多层复合函数里,每个参数的梯度怎么高效算出来**。完整训练主线见子篇 [从线性模型训练到深度网络训练](node:training);下一节 [反向传播](node:backprop) 专门解释梯度如何沿计算图回传。
+MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 或交叉熵算损失,再根据梯度更新所有 $W,\mathbf b$。真正的新问题不是"怎么更新",而是**多层复合函数里,每个参数的梯度怎么高效算出来**。完整训练主线见子篇 [训练:线性模型 → 深度网络](node:training);下一节 [反向传播](node:backprop) 专门解释梯度如何沿计算图回传。
 
 ## 6. 网络如何学出这条弯曲边界
 
@@ -758,7 +758,7 @@ MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 
 
 **① 隐藏层不是直接画出弯曲边界,而是在做非线性表示变换。** 输出层自始至终只是个**线性分类器**(一条直线 / 超平面)。隐藏层 $\sigma(W_1\mathbf x+\mathbf b_1)$ 先把输入空间**非线性地变换**(承接 [线性代数](node:linalg#矩阵):每层 $W\mathbf x$ 都是一次空间变换),使原本绕成一圈、线性分不开的数据,在新表示空间里变得线性可分;输出层在新空间里划一条直线,这条直线**映射回原始坐标**看起来就是弯的(这里是一圈)。所以"弯"不是直接画出来的,而是"先变换表示、再线性切分"的结果。
 
-**② 参数靠梯度下降一步步试出来,没有蓝图。** 训练就是 [第 5 节](node:mlp#怎么训练) 和子篇 [从线性模型训练到深度网络训练](node:training) 里的循环:
+**② 参数靠梯度下降一步步试出来,没有蓝图。** 训练就是 [第 5 节](node:mlp#怎么训练) 和子篇 [训练:线性模型 → 深度网络](node:training) 里的循环:
 - 随机初始化 → 边界通常是不规则曲线,准确率约 50%(接近随机猜测);
 - 反向传播算出"每个权重往哪个方向微调能让损失下降一点点"(梯度);
 - 沿梯度方向更新一小步,边界随参数发生微小变化,错分的点减少一些;
@@ -777,7 +777,7 @@ MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 
 - MLP = 输入 + 隐藏层(仿射+激活)+ 输出,全连接;是单神经元的堆叠;
 - ReLU 因不饱和、缓解梯度消失成为默认激活;sigmoid / tanh 两端饱和;
 - 通用近似定理:单隐藏层 MLP 可逼近任意连续函数;但实践偏好更深;
-- 训练闭环仍是"前向计算 → 损失 → 梯度 → 更新";从线性模型到 MLP 的训练差异见 [从线性模型训练到深度网络训练](node:training);
+- 训练闭环仍是"前向计算 → 损失 → 梯度 → 更新";从线性模型到 MLP 的训练差异见 [训练:线性模型 → 深度网络](node:training);
 - **弯曲边界是怎么来的**:隐藏层做非线性表示变换,使数据线性可分;梯度下降再逐步逼近低损失解。边界形状是最小化损失的结果,不是模型显式预设的几何对象。完整几何承接见 [线性分类的几何视角](node:geometry)。
 
 ---
@@ -962,7 +962,7 @@ $$r^2=x_1^2+x_2^2$$
 - **非线性的职责,是把数据搬进那个空间**,即隐藏层激活。没有它,"线性套线性仍是线性"($W_2(W_1\mathbf x)=(W_2W_1)\mathbf x$,见 [线性代数 · 矩阵乘法](node:linalg#矩阵乘法)),堆叠再多层仍等价于一条直线。
 - **维度高低不是目的,线性可分才是。** 有完美先验可降维(一个 $r^2$);无先验则用通用单元升维(3→8)逼近。升的是**嵌入空间维度**(2→8),数据的**内在维度恒为 2**(8 个特征皆由 2 个输入算出,仅分布在 8 维空间中的一张 2 维曲面上)。
 
-掌握这条主线后,再看 [多层感知机](node:mlp) 的结构、[从线性模型训练到深度网络训练](node:training) 如何延续训练闭环,以及 [反向传播](node:backprop) 如何求出这些 $\mathbf w,b$ 的梯度,皆顺理成章。
+掌握这条主线后,再看 [多层感知机](node:mlp) 的结构、[训练:线性模型 → 深度网络](node:training) 如何延续训练闭环,以及 [反向传播](node:backprop) 如何求出这些 $\mathbf w,b$ 的梯度,皆顺理成章。
 
 ## 延伸
 - **特征工程 vs 神经网络**:前者人工设计特征(形式可各异,如 $x_1^2+x_2^2$、$x_1x_2$),依赖领域知识;后者用统一通用形式、由训练学得。两者都需人工设定超参(单元数、层数、激活种类——凭经验与验证集),但"每个单元最终表示什么"由训练决定。
@@ -987,7 +987,7 @@ $$r^2=x_1^2+x_2^2$$
 - [通用近似定理 · Wikipedia](https://zh.wikipedia.org/wiki/通用近似定理) · [核方法 · Wikipedia](https://zh.wikipedia.org/wiki/核方法)
 </script>
 <script type="text/markdown" data-node="training">
-# 从线性模型训练到深度网络训练
+# 训练:线性模型 → 深度网络
 
 > 本篇承接 [线性回归](node:linreg)、[逻辑回归 / softmax 回归](node:softmax) 和 [MLP 引入非线性的作用](node:nonlinear),专门理清一个容易混淆的问题:**训练闭环始终是"前向计算 → 损失 → 梯度 → 参数更新",真正变复杂的是"梯度怎么高效算出来"。** 线性模型的梯度可以直接写公式;深度网络的早期层参数要穿过多层复合函数影响损失,因此需要 [反向传播](node:backprop) 系统化地计算梯度。
 
@@ -1112,7 +1112,7 @@ $$\frac{\partial L}{\partial W_1}
 
 > 多层网络是层层复合的函数,要训练它就得求"损失对每个参数的梯度"。**反向传播**给出了高效算法:它本质是「微积分」节链式法则的**系统化、向量化**应用,沿计算图从损失端**逐段回乘**局部梯度。框架(PyTorch 等)的自动微分就是它。记号锚定 d2l 4.7。
 
-📌 **前置承接**:[从线性模型训练到深度网络训练](node:training)
+📌 **前置承接**:[训练:线性模型 → 深度网络](node:training)
 
 📌 **数学基础**:[微积分 · 链式法则](node:calc#链式法则) · [矩阵求导 · 链式法则的矩阵形式](node:matcalc#矩阵形式)
 
@@ -1340,7 +1340,7 @@ Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Ad
 每个实验开始前先对齐设计:确认目标、数据、需观察的现象,以及与前序内容的衔接。
 </script>
 <script>
-const TREE=[{"id": "refs", "label": "📚 参考资料"}, {"id": "math", "label": "🧮 数学基础", "children": [{"id": "calc", "label": "微积分:导数与梯度"}, {"id": "prob", "label": "概率基础"}, {"id": "linalg", "label": "线性代数"}, {"id": "matcalc", "label": "矩阵求导(按需)"}]}, {"id": "ml", "label": "🤖 机器学习基础", "children": [{"id": "mlwhat", "label": "机器学习概述"}, {"id": "linreg", "label": "线性回归"}, {"id": "softmax", "label": "逻辑回归 / softmax 回归"}]}, {"id": "dl", "label": "🧠 深度学习", "children": [{"id": "mlp", "label": "感知机 → 多层感知机", "children": [{"id": "geometry", "label": "线性分类的几何视角"}, {"id": "nonlinear", "label": "MLP 引入非线性的作用"}, {"id": "training", "label": "从线性模型训练到深度网络训练"}]}, {"id": "backprop", "label": "反向传播与计算图"}, {"id": "cnn", "label": "卷积神经网络 CNN"}, {"id": "rnn", "label": "循环神经网络 RNN"}, {"id": "attn", "label": "注意力 → Transformer"}]}, {"id": "lab", "label": "🧪 实验"}];
+const TREE=[{"id": "refs", "label": "📚 参考资料"}, {"id": "math", "label": "🧮 数学基础", "children": [{"id": "calc", "label": "微积分:导数与梯度"}, {"id": "prob", "label": "概率基础"}, {"id": "linalg", "label": "线性代数"}, {"id": "matcalc", "label": "矩阵求导(按需)"}]}, {"id": "ml", "label": "🤖 机器学习基础", "children": [{"id": "mlwhat", "label": "机器学习概述"}, {"id": "linreg", "label": "线性回归"}, {"id": "softmax", "label": "逻辑回归 / softmax 回归"}]}, {"id": "dl", "label": "🧠 深度学习", "children": [{"id": "mlp", "label": "感知机 → 多层感知机", "children": [{"id": "geometry", "label": "线性分类的几何视角"}, {"id": "nonlinear", "label": "MLP 引入非线性的作用"}, {"id": "training", "label": "训练:线性模型 → 深度网络"}]}, {"id": "backprop", "label": "反向传播与计算图"}, {"id": "cnn", "label": "卷积神经网络 CNN"}, {"id": "rnn", "label": "循环神经网络 RNN"}, {"id": "attn", "label": "注意力 → Transformer"}]}, {"id": "lab", "label": "🧪 实验"}];
 const CONTENT={},LABEL={},PARENT={};
 document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
 (function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");
