@@ -1,0 +1,285 @@
+# -*- coding: utf-8 -*-
+"""
+MLP 引入非线性的作用 —— 可视化复现 demo
+=========================================
+
+配套知识点:知识库/04-深度学习/01a-MLP引入非线性的作用.md
+
+用一份 50 点的环形数据,从零(numpy 手写前向 + 反向传播)演示:
+  - 线性分类器为何分不开环形数据;
+  - 已知分布时,一个特制特征 r² 即可"降维"解决;
+  - 一般情形用通用 tanh 单元"升维",单元越多边界越接近圆。
+
+运行方式
+  1) 命令行:  python nonlinear_demo.py        # 生成全部图到 ./figures/
+  2) Jupyter / VS Code:按 `# %%` 单元逐块运行(交互查看 3D 可旋转)
+
+依赖:numpy, matplotlib(中文标签需系统装有 CJK 字体,见 README)
+"""
+
+# %% 依赖与全局设置 -------------------------------------------------------------
+import os
+import csv
+import numpy as np
+import matplotlib
+matplotlib.rcParams["font.sans-serif"] = ["Arial Unicode MS", "PingFang SC", "Heiti TC", "STHeiti", "Microsoft YaHei", "sans-serif"]
+matplotlib.rcParams["axes.unicode_minus"] = False
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (注册 3d 投影)
+
+C0, C1, BG = "#2f74d0", "#d04a3a", "#ffffff"   # 内圈蓝 / 外圈红 / 背景
+FIG_DIR = "figures"
+DATA_CSV = "nonlinear_data.csv"
+os.makedirs(FIG_DIR, exist_ok=True)
+
+
+# %% 1) 数据:50 点环形(优先读 csv,否则按规则生成并保存) ----------------------
+def load_or_make_data():
+    if os.path.exists(DATA_CSV):
+        arr = np.loadtxt(DATA_CSV, delimiter=",", skiprows=1)
+        return arr[:, :2], arr[:, 2].astype(int)
+    rng = np.random.default_rng(7)            # 固定种子,可复现
+    n_in, n_out = 20, 30
+    r_in = rng.uniform(0.05, 1.0, n_in);   th_in = rng.uniform(0, 2 * np.pi, n_in)
+    r_out = rng.uniform(1.25, 2.1, n_out); th_out = rng.uniform(0, 2 * np.pi, n_out)
+    X = np.vstack([np.c_[r_in * np.cos(th_in), r_in * np.sin(th_in)],
+                   np.c_[r_out * np.cos(th_out), r_out * np.sin(th_out)]]).round(2)
+    y = np.r_[np.zeros(n_in), np.ones(n_out)].astype(int)
+    np.savetxt(DATA_CSV, np.c_[X, y], delimiter=",", header="x1,x2,label",
+               comments="", fmt=["%.2f", "%.2f", "%d"])
+    return X, y
+
+X, y = load_or_make_data()
+r2 = (X ** 2).sum(1)
+# 内圈 r² ≤ 1.0 < 外圈 r² ≥ 1.56,故 r² 严格可分;阈值取 τ=1.3
+TAU = 1.3
+print("内圈 r² 范围 %.2f~%.2f | 外圈 r² 范围 %.2f~%.2f" %
+      (r2[y == 0].min(), r2[y == 0].max(), r2[y == 1].min(), r2[y == 1].max()))
+
+
+def scat(ax, s=42):
+    ax.scatter(X[y == 0, 0], X[y == 0, 1], c=C0, s=s, edgecolors="white", linewidths=0.7, zorder=3, label="类别 0(内)")
+    ax.scatter(X[y == 1, 0], X[y == 1, 1], c=C1, s=s, edgecolors="white", linewidths=0.7, zorder=3, label="类别 1(外)")
+
+
+# %% 2) 小 MLP:训练 / 前向 / 评估(numpy 手写,2 → k tanh → 1) -----------------
+def train(h, seed=0, epochs=6000, lr=0.6, wd=0.0):
+    """训练 2→h(tanh)→1(sigmoid) 网络,交叉熵 + 全量梯度下降(wd=可选权重衰减)。"""
+    rg = np.random.default_rng(seed)
+    mu, sd = X.mean(0), X.std(0)
+    Xs = (X - mu) / sd                                   # 标准化:让损失面更圆,SGD 好收敛
+    W1 = rg.normal(0, 1.0, (2, h)); b1 = np.zeros(h)
+    W2 = rg.normal(0, 1.0, (h, 1)); b2 = np.zeros(1)
+    Y = y.reshape(-1, 1).astype(float)
+    for _ in range(epochs):
+        H = np.tanh(Xs @ W1 + b1)                        # 前向
+        P = 1 / (1 + np.exp(-(H @ W2 + b2)))
+        dZ2 = (P - Y) / len(Xs)                          # 反向(交叉熵 + sigmoid 的简洁梯度)
+        dW2 = H.T @ dZ2 + wd * W2; db2 = dZ2.sum(0)
+        dZ1 = (dZ2 @ W2.T) * (1 - H ** 2)                # tanh' = 1 - tanh²
+        dW1 = Xs.T @ dZ1 + wd * W1; db1 = dZ1.sum(0)
+        W1 -= lr * dW1; b1 -= lr * db1; W2 -= lr * dW2; b2 -= lr * db2
+    return mu, sd, W1, b1, W2, b2
+
+def logit(P, XX):
+    mu, sd, W1, b1, W2, b2 = P
+    return (np.tanh(((XX - mu) / sd) @ W1 + b1) @ W2 + b2)[:, 0]
+
+# 密集评估集:同分布另采点,衡量"整片区域"判准(= 边界形状好坏,而非记住训练点)
+def _eval_set(n=4000, seed=999):
+    rg = np.random.default_rng(seed); m = n // 2
+    ri = rg.uniform(0.05, 1.0, m); ti = rg.uniform(0, 2 * np.pi, m)
+    ro = rg.uniform(1.25, 2.1, n - m); to = rg.uniform(0, 2 * np.pi, n - m)
+    XX = np.vstack([np.c_[ri * np.cos(ti), ri * np.sin(ti)], np.c_[ro * np.cos(to), ro * np.sin(to)]])
+    return XX, np.r_[np.zeros(m), np.ones(n - m)].astype(int)
+Xte, yte = _eval_set()
+def acc_eval(P):
+    return ((logit(P, Xte) > 0).astype(int) == yte).mean()
+
+def pick(h, seeds=25):
+    """跑多个随机初始化,报告平均判准(反映该宽度的典型容量),图用最接近平均的那次。"""
+    runs = [(acc_eval(P := train(h, seed=s)), P) for s in range(seeds)]
+    mean = sum(a for a, _ in runs) / len(runs)
+    return mean, min(runs, key=lambda t: abs(t[0] - mean))[1]
+
+def hidden(P, XX):
+    mu, sd, W1, b1, W2, b2 = P
+    return np.tanh(((XX - mu) / sd) @ W1 + b1)
+
+def sat(P):                       # 饱和比例(|h|>0.95 的占比,越低 3D 越铺得开)
+    return (np.abs(hidden(P, X)) > 0.95).mean()
+
+def pick_spread(wd=0.004, epochs=4000, lr=0.4, accmin=0.86, seeds=30):
+    """在准确率达标的 3 单元网络里挑饱和最低的一个,让真实 3D 隐藏坐标铺得开。"""
+    cand = []
+    for s in range(seeds):
+        P = train(3, seed=s, epochs=epochs, lr=lr, wd=wd); a = acc_eval(P)
+        if a >= accmin: cand.append((sat(P), a, P))
+    cand.sort(key=lambda t: (t[0], -t[1]))
+    return cand[0][2] if cand else pick(3)[1]
+
+
+# %% 3) 工具:决策边界 / MLP 结构图 --------------------------------------------
+def boundary(ax, P, lim=2.6):
+    g = np.linspace(-lim, lim, 300); gx, gy = np.meshgrid(g, g)
+    S = logit(P, np.c_[gx.ravel(), gy.ravel()]).reshape(gx.shape)
+    ax.contourf(gx, gy, S, levels=[-1e9, 0, 1e9], colors=[C0, C1], alpha=0.13, zorder=0)
+    ax.contour(gx, gy, S, levels=[0], colors="#222", linewidths=2, linestyles="--", zorder=2)
+
+def _ypos(n, gap):
+    return [(i - (n - 1) / 2) * gap for i in range(n)]
+
+def draw_mlp(ax, n_hidden, caption, single_label=None):
+    """画一个 输入(x1,x2,+1) → n_hidden 隐藏 → sigmoid 的 MLP 结构示意图。"""
+    ax.set_aspect("equal"); ax.axis("off")
+    xin, xh, xout, R = 0.0, 1.7, 3.4, 0.17
+    yin = _ypos(3, 0.95); gap_h = 0.6 if n_hidden > 4 else 0.9; yh = _ypos(n_hidden, gap_h)
+    for yi in yin:
+        for yj in yh:
+            ax.plot([xin + R, xh - R], [yi, yj], color="#cccccc", lw=0.5, zorder=1)
+    for yj in yh:
+        ax.plot([xh + R, xout - R], [yj, 0.0], color="#cccccc", lw=0.5, zorder=1)
+    for yi, lb, fc in zip(yin, ["$x_1$", "$x_2$", "$+1$"], ["#dbe6f5", "#dbe6f5", "#f6edcf"]):
+        ax.add_patch(Circle((xin, yi), R, fc=fc, ec="#5b7aa6", lw=1.1, zorder=3))
+        ax.text(xin, yi, lb, ha="center", va="center", fontsize=9.5, zorder=4)
+    for k, yj in enumerate(yh):
+        ax.add_patch(Circle((xh, yj), R, fc="#eaf3ec", ec="#6f9c78", lw=1.1, zorder=3))
+        if single_label and n_hidden == 1:
+            ax.text(xh, yj, single_label, ha="center", va="center", fontsize=9, zorder=4)
+        elif n_hidden <= 4:
+            ax.text(xh, yj, "$h_%d$" % (k + 1), ha="center", va="center", fontsize=8.5, zorder=4)
+    ax.add_patch(Circle((xout, 0), R, fc="#f7dfdc", ec="#b56a5e", lw=1.1, zorder=3))
+    ax.text(xout, 0, "$\\hat p$", ha="center", va="center", fontsize=9.5, zorder=4)
+    top = max(max(yh), max(yin))
+    ax.text(xin, top + 0.55, "输入", ha="center", fontsize=9.5, color="#444")
+    ax.text(xh, top + 0.55, caption, ha="center", fontsize=9.5, color="#444")
+    ax.text(xout, 0.42, "sigmoid", ha="center", fontsize=8.5, color="#444")
+    ax.set_xlim(-0.4, 3.9); ax.set_ylim(-(top + 0.95), top + 0.95)
+
+
+# %% 图1:线性分类器对环形无能为力 --------------------------------------------
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 5.2)); fig.patch.set_facecolor(BG)
+for ax in (a1, a2):
+    ax.set_facecolor(BG); ax.set_aspect("equal"); ax.set_xlim(-2.6, 2.6); ax.set_ylim(-2.6, 2.6)
+    ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$")
+scat(a1); a1.legend(loc="upper right", fontsize=9); a1.set_title("① 一份 50 点的环形数据\n内圈一类、外圈一类", fontsize=12)
+scat(a2)
+a2.fill_betweenx([-2.6, 2.6], -2.6, 0, color=C0, alpha=0.10); a2.fill_betweenx([-2.6, 2.6], 0, 2.6, color=C1, alpha=0.10)
+a2.axvline(0, color="#222", lw=2, ls="--")
+a2.set_title("② 线性分类器:一条直线\n任你怎么放都分不开", fontsize=12)
+plt.tight_layout(); plt.savefig(f"{FIG_DIR}/nonlinear-data-linear.png", dpi=130, facecolor=BG); plt.show()
+
+
+# %% 图2:理想——1 个特制单元 r²(降维到 1D,回到 2D 是圆) ---------------------
+fig = plt.figure(figsize=(13.5, 4.3)); fig.patch.set_facecolor(BG)
+ax = fig.add_subplot(1, 3, 1); draw_mlp(ax, 1, "1 个特制单元", single_label="$r^2$")
+ax.set_title("① 理想:已知是一圈\n只需 1 个算 r² 的隐藏单元", fontsize=11)
+ax = fig.add_subplot(1, 3, 2); ax.set_facecolor(BG)
+jit = np.random.default_rng(1).uniform(-0.25, 0.25, len(X))
+ax.scatter(r2[y == 0], jit[y == 0], c=C0, s=40, edgecolors="white", linewidths=0.6)
+ax.scatter(r2[y == 1], jit[y == 1], c=C1, s=40, edgecolors="white", linewidths=0.6)
+ax.axvline(TAU, color="#222", lw=2, ls="--"); ax.text(TAU, 0.55, "阈值 τ=%.1f" % TAU, ha="center", fontsize=10)
+ax.set_ylim(-0.8, 0.8); ax.set_yticks([]); ax.set_xlabel("$r^2=x_1^2+x_2^2$  (一个数)")
+ax.set_title("② 压成 1 维:左堆=内、右堆=外\n一个阈值完全分开", fontsize=11)
+ax = fig.add_subplot(1, 3, 3); ax.set_facecolor(BG); ax.set_aspect("equal"); ax.set_xlim(-2.6, 2.6); ax.set_ylim(-2.6, 2.6)
+th = np.linspace(0, 2 * np.pi, 200); rr = np.sqrt(TAU)
+ax.fill_between([-2.6, 2.6], -2.6, 2.6, color=C1, alpha=0.06, zorder=-1)
+ax.fill(rr * np.cos(th), rr * np.sin(th), color=C0, alpha=0.13, zorder=0)
+ax.plot(rr * np.cos(th), rr * np.sin(th), color="#222", lw=2, ls="--", zorder=2); scat(ax)
+ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$"); ax.set_title("③ 阈值 r²=τ 回到 2D\n正是一个圆", fontsize=11)
+plt.tight_layout(); plt.savefig(f"{FIG_DIR}/nonlinear-step1-r2.png", dpi=130, facecolor=BG); plt.show()
+
+
+# %% 图3:升维细化 —— 真实隐藏坐标 (h1,h2,h3),拆成 A 算坐标 / B 三维切面 / C 映射回 2D
+P3 = pick_spread()                       # 轻衰减、低饱和的 3 单元网络(让真实 3D 铺得开)
+mu3, sd3, W1, b1, W2, b2 = P3; acc3 = acc_eval(P3); H = hidden(P3, X)
+A1 = W1[0] / sd3[0]; A2 = W1[1] / sd3[1]; Cc = b1 - W1[0] * mu3[0] / sd3[0] - W1[1] * mu3[1] / sd3[1]   # 折回原始 x 系数
+with open("nonlinear_data_hidden.csv", "w", newline="", encoding="utf-8") as f:                          # 扩展 csv(含 h1,h2,h3)
+    w = csv.writer(f); w.writerow(["x1", "x2", "label", "h1", "h2", "h3"])
+    for (a, b), c, hh in zip(X, y, H): w.writerow(["%.2f" % a, "%.2f" % b, c, "%.3f" % hh[0], "%.3f" % hh[1], "%.3f" % hh[2]])
+_r2 = (X ** 2).sum(1); _ii = np.where(y == 0)[0]; _io = np.where(y == 1)[0]
+i_in = int(_ii[np.argmin(_r2[_ii])]); i_out = int(_io[np.argmax(_r2[_io])])    # 最靠中心的内点 / 最靠外的外点
+GOLD, PURP = "#ffd23f", "#7b2ff7"
+
+def draw_h3d(ax, stars=()):
+    ax.scatter(H[y == 0, 0], H[y == 0, 1], H[y == 0, 2], c=C0, s=30, depthshade=False, edgecolors="white", linewidths=0.4)
+    ax.scatter(H[y == 1, 0], H[y == 1, 1], H[y == 1, 2], c=C1, s=30, depthshade=False, edgecolors="white", linewidths=0.4)
+    if abs(W2[2, 0]) > 1e-6:
+        gh = np.linspace(-1.1, 1.1, 40); G1, G2 = np.meshgrid(gh, gh)
+        G3 = -(W2[0, 0] * G1 + W2[1, 0] * G2 + b2[0]) / W2[2, 0]
+        G3 = np.where(np.abs(G3) <= 1.12, G3, np.nan)   # 只画落在可见立方体内的平面带:避免截断造成"折面"假象
+        ax.plot_surface(G1, G2, G3, color="#8a9097", alpha=0.32, linewidth=0)
+    for xi, col in stars:
+        ax.scatter([H[xi, 0]], [H[xi, 1]], [H[xi, 2]], marker="*", s=240, c=col, edgecolors="k", linewidths=1.3, depthshade=False, zorder=10)
+    ax.set_xlim(-1.1, 1.1); ax.set_ylim(-1.1, 1.1); ax.set_zlim(-1.1, 1.1)
+    ax.set_xlabel("$h_1$"); ax.set_ylabel("$h_2$"); ax.set_zlabel("$h_3$"); ax.view_init(elev=20, azim=-80)
+
+# 图 A:MLP + 真实表达式 + 逐点计算
+def fmt_h(i): return r"$h_%d=\tanh(%+.2f\,x_1%+.2f\,x_2%+.2f)$" % (i + 1, A1[i], A2[i], Cc[i])
+zstr = r"$z=%+.2f\,h_1%+.2f\,h_2%+.2f\,h_3%+.2f$" % (W2[0, 0], W2[1, 0], W2[2, 0], b2[0])
+ein = "★内点 (%.2f, %.2f) → h=(%.2f, %.2f, %.2f), z=%+.2f → 内" % (X[i_in, 0], X[i_in, 1], H[i_in, 0], H[i_in, 1], H[i_in, 2], logit(P3, X[i_in:i_in + 1])[0])
+eout = "★外点 (%.2f, %.2f) → h=(%.2f, %.2f, %.2f), z=%+.2f → 外" % (X[i_out, 0], X[i_out, 1], H[i_out, 0], H[i_out, 1], H[i_out, 2], logit(P3, X[i_out:i_out + 1])[0])
+figA = plt.figure(figsize=(13, 4.7)); figA.patch.set_facecolor(BG)
+gsA = figA.add_gridspec(1, 2, width_ratios=[1, 1.2])
+axm = figA.add_subplot(gsA[0]); draw_mlp(axm, 3, "3 个 tanh"); axm.set_title("① MLP:输入 → 3 个 tanh → 输出", fontsize=11)
+axt = figA.add_subplot(gsA[1]); axt.axis("off")
+rows = [("代入原始坐标,三个隐藏单元各算出一个数:", "n"), (fmt_h(0), "m"), (fmt_h(1), "m"), (fmt_h(2), "m"),
+        ("输出层做线性打分:", "n"), (zstr, "m"), ("判别: z < 0 → 内,  z > 0 → 外", "n"),
+        ("逐点代入(示例):", "n"), (ein, "g"), (eout, "p"),
+        ("全部 50 点的 (h₁,h₂,h₃) 见 nonlinear_data_hidden.csv", "s")]
+yv = 0.97
+for txt, k in rows:
+    col = {"g": "#a8860b", "p": PURP, "s": "#777"}.get(k, "#222"); fs = 9 if k == "s" else 11
+    axt.text(0.0, yv, txt, transform=axt.transAxes, va="top", ha="left", fontsize=fs, color=col)
+    yv -= 0.085 if k == "s" else 0.097
+figA.tight_layout(); figA.savefig(f"{FIG_DIR}/nonlinear-h-a.png", dpi=130, facecolor=BG); plt.show()
+
+# 图 B:GIF —— 转一次进入 edge-on 并停住(末帧停留,不做 360 连转)
+import PIL.Image
+nvec = np.array([W2[0, 0], W2[1, 0], W2[2, 0]]); nvec = nvec / np.linalg.norm(nvec)
+def _eye(elev, azim):
+    e, a = np.radians(elev), np.radians(azim)
+    return np.array([np.cos(e) * np.cos(a), np.cos(e) * np.sin(a), np.sin(e)])
+ELEV = 14; _azs = np.linspace(0, 359, 360)
+edge_az = float(_azs[int(np.argmin([abs(_eye(ELEV, a) @ nvec) for a in _azs]))])   # 平面 edge-on 的方位角
+EDGE_OFF = 16   # 停在 edge-on 前 16°:平面成"窄斜面"而非一条线,既看清分隔又看得出是平面
+figB = plt.figure(figsize=(5.8, 5.2)); figB.patch.set_facecolor(BG); axb = figB.add_subplot(111, projection="3d")
+draw_h3d(axb); axb.set_title("真实隐藏坐标 (h₁,h₂,h₃):转到侧视角度,一张平面把内 / 外分开", fontsize=10.5)
+imgs = []
+for az in np.linspace(edge_az - 70, edge_az - EDGE_OFF, 28):
+    axb.view_init(elev=ELEV, azim=az); figB.canvas.draw()
+    buf = np.asarray(figB.canvas.buffer_rgba())[..., :3]   # 自适应缓冲尺寸,兼容 Retina / 各后端
+    imgs.append(PIL.Image.fromarray(buf.copy()).resize((580, 520)))
+plt.close(figB)
+imgs[0].save(f"{FIG_DIR}/nonlinear-h-b.gif", save_all=True, append_images=imgs[1:],
+             duration=[70] * (len(imgs) - 1) + [6000], loop=0)   # 末帧 edge-on 停 6 秒
+print("图B GIF: edge-on 方位角 ≈ %.0f · 准确率 %d%%" % (edge_az, round(acc3 * 100)))
+
+# 图 C:映射回 2D(同两点★对照)
+figC = plt.figure(figsize=(13, 5.4)); figC.patch.set_facecolor(BG)
+gsC = figC.add_gridspec(1, 2, width_ratios=[1, 1])
+ax1 = figC.add_subplot(gsC[0]); ax1.set_facecolor(BG); ax1.set_aspect("equal"); ax1.set_xlim(-2.6, 2.6); ax1.set_ylim(-2.6, 2.6)
+boundary(ax1, P3); scat(ax1, s=32)
+ax1.scatter([X[i_in, 0]], [X[i_in, 1]], marker="*", s=300, c=GOLD, edgecolors="k", linewidths=1.3, zorder=6)
+ax1.scatter([X[i_out, 0]], [X[i_out, 1]], marker="*", s=300, c=PURP, edgecolors="k", linewidths=1.3, zorder=6)
+ax1.set_xlabel("$x_1$"); ax1.set_ylabel("$x_2$"); ax1.set_title("回到原 2D:边界 = 平面的「原像」(★ 两个示范点)", fontsize=11)
+ax2 = figC.add_subplot(gsC[1], projection="3d"); draw_h3d(ax2, stars=[(i_in, GOLD), (i_out, PURP)]); ax2.view_init(elev=ELEV, azim=edge_az - EDGE_OFF)
+ax2.set_title("同两点在 3D(侧视):分居切面两侧", fontsize=11)
+figC.tight_layout(); figC.savefig(f"{FIG_DIR}/nonlinear-h-c.png", dpi=130, facecolor=BG); plt.show()
+print("3 单元(轻衰减)整片判准 %.3f · 饱和 %d%%" % (acc3, round(sat(P3) * 100)))
+
+
+# %% 图4:加大宽度 3 / 5 / 8(三角形 → 五边形 → 八边形 ≈ 圆) -------------------
+fig, axes = plt.subplots(2, 3, figsize=(13.5, 10), gridspec_kw={"height_ratios": [1.5, 1.3]}); fig.patch.set_facecolor(BG)
+shapes = {3: "三角形", 5: "五边形", 8: "八边形 ≈ 圆"}
+for j, h in enumerate((3, 5, 8)):
+    aH, PH = pick(h); print("%d 单元 整片判准 %.3f" % (h, aH))
+    draw_mlp(axes[0, j], h, "%d 个 tanh" % h); axes[0, j].set_title("%d 个隐藏单元" % h, fontsize=11)
+    ax = axes[1, j]; ax.set_facecolor(BG); ax.set_aspect("equal"); ax.set_xlim(-2.6, 2.6); ax.set_ylim(-2.6, 2.6)
+    boundary(ax, PH); scat(ax, s=26); ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$")
+    ax.set_title("%s · 整片判准 %d%%" % (shapes[h], round(aH * 100)), fontsize=11)
+plt.suptitle("加大宽度:隐藏单元越多,边界越接近圆(同一份 50 点数据)", fontsize=13, y=1.0)
+plt.tight_layout(); plt.savefig(f"{FIG_DIR}/nonlinear-step3-width.png", dpi=130, facecolor=BG, bbox_inches="tight"); plt.show()
+
+print("全部图已生成到 ./%s/" % FIG_DIR)

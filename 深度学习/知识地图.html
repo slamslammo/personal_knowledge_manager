@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>深度学习 知识梳理</title>
+<style>
+  :root{--bg:#f7f7f4;--panel:#fff;--ink:#23211c;--sub:#6b6860;--line:#e3e0d8;--accent:#2f74d0;--ok:#1d9e75;--todo:#b9791a;--shadow:0 1px 3px rgba(0,0,0,.06)}
+  @media (prefers-color-scheme:dark){:root{--bg:#1c1b18;--panel:#26241f;--ink:#ece9e1;--sub:#a39e93;--line:#3a372f;--shadow:0 1px 3px rgba(0,0,0,.3)}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  header{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  header h1{margin:0;font-size:18px;font-weight:600}
+  header .note{font-size:12.5px;color:var(--sub)}
+  header .prog{margin-left:auto;font-size:12px;color:var(--sub)}
+  .wrap{display:flex;align-items:stretch;min-height:calc(100vh - 50px)}
+  aside{width:310px;flex:none;border-right:1px solid var(--line);padding:12px 8px;overflow:auto}
+  @media(max-width:760px){.wrap{flex-direction:column}aside{width:auto;border-right:none;border-bottom:1px solid var(--line)}}
+  .tnode{display:flex;align-items:center;gap:6px;padding:7px 9px;margin:3px 4px;border:1px solid transparent;border-radius:8px;cursor:pointer;font-size:14px}
+  .tnode:hover{background:var(--bg)}
+  .tnode.sel{background:var(--panel);border-color:var(--line);box-shadow:var(--shadow);font-weight:600}
+  .tnode .cv{width:14px;color:var(--sub);font-size:11px;flex:none;transition:transform .15s}
+  .tnode .cv.open{transform:rotate(90deg)}
+  .tnode .lbl{flex:1}
+  .tnode .chk{font-size:12px;color:var(--ok)}
+  .tnode.lvl0{font-weight:600;font-size:14.5px}
+  .kids{margin-left:6px;border-left:1px dashed var(--line)}
+  main{flex:1;overflow:auto;padding:22px 30px;max-width:880px}
+  .rdrhead{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .rdrhead .markbtn{margin-left:auto;font:12.5px/1 inherit;border:1px solid var(--line);background:var(--panel);color:var(--sub);border-radius:999px;padding:6px 12px;cursor:pointer}
+  .rdrhead .markbtn.done{color:var(--ok);border-color:var(--ok);background:rgba(29,158,117,.08)}
+  main h1{font-size:22px;margin:.2em 0 .5em} main h2{font-size:17px;margin:1.3em 0 .4em} main h3{font-size:15px;margin:1em 0 .3em;color:var(--sub)}
+  main p{margin:.5em 0} main ul,main ol{margin:.4em 0;padding-left:1.4em} main li{margin:.25em 0}
+  main code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.92em}
+  main blockquote{margin:.6em 0;padding:.5em .9em;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;color:var(--sub)}
+  main hr{border:none;border-top:1px solid var(--line);margin:1.4em 0}
+  main a{color:var(--accent)}
+  main img{max-width:100%;display:block;margin:.8em auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+  main .tw{overflow-x:auto;margin:.8em 0}
+  main table{border-collapse:collapse;width:100%;font-size:13.5px}
+  main th,main td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  main thead th{background:var(--bg);font-weight:600;white-space:nowrap}
+  main tbody tr:nth-child(even) td{background:rgba(127,127,127,.06)}
+  .todo{color:var(--todo)}
+  mjx-container{overflow-x:auto;overflow-y:hidden}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<header>
+  <h1>深度学习 知识梳理</h1>
+  <span class="note">左侧点开看结构 · 点知识点阅读</span>
+  <span class="prog" id="prog"></span>
+</header>
+<div class="wrap">
+  <aside id="tree"></aside>
+  <main id="reader"></main>
+</div>
+<script type="text/markdown" data-node="root">
+# 深度学习 · 知识梳理
+
+一份系统讲解深度学习原理的知识库:从数学基础,到线性回归、分类、感知机、卷积与循环网络,直至注意力与 Transformer。每个知识点力求给出**直觉、严谨公式与可视化**三者并重。
+
+左侧为知识结构,点开任意分支展开,点知识点阅读对应讲解。
+
+- 📚 **参考资料**:精选学习材料(教材、视频、可视化、论文实现)
+- 🧮 **数学基础**:深度学习所需的微积分、线性代数、概率核心
+- 🤖 **机器学习基础**:线性模型(回归、分类)与"训练"框架
+- 🧠 **深度学习**:多层神经网络(MLP、CNN、RNN、注意力 / Transformer)
+- 🧪 **实验主线**:从零实现到 mini-GPT 的渐进式实践
+</script>
+<script type="text/markdown" data-node="refs">
+# 📚 参考资料
+
+按用途分类,带 ⭐ 的为主力材料。
+
+## 主线教材 / 视频
+- ⭐ [《动手学深度学习》(d2l)](https://zh.d2l.ai/) — 中英双语、理论与 PyTorch 实现并重,覆盖线性回归到 Transformer。本库主线教材。
+- ⭐ [动手学深度学习 v2 · 视频课](https://www.youtube.com/playlist?list=PLQtPj5OvXSt9SwJnrYu_45_-S6oKQqyxW) — 上述教材的配套中文讲解。
+- [官方课程页(视频 ↔ 章节 ↔ notebook)](https://courses.d2l.ai/zh-v2/)
+
+## 直觉与可视化
+- ⭐ [3Blue1Brown · 线性代数的本质](https://www.3blue1brown.com/topics/linear-algebra)
+- [3Blue1Brown · 微积分的本质](https://www.3blue1brown.com/topics/calculus)
+- [3Blue1Brown · 神经网络与反向传播](https://www.3blue1brown.com/topics/neural-networks)
+- 深度学习本质 · 拔高视频:[①](https://www.youtube.com/watch?v=RXetpF8gPp4) · [②](https://www.youtube.com/watch?v=eIpea-uFBEs) · [③](https://www.youtube.com/watch?v=OvOz1P9x-CA)
+
+## 数学
+- [Mathematics for Machine Learning(免费书)](https://mml-book.github.io/) · [PDF](https://mml-book.github.io/book/mml-book.pdf)
+- [The Matrix Calculus You Need For Deep Learning](https://explained.ai/matrix-calculus/) — 深度学习所需的矩阵求导
+- [StatQuest(统计与机器学习直觉)](https://statquest.org/)
+- [《深度学习的数学》(涌井良幸 等)](https://book.douban.com/subject/33414479/) · [在线阅读](https://weread.qq.com/web/bookDetail/01d327c071a122c701d71f3)
+- [Khan Academy · 数学](https://www.khanacademy.org/math)
+
+## Transformer / 序列 专项
+- [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) — 图解 Transformer
+- [The Annotated Transformer](http://nlp.seas.harvard.edu/annotated-transformer/) — 论文逐段配 PyTorch 实现
+- [Colah · Understanding LSTM Networks](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+
+## 从零实现 / 进阶
+- ⭐ [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) — notebook 逐步手写 GPT
+- [karpathy/nanoGPT](https://github.com/karpathy/nanoGPT) · [karpathy/nn-zero-to-hero](https://github.com/karpathy/nn-zero-to-hero)
+- [mlabonne/llm-course](https://github.com/mlabonne/llm-course) — LLM 路线图 + Colab
+- [labmlai · 论文注释实现合集](https://github.com/labmlai/annotated_deep_learning_paper_implementations)
+- datawhale:[leedl-tutorial](https://github.com/datawhalechina/leedl-tutorial) · [happy-llm](https://github.com/datawhalechina/happy-llm) · [self-llm](https://github.com/datawhalechina/self-llm) · [diy-llm](https://github.com/datawhalechina/diy-llm)
+
+## 本地配套深度精讲
+> 以下资料曾作为本地学习串联材料,暂未纳入本仓库。为保证 GitHub 下载后 HTML 不依赖作者本机路径,这里先保留说明,不提供本地相对链接。
+
+- 线性代数的本质 · 精讲
+- micrograd 精讲(反向传播)
+- Transformer 截帧精讲
+
+## 交互式练习平台
+- [Kaggle Learn](https://www.kaggle.com/learn) · [Hugging Face Learn](https://huggingface.co/learn) · [DeepLearning.AI 短课](https://www.deeplearning.ai/short-courses/) · [Brilliant](https://brilliant.org/)
+</script>
+<script type="text/markdown" data-node="math">
+# 🧮 数学基础
+
+深度学习用到的数学集中在三块:**微积分**(梯度与优化)、**线性代数**(向量与矩阵运算)、**概率**(分布与极大似然);训练时把它们缝在一起的,是**矩阵求导**(向量化的链式法则)。本节聚焦与模型训练直接相关的核心概念,统一给出**定义、公式与可视化**,并在每个概念处就近挂出权威详解(Wikipedia / d2l)。不追求数学教材的完备性,但关键定义与推理不省略。点开下面的知识点阅读。
+
+- **微积分**——导数刻画敏感度,梯度给出下降方向,链式法则是反向传播的内核;
+- **概率**——分布描述数据与标签,极大似然把"训练"翻译成"最大化数据出现的概率",由此导出 MSE 与交叉熵两大损失;
+- **线性代数**——把矩阵看成"空间变换",理解每一层 $Wx$、注意力的 $QK^\top$、PCA/SVD 都在做什么;
+- **矩阵求导**——把上面三者向量化,给出反向传播实际计算的梯度形状。
+</script>
+<script type="text/markdown" data-node="calc">
+# 微积分:导数与梯度
+
+> 训练神经网络的本质,是用**梯度下降**最小化损失函数。理解这一过程所需的微积分核心有三:**导数(刻画敏感度)、梯度(多维方向)、链式法则(反向传播的数学内核)**。本节给出定义、公式与可视化,记号锚定 d2l 2.4。
+
+## 1. 导数:函数对输入的瞬时变化率
+
+📖 **权威详解**:[导数 · Wikipedia](https://zh.wikipedia.org/wiki/导数)
+
+导数定义为差商的极限:
+$$f'(x)=\lim_{h\to 0}\frac{f(x+h)-f(x)}{h}$$
+其几何意义是函数曲线在该点**切线的斜率**,刻画"输入发生微小变化时,输出变化的快慢与方向"——符号给出方向,绝对值给出敏感程度。
+
+![导数 = 该点切线的斜率](../../assets/calc-derivative.png)
+
+常用求导法则:幂 $\frac{d}{dx}x^n=nx^{n-1}$、指数 $\frac{d}{dx}e^x=e^x$、对数 $\frac{d}{dx}\ln x=\frac1x$;以及乘法与除法法则
+$$\frac{d}{dx}[fg]=f'g+fg',\qquad \frac{d}{dx}\Big[\frac fg\Big]=\frac{f'g-fg'}{g^2}$$
+数值差商 $f'(x)\approx\dfrac{f(x+h)-f(x)}{h}$ 可用于直觉验证,但不用于实际训练(逐参数前向计算两次,代价过高)。
+
+## 2. 偏导与梯度:多元函数的方向信息
+
+📖 **权威详解**:[梯度 · Wikipedia](https://zh.wikipedia.org/wiki/梯度) ｜ [偏导数](https://zh.wikipedia.org/wiki/偏导数)
+
+当函数依赖多个变量时,固定其余变量、仅对第 $i$ 个变量求导,得到**偏导数**:
+$$\frac{\partial y}{\partial x_i}=\lim_{h\to 0}\frac{f(x_1,\dots,x_i+h,\dots,x_n)-f(x_1,\dots,x_i,\dots,x_n)}{h}$$
+将全部偏导按分量排列,得到**梯度向量**:
+$$\nabla_{\mathbf x}f(\mathbf x)=\Big[\frac{\partial f}{\partial x_1},\ \frac{\partial f}{\partial x_2},\ \dots,\ \frac{\partial f}{\partial x_n}\Big]^\top$$
+梯度的关键性质:$\nabla f$ 指向函数**上升最快**的方向,其反方向 $-\nabla f$ 指向下降最快的方向。
+
+这正是**梯度下降**的依据——沿负梯度方向、以步长 $\eta$(学习率)迭代更新参数,损失随之下降:
+$$\mathbf x\leftarrow\mathbf x-\eta\,\nabla f(\mathbf x)$$
+
+![梯度下降:在损失曲面上沿 −∇L 逐步逼近最小值](../../assets/calc-gradient-descent.gif)
+
+深度学习中反复出现的若干向量求导规则(线性回归、反向传播将直接使用,详见 [矩阵求导](node:matcalc) 节):
+$$\nabla_{\mathbf x}(\mathbf A\mathbf x)=\mathbf A^\top,\qquad \nabla_{\mathbf x}(\mathbf x^\top\mathbf A\mathbf x)=(\mathbf A+\mathbf A^\top)\mathbf x,\qquad \nabla_{\mathbf x}\lVert\mathbf x\rVert^2=2\mathbf x$$
+
+## 3. 链式法则:反向传播的数学内核
+
+📖 **权威详解**:[链式法则 · Wikipedia](https://zh.wikipedia.org/wiki/链式法则)
+
+复合函数的求导法则。单变量情形,若 $y=f(u),\ u=g(x)$:
+$$\frac{dy}{dx}=\frac{dy}{du}\cdot\frac{du}{dx}$$
+多变量情形($y$ 经由中间变量 $u_1,\dots,u_m$ 依赖各 $x_i$):
+$$\frac{\partial y}{\partial x_i}=\sum_{j=1}^{m}\frac{\partial y}{\partial u_j}\,\frac{\partial u_j}{\partial x_i}$$
+神经网络是多层复合函数。**前向**逐层算出各中间量的数值;**反向**则把"损失对深层参数的偏导"沿这条链**逐段回乘**——这构成了**反向传播(backpropagation)**算法的数学基础。
+
+![链式法则:前向算值(蓝),反向沿链回乘局部导数(红)](../../assets/calc-chain-rule.png)
+
+如上图,$y$ 对 $x$ 的导数 $=$ 后一段局部导数 $\frac{dy}{du}$ 乘前一段 $\frac{du}{dx}$。把每个节点的"局部导数"乘起来,就得到端到端的梯度——这就是反向传播在做的事。
+
+## 应掌握的要点
+- 导数的极限定义及其几何意义(切线斜率 / 敏感度);
+- 梯度为偏导组成的向量、指向上升最快方向,梯度下降沿 $-\nabla f$ 迭代;
+- 单变量与多变量链式法则,及其与反向传播的关系(前向算值、反向回乘)。
+
+---
+### 参考链接
+- [d2l 2.4 微积分](https://zh.d2l.ai/chapter_preliminaries/calculus.html)(公式与记号锚定此页)、[d2l 2.5 自动微分](https://zh.d2l.ai/chapter_preliminaries/autograd.html)
+- [3Blue1Brown《微积分的本质》](https://www.3blue1brown.com/topics/calculus) — 几何直觉
+</script>
+<script type="text/markdown" data-node="prob">
+# 概率基础
+
+> 深度学习里,数据和标签都被看作**随机变量**,模型输出常常是一个**概率分布**。训练的目标——"让模型尽量解释观测到的数据"——用概率语言精确表述就是**极大似然估计(MLE)**;由它出发,能自然推导出回归用的 **MSE**、分类用的**交叉熵**。本节从分布讲到信息论,把"为什么是这个损失函数"说清楚。记号锚定 d2l 2.6。
+
+## 1. 随机变量与概率分布
+
+📖 **权威详解**:[概率分布 · Wikipedia](https://zh.wikipedia.org/wiki/概率分布)
+
+**随机变量**把随机结果映射为数值。其取值规律由**分布**描述:离散用**概率质量函数 PMF** $P(X=k)$,连续用**概率密度函数 PDF** $p(x)$。两者都必须满足**非负**与**归一化**——离散情形 $\sum_k P(X=k)=1$,连续情形 $\int_{-\infty}^{\infty} p(x)\,dx=1$。注意连续情形下 $p(x)$ 是"密度"而非概率,可以大于 1,只有在区间上积分才得到概率。
+
+## 2. 期望与方差:分布的中心与离散程度
+
+📖 **权威详解**:[期望值 · Wikipedia](https://zh.wikipedia.org/wiki/期望值) ｜ [方差](https://zh.wikipedia.org/wiki/方差)
+
+**期望**是分布的加权平均(中心):离散 $\mathbb E[X]=\sum_k k\,P(X=k)$,连续 $\mathbb E[X]=\int x\,p(x)\,dx$。**方差**刻画偏离中心的程度:
+$$\operatorname{Var}(X)=\mathbb E\big[(X-\mathbb E[X])^2\big]=\mathbb E[X^2]-(\mathbb E[X])^2$$
+期望的**线性性** $\mathbb E[aX+bY]=a\mathbb E[X]+b\mathbb E[Y]$(无需独立)在推导中极常用。深度学习里,小批量(mini-batch)上的平均损失,就是用样本均值**估计**真实期望损失。
+
+## 3. 条件概率、独立与贝叶斯
+
+📖 **权威详解**:[条件概率 · Wikipedia](https://zh.wikipedia.org/wiki/条件概率) ｜ [贝叶斯定理](https://zh.wikipedia.org/wiki/贝叶斯定理)
+
+在已知事件 $B$ 发生的前提下 $A$ 的概率:
+$$P(A\mid B)=\frac{P(A\cap B)}{P(B)}$$
+若 $P(A\cap B)=P(A)P(B)$ 则称 $A,B$ **独立**。把条件概率两边展开即得**贝叶斯定理**——它给出"看到数据后如何更新对参数的信念":
+$$P(\theta\mid \mathcal D)=\frac{P(\mathcal D\mid \theta)\,P(\theta)}{P(\mathcal D)}\ \ \propto\ \ P(\mathcal D\mid\theta)\,P(\theta)$$
+其中 $P(\theta\mid\mathcal D)$ 是**后验**、$P(\mathcal D\mid\theta)$ 是**似然**、$P(\theta)$ 是**先验**、分母 $P(\mathcal D)$ 是归一化常数(证据)。
+
+![贝叶斯更新:后验 ∝ 先验 × 似然](../../assets/prob-bayes.png)
+
+**先验**是看到数据前的信念,**似然**是数据对各参数取值的支持度,二者相乘(再归一化)得到**后验**。当先验取均匀分布时,最大化后验就退化为最大化似然(下一节)。贝叶斯视角也解释了正则化:**L2 正则 ≈ 给参数加一个高斯先验**。
+
+## 4. 深度学习常用的三种分布
+
+📖 **权威详解**:[伯努利分布](https://zh.wikipedia.org/wiki/伯努利分布) ｜ [范畴分布](https://zh.wikipedia.org/wiki/范畴分布) ｜ [正态分布](https://zh.wikipedia.org/wiki/正态分布)
+
+![三种常见分布:伯努利 / 类别 / 高斯](../../assets/prob-distributions.png)
+
+- **伯努利分布** $\mathrm{Bernoulli}(p)$:单次二值事件,$P(X=1)=p$。对应**二分类**标签,模型用 sigmoid 输出 $p$。PMF:$P(X=k)=p^{k}(1-p)^{1-k},\ k\in\{0,1\}$。
+- **类别分布** $\mathrm{Categorical}(\boldsymbol p)$:$K$ 选一,$P(X=k)=p_k,\ \sum_k p_k=1$。对应**多分类**标签,模型用 **softmax** 输出 $\boldsymbol p$。
+- **高斯(正态)分布** $\mathcal N(\mu,\sigma^2)$:连续值的默认模型,也用于噪声假设与参数初始化。PDF:
+$$p(x)=\frac{1}{\sqrt{2\pi}\,\sigma}\exp\!\Big(-\frac{(x-\mu)^2}{2\sigma^2}\Big)$$
+
+## 5. 极大似然估计(MLE):把"训练"翻译成概率
+
+📖 **权威详解**:[最大似然估计 · Wikipedia](https://zh.wikipedia.org/wiki/最大似然估计)
+
+给定一组独立同分布的数据 $\{x_1,\dots,x_N\}$ 和带参数 $\theta$ 的模型,**似然**是模型生成这批数据的概率。MLE 选取让似然最大的参数;因连乘易下溢,实际最大化**对数似然**(等价,$\log$ 单调):
+$$\theta^{*}=\arg\max_{\theta}\prod_{i=1}^{N} p(x_i;\theta)=\arg\max_{\theta}\sum_{i=1}^{N}\log p(x_i;\theta)$$
+取负号,就得到训练里最小化的**负对数似然(NLL)**,即损失函数 $\mathcal L(\theta)=-\sum_i\log p(x_i;\theta)$。
+
+![MLE:滑动均值 μ,数据似然在真实均值处达到最大](../../assets/prob-mle.gif)
+
+如上图,固定 $\sigma$、滑动高斯均值 $\mu$:当曲线最贴合数据时,对数似然(下方)登顶——**最大似然估计就是"挑一个让数据最不意外的参数"**。
+
+**两大损失都由此导出**:
+- 假设输出服从**高斯**(回归),$-\log p\propto \dfrac{(x-\mu)^2}{2\sigma^2}$,最小化 NLL $\Longleftrightarrow$ 最小化**均方误差 MSE**;
+- 假设输出服从**类别分布**(分类),NLL $=-\log q_{y}$($q_y$ 为模型给真实类别的概率),正是**交叉熵损失**(下一节)。
+
+## 6. 信息论:熵、交叉熵与 KL 散度
+
+📖 **权威详解**:[熵(信息论) · Wikipedia](https://zh.wikipedia.org/wiki/熵_%28信息论%29) ｜ [交叉熵](https://zh.wikipedia.org/wiki/交叉熵) ｜ [相对熵(KL 散度)](https://zh.wikipedia.org/wiki/相对熵)
+
+一个概率为 $p$ 的事件,其**自信息**(意外程度)为 $-\log p$:越罕见越"意外"。对整个分布取期望,得到**熵**——分布固有的平均不确定性:
+$$H(p)=-\sum_x p(x)\log p(x)$$
+用分布 $q$ 去编码真实分布 $p$ 的平均代价,是**交叉熵**;二者之差是 **KL 散度**(衡量 $q$ 偏离 $p$ 多少,恒非负,$p=q$ 时为 0):
+$$H(p,q)=-\sum_x p(x)\log q(x),\qquad D_{\mathrm{KL}}(p\,\|\,q)=\sum_x p(x)\log\frac{p(x)}{q(x)}=H(p,q)-H(p)$$
+
+![交叉熵损失 = −log p(真实类);H(p,q) 比较真实分布与预测分布](../../assets/prob-crossentropy.png)
+
+分类任务里,真实分布 $p$ 是 one-hot,故 $H(p,q)=-\log q_{y}$——**交叉熵损失 = 给真实类别的预测概率取负对数**:预测越笃定且正确,损失越接近 0;越自信地错,损失越趋于无穷(左图)。由于 $H(p)$ 是常数,**最小化交叉熵 $\Longleftrightarrow$ 最小化 $D_{\mathrm{KL}}(p\,\|\,q)$ $\Longleftrightarrow$ 第 5 节的极大似然**——三种说法,同一件事。
+
+## 应掌握的要点
+- 分布的两条铁律:非负 + 归一化;期望是中心、方差是离散度;
+- 贝叶斯:后验 ∝ 似然 × 先验;均匀先验下最大化后验 = 极大似然;
+- 三种分布对应三类输出:伯努利↔二分类、类别↔多分类(softmax)、高斯↔回归;
+- **MLE 是主线**:负对数似然就是损失;高斯假设导出 MSE,类别假设导出交叉熵;
+- 交叉熵 = $-\log$(真实类预测概率);最小化交叉熵 = 最小化 KL = 极大似然。
+
+---
+### 参考链接
+- [d2l 2.6 概率](https://zh.d2l.ai/chapter_preliminaries/probability.html)、[d2l 3.4 softmax 回归(交叉熵)](https://zh.d2l.ai/chapter_linear-networks/softmax-regression.html)
+- [李沐《动手学深度学习》视频课](https://www.bilibili.com/video/BV1if4y147hS) — 中文直觉讲解
+</script>
+<script type="text/markdown" data-node="linalg">
+# 线性代数
+
+> 线性代数最该被纠正的认知是:**别把矩阵当成一张数字表格,把它当成一个"动作"——对整个空间的一条线性变换指令**。而这条指令**完全由基向量(î、ĵ)被搬到哪里决定**:矩阵的列,就是基向量变换后的落点。接受这个视角后,行列式、逆、特征值都不再是孤立公式,而是同一件事的不同侧面。神经网络每一层 $Wx$ 是一次空间变换,注意力的 $QK^\top$ 是点积,PCA/SVD 是特征向量——都建立在此之上。配图为本节自绘(matplotlib),公式锚定 d2l 2.3。
+
+判定"线性"的精确标准是同时满足**可加性** $f(\mathbf u+\mathbf v)=f(\mathbf u)+f(\mathbf v)$ 与**齐次性** $f(k\mathbf u)=k\,f(\mathbf u)$。其可视化表现是:变换后网格线在各自方向上仍**平行、等间距,且原点不动**(两族网格的间距可不同、也不必正交)。正因这两条性质,任意向量写成基向量的线性组合后**组合系数不变**——只要知道 î、ĵ 的落点,就能推出任意向量的落点。
+
+## 1. 矩阵 = 线性变换:列 = 基向量落点
+
+📖 **权威详解**:[线性映射 · Wikipedia](https://zh.wikipedia.org/wiki/线性映射)
+
+![矩阵 = 基向量落点](../../assets/01-transform-basis.png)
+
+向量 $\mathbf v=(x,y)$ 的含义是"$x$ 个 î 加 $y$ 个 ĵ"。变换后这个"配方"不变,只是 î、ĵ 换了落点,于是矩阵乘向量 $=$ **用 $\mathbf v$ 的坐标对矩阵的列做加权求和**:
+$$A=\begin{bmatrix}a&b\\c&d\end{bmatrix},\qquad A\begin{bmatrix}x\\y\end{bmatrix}=x\begin{bmatrix}a\\c\end{bmatrix}+y\begin{bmatrix}b\\d\end{bmatrix}$$
+**在深度学习中**:全连接层就是 $\mathbf y=W\mathbf x+\mathbf b$——把输入向量做一次线性变换($W$)再平移($\mathbf b$)。理解"层 = 空间变换",就理解了网络在干嘛:逐层把数据搬到更易分类的空间里。看到矩阵,先问"î、ĵ 被搬到哪了",答案就是它的两列。
+
+## 2. 矩阵乘法 = 变换的复合
+
+📖 **权威详解**:[矩阵乘法 · Wikipedia](https://zh.wikipedia.org/wiki/矩阵乘法)
+
+![矩阵乘法 = 复合](../../assets/02-composition.png)
+
+$AB$ 不是"数字对应相乘",而是"**先做 $B$ 这个变换,再做 $A$ 这个变换**":$(AB)\mathbf v=A(B\mathbf v)$。所以矩阵乘法**从右往左读**,满足结合律但一般 $AB\neq BA$(先穿袜子再穿鞋 ≠ 先穿鞋再穿袜子)。
+
+**在深度学习中**:深层网络是一连串变换接力。但有个关键警示——**纯线性变换的叠加仍是线性的**($W_2W_1\mathbf x$ 等价于单个矩阵;考虑偏置则是仿射∘仿射仍为仿射,同样塌成一层)。这正是为什么每层之间**必须插入非线性激活函数**(ReLU/tanh),否则再多层也等价于一层。(注意区分:$AB$ 是矩阵乘法,与逐元素的 Hadamard 积 $\odot$ 不同。)
+
+## 3. 行列式:面积 / 体积缩放了多少
+
+📖 **权威详解**:[行列式 · Wikipedia](https://zh.wikipedia.org/wiki/行列式)
+
+![行列式 = 面积缩放倍数](../../assets/03-determinant.png)
+
+行列式的**绝对值** $|\det A|$ $=$ 变换把单位面积放大成了几倍,**符号**编码定向:$\det=2$ 面积翻倍、定向不变;$\det=-2$ 面积翻倍但空间被翻面;$\det=0$ 把平面压成一条线甚至一点(维度坍塌)。二阶公式:
+$$\det\begin{bmatrix}a&b\\c&d\end{bmatrix}=ad-bc$$
+**在深度学习中**:① $\det=0$ 意味着信息被压扁、不可恢复,是"不可逆"的几何信号;② Normalizing Flows(一类生成模型)需计算变换雅可比的 $\log|\det J|$ 来追踪概率密度的缩放。
+
+## 4. 逆矩阵:把变换倒回去
+
+📖 **权威详解**:[逆矩阵 · Wikipedia](https://zh.wikipedia.org/wiki/逆矩阵)
+
+![逆矩阵 = 撤销变换](../../assets/04-inverse.png)
+
+$A^{-1}$ 是"撤销键":$A$ 把空间怎么搬过去,$A^{-1}$ 原样搬回来,$A^{-1}A=I$。但若 $A$ 把面积压成 0($\det A=0$),信息已丢,不存在撤销键——故 $A^{-1}$ 存在 $\iff \det A\neq 0$。解线性方程组即 $A\mathbf x=\mathbf b\Rightarrow\mathbf x=A^{-1}\mathbf b$。
+
+**在深度学习中**:线性回归的解析解 $\mathbf w=(X^\top X)^{-1}X^\top\mathbf y$(最小二乘)就靠求逆;当 $X^\top X$ 病态/不可逆时,用**伪逆**或加正则(岭回归 $+\lambda I$)来救——这也是正则化的一个几何理由。工程上很少真去算 $A^{-1}$(数值不稳、慢),而是解方程或用分解(LU/QR);求逆更多是**理解工具**。
+
+## 5. 点积与对偶性:投影与相似度
+
+📖 **权威详解**:[点积 · Wikipedia](https://zh.wikipedia.org/wiki/点积)
+
+![点积 = 投影 × 长度 = 同向程度](../../assets/05-dotproduct.png)
+
+点积 $\mathbf v\cdot\mathbf w$ 衡量"两个向量有多同向":同向为正、垂直为 0、反向为负。它有两种写法——
+$$\mathbf v\cdot\mathbf w=\sum_i v_iw_i=\lVert\mathbf v\rVert\,\lVert\mathbf w\rVert\cos\theta,\qquad \operatorname{proj}_{\mathbf v}\mathbf w=\frac{\mathbf v\cdot\mathbf w}{\mathbf v\cdot\mathbf v}\,\mathbf v$$
+其中左边 $\sum_i v_iw_i$ 是**代数式**(点积的定义),右边 $\lVert\mathbf v\rVert\lVert\mathbf w\rVert\cos\theta$ 是**几何式**(需要证明的定理,见下);$\operatorname{proj}_{\mathbf v}\mathbf w$ 是 $\mathbf w$ 沿 $\mathbf v$ 的投影向量。
+
+**在深度学习中**:点积无处不在——单个神经元 $\mathbf w\cdot\mathbf x$ 是输入与权重的匹配度;注意力分数 $QK^\top$ 是 query 与 key 两两点积的相关度;余弦相似度 / 向量检索(RAG)靠归一化点积找最相似的 embedding。凡是"算相似度/匹配度"的地方,底下基本都是它。
+
+### ★ 重点论证:点积的代数式与几何式为何必然相等
+
+点积**只有代数式 $\sum_i v_iw_i$ 是"定义"**,几何式 $\lVert\mathbf v\rVert\lVert\mathbf w\rVert\cos\theta$ 是要被证明的"定理"——两者看起来毫不相干,凭什么相等?下面用"**线性函数 ⇄ 向量**"的对偶把它推出来,全程同一组数:$\mathbf v=(4,3)$、$\hat{\mathbf u}=\mathbf v/\lVert\mathbf v\rVert=(0.8,0.6)$、$\mathbf w=(0,5)$。先定准:$f:\mathbb R^2\to\mathbb R$ 线性 $\iff$ 同时满足可加性与齐次性。
+
+**第 1 步 · 线性函数 $f$ 由 $f(\hat\imath)$、$f(\hat\jmath)$ 完全确定。**
+
+![第1步:向量按基分解,f 由 f(î)、f(ĵ) 决定](../../assets/dual-step1.png)
+
+- $f(x,y)=f(x\hat\imath+y\hat\jmath)$ 〔按基分解 $(x,y)=x\hat\imath+y\hat\jmath$ 代入〕
+- $\qquad\ =f(x\hat\imath)+f(y\hat\jmath)$ 〔可加性〕
+- $\qquad\ =x\,f(\hat\imath)+y\,f(\hat\jmath)$ 〔齐次性两次〕
+
+记 $a=f(\hat\imath),\ b=f(\hat\jmath)$,得 $f(x,y)=ax+by$。例:取 $f(\hat\imath)=4,\ f(\hat\jmath)=3\Rightarrow f(x,y)=4x+3y$,$f(0,5)=15$。
+
+**第 2 步 · 这两个数 $(a,b)$ 构成向量 $\mathbf v$,且 $f(\mathbf w)=\mathbf v\cdot\mathbf w$。**
+
+![第2步:系数 (4,3) 排成向量 v,f(w)=v·w](../../assets/dual-step2.png)
+
+点积的代数定义 $(a,b)\cdot(x,y)=ax+by$ 与第 1 步的 $f(x,y)=ax+by$ **逐项相同**,故 $f(\mathbf w)=\mathbf v\cdot\mathbf w$,其中 $\mathbf v=(a,b)=(f(\hat\imath),f(\hat\jmath))=(4,3)$。反向也成立:每个向量都给出一个线性函数,且两个方向用的是同一组系数,互为逆映射,构成**双射**——这就是"**对偶**"的精确含义:线性函数与向量一一对应。
+
+**第 3 步 · "投影到直线 $L$"这个线性函数,对应的向量正是单位向量 $\hat{\mathbf u}$。**
+
+![第3步:î、ĵ 投到 L 的影长 = û 的坐标](../../assets/dual-step3.png)
+
+设 $L$ 过原点、单位方向 $\hat{\mathbf u}=(\cos\alpha,\sin\alpha)$,令 $g(\mathbf w)=\mathbf w$ 在 $L$ 上的投影坐标。**投影是线性的**(因 $L$ 过原点,正交投影满足可加性与齐次性),故套第 1 步:$g(\mathbf w)=ax+by$,$a=g(\hat\imath),\ b=g(\hat\jmath)$。用"单位向量的影长 $=\cos$(夹角)":$g(\hat\imath)=\cos\alpha=\hat u_x$、$g(\hat\jmath)=\sin\alpha=\hat u_y$,于是 $(a,b)=\hat{\mathbf u}$,即 $g(\mathbf w)=\hat{\mathbf u}\cdot\mathbf w$——**"投影到 $L$" 就是 "和单位向量 $\hat{\mathbf u}$ 做点积"**。
+
+**第 4 步 · 一般 $\mathbf v$,推出几何式 = 代数式。**
+
+![第4步:代入 v=(4,3)、w=(0,5),两式都=15](../../assets/dual-step4.png)
+
+从代数定义出发,把 $\mathbf v$ 写成 $\mathbf v=\lVert\mathbf v\rVert\,\hat{\mathbf u}$,用点积的双线性:
+$$\mathbf v\cdot\mathbf w=\lVert\mathbf v\rVert\,(\hat{\mathbf u}\cdot\mathbf w)=\lVert\mathbf v\rVert\,\lVert\mathbf w\rVert\cos\theta$$
+中间一步用**第 3 步**:$\hat{\mathbf u}\cdot\mathbf w$ 正是 $\mathbf w$ 投到 $\mathbf v$ 方向的投影坐标,等于 $\lVert\mathbf w\rVert\cos\theta$。全程从代数定义出发,只在中间用第 3 步那座"几何 = 代数"的桥,推出几何式——**没有第 3 步,两式互不相关**。代入验证:代数 $4\cdot0+3\cdot5=15$;几何 $\lVert\mathbf v\rVert\cdot$ 投影长 $=5\cdot3=15$。
+
+**另证(余弦定理,直接适用任意维度)**:由 $\lVert\mathbf w-\mathbf v\rVert^2=\lVert\mathbf v\rVert^2+\lVert\mathbf w\rVert^2-2\lVert\mathbf v\rVert\lVert\mathbf w\rVert\cos\theta$(余弦定理)与 $\lVert\mathbf w-\mathbf v\rVert^2=\sum_i(w_i-v_i)^2=\lVert\mathbf w\rVert^2+\lVert\mathbf v\rVert^2-2\sum_i v_iw_i$(代数展开)相减,即得 $\sum_i v_iw_i=\lVert\mathbf v\rVert\lVert\mathbf w\rVert\cos\theta$。高维无需新证明:两个向量连同原点这三点永远只张成一个 $\le 2$ 维平面,夹角就定义在这张平面里。
+
+## 6. 基变换:换一个坐标系看同一向量
+
+📖 **权威详解**:[基(线性代数) · Wikipedia](https://zh.wikipedia.org/wiki/基_%28線性代數%29)
+
+![基变换 = 换坐标系描述同一向量](../../assets/06-change-of-basis.png)
+
+向量本身是客观存在的箭头,但"坐标 $(2,1)$"只相对于**某一组基**才有意义。换一组基,同一个箭头的坐标数字就变了——坐标是语言,向量是被描述的事物。若新基的列向量(用标准坐标写)组成矩阵 $B$,则 $[\mathbf v]_B=B^{-1}\mathbf v$;同一变换在新基下表示为 $B^{-1}AB$(右起读:$B$ 换回标准坐标 → $A$ 施加变换 → $B^{-1}$ 换回新基),称 $A$ 与 $B^{-1}AB$ 为**相似矩阵**。
+
+**在深度学习中**:表示学习的核心就是"找一组好基"。词嵌入把词放进语义坐标系;**PCA 本质是换到一组标准正交的新基(数据协方差矩阵的特征向量)**——保留方差大的几条轴、砍掉方差小的轴即完成降维;白化(whitening)也是一次基变换,让特征去相关。
+
+## 7. 特征值 / 特征向量:方向不变的特殊方向
+
+📖 **权威详解**:[特征值和特征向量 · Wikipedia](https://zh.wikipedia.org/wiki/特征值和特征向量)
+
+![特征向量 = 方向不动的轴,特征值 = 拉伸倍数](../../assets/07-eigen.png)
+
+大多数向量经变换会被甩偏(方向改变),但有些特殊方向上的向量,变换后**仍停在自己那条直线上**,只是被拉长/压缩 $\lambda$ 倍——这些方向是**特征向量**,$\lambda$ 是对应**特征值**,它们是变换"最本质的骨架":
+$$A\mathbf e=\lambda\mathbf e\ (\mathbf e\neq\mathbf 0),\qquad \det(A-\lambda I)=0$$
+**在深度学习中**:① **PCA**——协方差矩阵实对称半正定,有一组正交实特征向量、特征值非负;这组正交向量即主成分,特征值 = 该方向方差,据此降维;② **谱归一化**——用最大奇异值 $\sigma_{\max}(W)$(注意是奇异值,不是最大特征值:$W$ 通常非方非对称)约束每层 Lipschitz 常数,稳住训练;③ **优化**——损失的 Hessian 特征值决定地形陡峭程度,条件数越大梯度下降越慢。实战更常用**奇异值分解 SVD** $A=U\Sigma V^\top$,它把对称矩阵的特征分解推广到任意(含非方)矩阵,核心量是非负的奇异值 $\sigma=\sqrt{\lambda(A^\top A)}$;PCA、谱归一化、低秩压缩(LoRA 的思想)背后都是它。([奇异值分解](https://zh.wikipedia.org/wiki/奇异值分解))
+
+## 关键公式速查
+- **矩阵乘向量**:$A\mathbf v=x\,\text{col}_1+y\,\text{col}_2$ — 对列做加权求和;
+- **变换复合**:$(AB)\mathbf v=A(B\mathbf v)$ — 从右往左做,不可交换;
+- **行列式(2×2)**:$ad-bc$ — 面积缩放,0 = 坍塌;
+- **逆矩阵**:$A^{-1}A=I$,存在 $\iff\det A\neq0$ — 撤销变换;
+- **点积**:$\mathbf v\cdot\mathbf w=\sum_i v_iw_i=\lVert\mathbf v\rVert\lVert\mathbf w\rVert\cos\theta$ — 同向程度;
+- **基变换**:$[\mathbf v]_B=B^{-1}\mathbf v$,变换 $B^{-1}AB$ — 换坐标系;
+- **特征**:$A\mathbf e=\lambda\mathbf e$ — 方向不变、缩放 $\lambda$;
+- **SVD**:$A=U\Sigma V^\top$ — 特征分解对任意矩阵的推广($\Sigma$ 对角元是奇异值)。
+
+## 应掌握的要点
+- **矩阵 = 空间变换,列 = 基向量落点**,这是钥匙,其余皆推论;
+- 矩阵乘法 = 变换接力(从右往左);线性叠加仍线性,故神经网络**必须有非线性激活**;
+- 行列式 = 面积缩放,$\det=0$ = 维度坍塌 = 不可逆;
+- 点积 = 投影长 × 长度 = 同向程度;只有代数式是定义,几何式经对偶/余弦定理被证明;
+- 基变换 = 换坐标系,特征向量 = 方向不变的轴——PCA / SVD 的根基。
+
+---
+### 参考链接
+- [3Blue1Brown《线性代数的本质》](https://www.3blue1brown.com/topics/linear-algebra) — 几何直觉来源
+- [d2l 2.3 线性代数](https://zh.d2l.ai/chapter_preliminaries/linear-algebra.html)(记号与公式锚定此页)
+</script>
+<script type="text/markdown" data-node="matcalc">
+# 矩阵求导(按需)
+
+> 反向传播本质是**向量化的链式法则**。框架(PyTorch 等)会自动求导,但要看懂梯度的**形状**、推导自定义层、或读论文里的梯度公式,需要矩阵求导的基本约定与几条常用恒等式。这一节是查阅性质的"按需"补充,深挖请直接看文末权威源。记号锚定 d2l 2.4。
+
+## 1. 求导结果的"形状"与布局约定
+
+📖 **权威详解**:[矩阵微积分 · Wikipedia](https://zh.wikipedia.org/wiki/矩阵微积分)
+
+![求导结果的形状:梯度是向量,雅可比是矩阵](../../assets/matcalc-jacobian.png)
+
+标量对向量求导得**梯度**(与自变量同形的向量);向量对向量求导得**雅可比矩阵**。存在两种排列约定,务必先约定清楚:
+
+- **分子布局(numerator layout)**:结果行数随分子、列数随分母。向量 $\mathbf y\in\mathbb R^m$ 对 $\mathbf x\in\mathbb R^n$ 的雅可比是 $m\times n$ 矩阵,$J_{ij}=\dfrac{\partial y_i}{\partial x_j}$。
+- **分母布局(denominator layout)**:与上互为转置。
+
+本库统一用**分母布局表达梯度**(即 $\nabla_{\mathbf x}f$ 与 $\mathbf x$ 同形,这是深度学习的惯例),用**分子布局表达雅可比**。两种布局只差一个转置,混用是公式对不上的头号原因。
+
+## 2. 梯度与雅可比
+
+📖 **权威详解**:[雅可比矩阵 · Wikipedia](https://zh.wikipedia.org/wiki/雅可比矩阵)
+
+标量 $f$ 对向量 $\mathbf x\in\mathbb R^n$:**梯度** $\nabla_{\mathbf x}f=\big[\frac{\partial f}{\partial x_1},\dots,\frac{\partial f}{\partial x_n}\big]^\top\in\mathbb R^n$。
+
+向量 $\mathbf y\in\mathbb R^m$ 对 $\mathbf x\in\mathbb R^n$:**雅可比**
+$$J=\frac{\partial \mathbf y}{\partial \mathbf x}\in\mathbb R^{m\times n},\qquad J_{ij}=\frac{\partial y_i}{\partial x_j}$$
+标量对矩阵 $W$ 求导,结果与 $W$ 同形:$\big(\nabla_W f\big)_{ij}=\dfrac{\partial f}{\partial W_{ij}}$——这正是更新某层权重时要算的东西。
+
+## 3. 深度学习常用求导恒等式(速查)
+
+这几条在线性回归、反向传播里反复出现(以分母布局给出梯度):
+
+- $\nabla_{\mathbf x}(\mathbf a^\top\mathbf x)=\mathbf a$;
+- $\nabla_{\mathbf x}\lVert\mathbf x\rVert^2=\nabla_{\mathbf x}(\mathbf x^\top\mathbf x)=2\mathbf x$;
+- $\nabla_{\mathbf x}(\mathbf x^\top A\mathbf x)=(A+A^\top)\mathbf x$,当 $A$ 对称时 $=2A\mathbf x$;
+- $\dfrac{\partial (A\mathbf x)}{\partial \mathbf x}=A$(雅可比,分子布局);
+- **最小二乘**:$f=\lVert X\mathbf w-\mathbf y\rVert^2\Rightarrow \nabla_{\mathbf w}f=2X^\top(X\mathbf w-\mathbf y)$,令其为 0 即得解析解 $\mathbf w=(X^\top X)^{-1}X^\top\mathbf y$。
+
+完整恒等式表见 *The Matrix Cookbook*(文末)。
+
+## 4. 链式法则的矩阵形式 → 反向传播
+
+📖 **权威详解**:[反向传播算法 · Wikipedia](https://zh.wikipedia.org/wiki/反向传播算法)
+
+多层网络 $\mathbf x\to\mathbf y\to\mathbf z$,标量损失对输入的梯度,等于**雅可比连乘**:
+$$\frac{\partial \mathcal L}{\partial \mathbf x}=\Big(\frac{\partial \mathbf y}{\partial \mathbf x}\Big)^{\!\top}\Big(\frac{\partial \mathbf z}{\partial \mathbf y}\Big)^{\!\top}\frac{\partial \mathcal L}{\partial \mathbf z}$$
+反向传播之所以高效,是因为它**从损失端开始、用"向量 × 雅可比"的顺序回乘**(vector-Jacobian product),始终只传播一个与该层输出同形的向量,而无需显式构造、相乘庞大的雅可比矩阵。这就是 [微积分 · 链式法则](node:calc#链式法则) 的向量化落地。
+
+## 应掌握的要点
+- 先约定布局(分母布局表梯度、分子布局表雅可比),否则公式差一个转置;
+- 记住几条高频恒等式:$\nabla\lVert\mathbf x\rVert^2=2\mathbf x$、$\nabla(\mathbf x^\top A\mathbf x)=(A+A^\top)\mathbf x$、$\partial(A\mathbf x)/\partial\mathbf x=A$;
+- 最小二乘梯度 $2X^\top(X\mathbf w-\mathbf y)$ 与解析解 $(X^\top X)^{-1}X^\top\mathbf y$;
+- 反向传播 = 雅可比连乘,实现上是从损失端回乘的 vector-Jacobian product。
+
+---
+### 参考链接
+- [The Matrix Cookbook (PDF)](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf) — 矩阵求导恒等式权威速查手册
+- [The Matrix Calculus You Need For Deep Learning](https://explained.ai/matrix-calculus/) — 面向深度学习、从零讲清矩阵求导(Parr & Howard)
+- [矩阵微积分 · Wikipedia](https://zh.wikipedia.org/wiki/矩阵微积分)、[d2l 2.4 微积分](https://zh.d2l.ai/chapter_preliminaries/calculus.html)
+</script>
+<script type="text/markdown" data-node="ml">
+# 🤖 机器学习基础
+
+本节是深度学习的根基:用**线性模型**讲清"训练"的完整机制——机器学习的统一框架(损失 / 优化 / 泛化)、[线性回归](node:linreg)、以及分类([softmax / 逻辑回归](node:softmax))。这些模型没有隐藏层,却已包含训练所需的全部基本要素;后续的 [深度学习](node:dl) 正是在此之上叠加多层与非线性。
+</script>
+<script type="text/markdown" data-node="mlwhat">
+# 机器学习概述
+
+> 在进入具体模型(线性回归、分类、神经网络)之前,先建立整体图景:机器学习在解决什么问题、用什么方法论、一个"学习过程"由哪些部件构成。后续每个模型都是这套框架的具体化——理解了它,再看公式就有了挂靠点。
+
+## 1. 什么是机器学习:从"写规则"到"从数据中学"
+
+📖 **权威详解**:[机器学习 · Wikipedia](https://zh.wikipedia.org/wiki/机器学习)
+
+传统编程是人把规则写死:输入经过人工设计的逻辑得到输出。但很多任务(识别图像、翻译、预测)规则极其复杂、难以穷举。**机器学习换了个思路:不写规则,而是给模型大量"输入 → 正确答案"的样本,让它自动调整内部参数,从数据中归纳出规律**,再用学到的规律处理新输入。
+
+一个被广泛引用的定义(Tom Mitchell):一个程序,若其在任务 $T$ 上的表现(用性能度量 $P$ 衡量)随经验 $E$(数据)增多而提升,就称它在"学习"。三要素 $T/P/E$ 分别回答:要做什么、好坏怎么量、从什么数据学。
+
+## 2. 机器学习的版图
+
+📖 **权威详解**:[监督学习 · Wikipedia](https://zh.wikipedia.org/wiki/监督学习)
+
+按"数据带不带答案"分三大类:
+- **监督学习**:数据含标签(输入 + 正确答案)。又分**回归**(输出连续值,如房价)与**分类**(输出离散类别,如猫 / 狗)。**本库主线**。
+- **无监督学习**:数据无标签,挖掘内在结构(聚类、降维如 PCA)。
+- **强化学习**:智能体与环境交互,靠奖励信号学策略(如 AlphaGo)。
+
+**深度学习不是另起一类**,而是上述范式中**用多层神经网络做"模型"**的那一支;它与线性模型共享同一套"训练"框架。
+
+## 3. 一个完整的学习流程(全书的统一骨架)
+
+监督学习的训练可拆成四个部件,循环往复:
+
+![机器学习的学习流程:模型 → 损失 → 优化的闭环,训练后看泛化](../../assets/ml-pipeline.png)
+
+1. **模型(假设空间)**:一族带参数 $\theta$ 的函数 $f_\theta$,规定"可能的规律长什么样"(如线性回归限定为直线)。训练就是在这族函数里挑参数。
+2. **损失函数**:衡量当前预测 $\hat y=f_\theta(x)$ 与真实 $y$ 差多少(下一节)。
+3. **优化算法**:按损失调参数,使损失下降——核心是梯度下降(第 5 节)。
+4. **评估**:在没参与训练的数据上看表现,即泛化(第 6 节)。
+
+后面的线性回归、softmax、MLP…… 都只是把"模型"和"损失"换成具体形式,这套流程不变。
+
+## 4. 损失函数:把"错得多严重"变成一个数
+
+要量化模型错得多严重,需要**损失函数 $L(\hat y,y)$**——一个标量,预测越偏离真值越大;训练就是最小化它。两类任务有各自的标准损失,且都能由 [概率](node:prob) 节的极大似然导出:
+- 回归 → **均方误差 MSE**:$\frac1n\sum_i(\hat y_i-y_i)^2$(对应高斯噪声假设);
+- 分类 → **交叉熵**:$-\frac1n\sum_i\log q_{y_i}$(对应类别分布假设)。
+
+(为什么恰是这两个、以及它们与极大似然的关系,见 [数学基础 · 概率 §5–6](node:prob#极大似然)。)
+
+## 5. 优化:沿负梯度下降
+
+有了损失,就沿梯度改参数:计算损失对每个参数的梯度 $\nabla_\theta L$,沿**负梯度**方向走一小步:
+$$\theta\leftarrow\theta-\eta\,\nabla_\theta L$$
+$\eta$ 是学习率。反复迭代,损失逐步降到(局部)最小——这正是 [微积分 · 梯度](node:calc#梯度) 的用武之地。实践中用**小批量随机梯度下降(SGD)**:每次只用一小批样本估计梯度,兼顾效率与稳定。
+
+## 6. 泛化与过拟合:真正的目标是"新数据"
+
+📖 **权威详解**:[过拟合 · Wikipedia](https://zh.wikipedia.org/wiki/過適)
+
+关键认识:**机器学习要的不是在训练集上考满分,而是在没见过的新数据上表现好——这叫泛化**。一味降低训练损失会掉进陷阱:
+
+![欠拟合 / 恰好 / 过拟合,以及训练-测试误差随复杂度的 U 形权衡](../../assets/ml-overfitting.png)
+
+- **欠拟合**:模型太简单,训练与测试都差(没学到规律);
+- **过拟合**:模型太复杂,把训练数据连噪声一起背下来,训练误差极低但测试误差飙升;
+- **恰好**:容量与问题匹配,泛化最好。
+
+随模型复杂度增加,训练误差单调下降,但测试误差**先降后升**(右图 U 形),最优点在中间。**对抗过拟合**的常用手段:更多数据、正则化(权重衰减 L2、Dropout)、限制模型容量、早停——它们会在各模型节里具体出现。
+
+## 应掌握的要点
+- 机器学习 = 从数据学规律(而非人写规则);三要素 $T/P/E$;
+- 监督学习含回归(连续)与分类(离散),是本库主线;深度学习是其中"多层神经网络"那一支;
+- 统一流程:**模型 → 损失 → 优化 → 评估**,后续所有模型都在此框架内;
+- 训练 = 用梯度下降最小化损失;但**目标是泛化,不是记住训练集**;
+- 欠拟合 / 过拟合的权衡,以及对抗过拟合的基本手段。
+
+---
+### 参考链接
+- [d2l 引言](https://zh.d2l.ai/chapter_introduction/index.html)
+- [机器学习 · Wikipedia](https://zh.wikipedia.org/wiki/机器学习) · [监督学习](https://zh.wikipedia.org/wiki/监督学习) · [过拟合](https://zh.wikipedia.org/wiki/過適)
+</script>
+<script type="text/markdown" data-node="linreg">
+# 线性回归:第一个完整的"训练"模板
+
+> 线性回归是最简单的模型,但**模型 → 损失 → 优化这一完整训练流程在此首次完整出现**;后续所有模型(含神经网络)都是在该模板上扩展。公式与记号锚定 d2l 3.1。
+
+## 1. 模型:加权和 + 偏置
+单样本(向量形式)与批量(矩阵形式):
+$$\hat{y}=\mathbf w^\top\mathbf x+b,\qquad\qquad \hat{\mathbf y}=\mathbf X\mathbf w+b$$
+其中 $\mathbf X\in\mathbb R^{n\times d}$ 每行一个样本、每列一个特征,$\mathbf w\in\mathbb R^{d}$ 为权重,$b$ 为标量偏置。每个特征配一个权重(表示其重要程度),加权求和后再加偏置;几何上是用一条直线 / 超平面拟合数据。
+
+## 2. 损失:平方误差
+单样本与整体损失(d2l 采用 $\tfrac12$ 系数,仅为求导后约去,不影响最优解):
+$$l^{(i)}(\mathbf w,b)=\tfrac12\big(\hat y^{(i)}-y^{(i)}\big)^2,\qquad L(\mathbf w,b)=\frac1n\sum_{i=1}^{n}\tfrac12\big(\mathbf w^\top\mathbf x^{(i)}+b-y^{(i)}\big)^2$$
+采用平方的原因:① 处处可导(便于求梯度);② 误差越大惩罚越重;③ 等价于高斯噪声假设下的极大似然(见第 5 节)。
+
+![线性回归:拟合直线与各样本的残差(红竖线),残差平方求和即损失](../../assets/linreg-fit.png)
+
+## 3. 解析解:线性回归的特例
+将 $b$ 并入 $\mathbf w$(在 $\mathbf X$ 上附加一列全 $1$),最小化均方误差存在**闭式解**:
+$$\mathbf w^{*}=(\mathbf X^\top\mathbf X)^{-1}\mathbf X^\top\mathbf y$$
+由 $\nabla_{\mathbf w}L=\mathbf 0$ 解出。需强调:这种闭式解是线性回归的特例;绝大多数模型(尤其神经网络)不存在解析解,只能依赖梯度下降。
+
+## 4. 小批量随机梯度下降(SGD)
+每次取一小批 $\mathcal B$ 计算梯度并更新(兼顾效率与稳定):
+$$\mathbf w\leftarrow\mathbf w-\frac{\eta}{|\mathcal B|}\sum_{i\in\mathcal B}\mathbf x^{(i)}\big(\mathbf w^\top\mathbf x^{(i)}+b-y^{(i)}\big)$$
+$$b\leftarrow b-\frac{\eta}{|\mathcal B|}\sum_{i\in\mathcal B}\big(\mathbf w^\top\mathbf x^{(i)}+b-y^{(i)}\big)$$
+括号内 $(\hat y-y)$ 为**残差**,更新量正比于"残差 × 输入"。学习率 $\eta$ 与批量大小 $|\mathcal B|$ 为超参数:$\eta$ 过大发散、过小收敛慢。
+
+![SGD 逐步调整 w、b,拟合直线越来越贴合数据,MSE 同步下降](../../assets/linreg-sgd.gif)
+
+## 5. 平方损失的由来:高斯噪声下的极大似然
+设 $y=\mathbf w^\top\mathbf x+b+\epsilon,\ \ \epsilon\sim\mathcal N(0,\sigma^2)$,则
+$$P(y\mid\mathbf x)=\frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\Big(-\frac{1}{2\sigma^2}\big(y-\mathbf w^\top\mathbf x-b\big)^2\Big)$$
+取负对数似然并略去与参数无关的项后,**最小化负对数似然等价于最小化平方误差**。这是平方损失的理论依据。
+
+## 6. 线性回归即最简单的神经网络
+把它画成**网络图**就一目了然:$d$ 个输入特征,每个配一个权重 $w_i$,加权求和后再加偏置 $b$,汇入**一个输出神经元**得到 $\hat y$——中间**没有激活函数**。这正是"神经元"的原型。
+
+![线性回归的网络图:d 个输入加权求和 + 偏置 → 1 个输出神经元(无激活)](../../assets/linreg-neuron.png)
+
+它是通往深度网络的接口:后续的神经网络可视为"**大量此类单元 + 非线性激活 + 多层堆叠**"。换言之,把这张图复制很多份、层层相连、每个神经元后面加一个非线性激活,就得到了多层感知机(下一章)。
+
+## 常见问题
+- 特征量纲差异大时需**标准化**,否则梯度下降方向偏斜、收敛缓慢。
+- 学习率为最敏感超参:损失变为 NaN 或发散,通常因 $\eta$ 过大。
+
+## 应掌握的要点
+能写出模型 $\hat y=\mathbf w^\top\mathbf x+b$、平方损失与 SGD 更新式;理解解析解为特例、而深度学习依赖 SGD;以及"线性回归是最简单的神经网络"这一视角。
+
+---
+### 参考链接
+- [d2l 3.1 线性回归](https://zh.d2l.ai/chapter_linear-networks/linear-regression.html)(公式记号锚定此页)· [3.2 从零实现](https://zh.d2l.ai/chapter_linear-networks/linear-regression-scratch.html) · [3.3 简洁实现](https://zh.d2l.ai/chapter_linear-networks/linear-regression-concise.html)
+- 动手学深度学习 v2「08 线性回归 + 基础优化算法」(见[视频合集](https://www.youtube.com/playlist?list=PLQtPj5OvXSt9SwJnrYu_45_-S6oKQqyxW))
+- [线性回归](https://zh.wikipedia.org/wiki/线性回归) · [最小二乘法](https://zh.wikipedia.org/wiki/最小二乘法)(维基百科)
+</script>
+<script type="text/markdown" data-node="softmax">
+# 逻辑回归 / softmax 回归
+
+> 这一节讲一条连贯的主线:**从线性回归的"打分",如何一步步改造成"输出类别概率"的分类器**——为什么必须是 sigmoid、为什么损失是交叉熵、又如何从二分类推广到多分类的 softmax。每个选择都不是拍脑袋,而是被同一个目标("把无界的打分翻译成概率")逼出来的。记号锚定 d2l 3.4。
+
+## 一、逻辑回归(二分类)
+
+### 1. 从线性回归到分类
+
+线性回归给出的是一个**实数打分** $z=\mathbf w\cdot\mathbf x+b\in\mathbb R$:拟合连续目标很好,但分类要的不是任意实数,而是**类别**,更有用的是**属于各类的概率**——一个落在 $[0,1]$、可比较、可优化的量。
+
+直接拿线性打分 $z$ 当类别或概率有几处硬伤:$z$ **无界**(可正可负、可以很大),没有概率含义;若用它配平方误差去逼近 0/1 标签,会对"已经分对、但离边界很远"的点施加莫名的惩罚,对离群点也不稳健。因此需要在打分之上,套一个把实数映射成概率的函数——下一节给出这个函数,逻辑回归的模型也就此定义。
+
+### 2. 模型:用 sigmoid 把打分变成概率
+
+打分 $z=\mathbf w\cdot\mathbf x+b$ 取值遍及 $(-\infty,+\infty)$,而概率 $p$ 只在 $[0,1]$,两者**范围不匹配**,不能直接令 $p=z$。可行的做法是:**把概率 $p$ 逐步改造成一个同样能取遍整条实数轴的量,再令它等于打分 $z$**。分两步改造:
+
+- **第一步——几率** $\dfrac{p}{1-p}$:把 $[0,1]$ 拉到 $[0,+\infty)$($p\to1$ 时趋于 $\infty$),含义是"正类比负类的可能性倍数";
+- **第二步——对数几率** $\ln\dfrac{p}{1-p}$(几率再取对数):把 $[0,+\infty)$ 拉到 $(-\infty,+\infty)$,范围终于和打分一致;它还有个好处——让各特征的"证据"在对数尺度上**可加**,正是线性模型擅长的形式。
+
+现在两边范围一致,令对数几率等于打分:
+$$\ln\frac{p}{1-p}=z=\mathbf w\cdot\mathbf x+b.$$
+反解出 $p$,唯一地得到 **sigmoid 函数**:
+$$p=\frac{1}{1+e^{-z}}=\sigma(z).$$
+逻辑回归的模型就此成形:$P(y{=}1\mid\mathbf x)=\sigma(\mathbf w\cdot\mathbf x+b)$,$P(y{=}0\mid\mathbf x)=1-\sigma(\cdot)$。**sigmoid 不是随手挑的 S 形函数,而是"把概率改造到与打分同范围"这一要求的必然结果。**
+
+![Sigmoid 把打分压成 (0,1) 概率;一维逻辑回归按 0.5 阈值分两类](../../assets/softmax-sigmoid.png)
+
+这个结果还有几重旁证:$\sigma$ **光滑、单调、$\sigma(0)=0.5$**,天然配梯度下降与 0.5 阈值;若两类各服从等协方差的高斯分布,则后验 $P(y{=}1\mid\mathbf x)$ 精确地就是某线性函数的 sigmoid;在广义线性模型里,它也是伯努利分布的标准联系函数。
+
+**别的"压缩函数"为什么不行。** 能把实数映到 $(0,1)$ 的函数很多,但关键不在"能否压到 $(0,1)$",而在"能否让打分恰好等于对数几率"。比如直接把 $z$ 线性截断到 $[0,1]$:两端**不可导、梯度消失**,还会把概率压成恰好 0 或 1 而使 $-\ln p$ 爆成无穷;高斯 CDF(probit)虽光滑,但它让 $\ln\frac{p}{1-p}$ 不再是 $z$ 的线性函数,丢了"证据可加"的解释,配交叉熵也得不到那个干净的凸损失与 $p-y$ 梯度。满足"打分 $=$ 对数几率"这一条的,唯有 sigmoid。
+
+### 3. 损失:极大似然与交叉熵
+
+模型能输出概率后,用**极大似然**确定参数 $\mathbf w,b$:选择让模型给"已观测到的真实标签"赋予最大概率的那组参数。单个样本的似然(伯努利)是 $p^{y}(1-p)^{1-y}$(标签为 1 取 $p$、为 0 取 $1-p$);各样本独立,整批似然是它们连乘。最大化连乘等价于最小化**负对数似然**——取负对数把连乘拆成求和,单样本即得**交叉熵**:
+$$\mathcal L=-\big[\,y\ln p+(1-y)\ln(1-p)\,\big].$$
+所以交叉熵不是另选的损失,而是极大似然的直接结果。严谨推导(极大似然 ⇄ 交叉熵的完整链条)见 [数学基础 · 概率 §5–6](node:prob#极大似然)(点击跳转)。
+
+确定参数靠**梯度下降**最小化 $\mathcal L$,其梯度形式极简:$\dfrac{\partial\mathcal L}{\partial z}=p-y$(预测概率减真值)。这里也能看出为何不用平方误差:配 sigmoid 时平方误差**非凸**,且预测严重错误时梯度反而趋近 0(越错越学不动),而交叉熵给出凸的、梯度健康的损失。
+
+## 二、softmax 回归(多分类)
+
+### 1. 从二分类到多分类:softmax
+
+二分类是特例。现实里常是 **$K$ 类**(手写数字 0–9、十类物体……),一个分数、一个 sigmoid 给不出 $K$ 个类的完整概率分布。沿用前面"把打分变成概率"的同一套逻辑,推广分两步:
+
+1. **每个类配自己的线性打分** $z_k=\mathbf w_k\cdot\mathbf x+b_k$,得到 $K$ 个实数 $z_1,\dots,z_K$;
+2. **把这 $K$ 个实数变成一个概率分布**(每项 $\ge 0$、总和 $=1$):要非负就**取指数** $e^{z_k}$,要和为 1 就**除以总和**归一化。
+
+合起来就是 **softmax**:
+$$\operatorname{softmax}(\mathbf z)_k=\frac{e^{z_k}}{\sum_{j=1}^{K}e^{z_j}}.$$
+
+![softmax 把任意实数 logits 变成非负、和为 1 的概率分布](../../assets/softmax-transform.png)
+
+它与 sigmoid 一脉相承:$K=2$ 时
+$$\operatorname{softmax}(z_1,z_2)_1=\frac{e^{z_1}}{e^{z_1}+e^{z_2}}=\frac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1-z_2),$$
+softmax 只依赖分数之**差**,恰好退化成一个 sigmoid。所以逻辑回归就是 softmax 在 $K=2$ 时的特例。预测时取概率最大的类(argmax)。
+
+### 2. 多分类的损失与决策边界
+
+损失同样从交叉熵推广:真实类是 one-hot,损失为 $-\ln q_{y}$($q_y$ 为真实类别的预测概率),它对 logit 的梯度仍是 $q-\text{one-hot}$,形式干净、数值稳定,故实现上 softmax 与交叉熵常合并成一个算子。
+
+![多分类:K 个线性打分把空间切成 K 块,每点归到分数最高的类](../../assets/softmax-boundary.png)
+
+$K$ 个线性打分把空间切成 $K$ 块,两类得分相等处 $\mathbf w_i\cdot\mathbf x=\mathbf w_j\cdot\mathbf x$ 是一条**线性边界**。所以逻辑回归、softmax 都是**线性分类器**,决策边界是直的;要拟合弯曲边界,必须引入非线性——这正是通往 [多层感知机](node:mlp) 的动因。
+
+## 应掌握的要点
+- **主线**:线性回归只给实数打分;分类要概率 → 把概率改造到与打分同范围(几率 → 对数几率)→ 令其等于打分、反解出 **sigmoid**(必然,不是硬凑);
+- **损失**:用极大似然确定参数,负对数似然即**交叉熵**;梯度 $=p-y$,梯度下降优化;严谨推导在概率节;
+- **推广**:$K$ 类时每类一个打分 → 取指数 + 归一化 = **softmax**;$K=2$ 退化成 sigmoid,逻辑回归是其特例;
+- 逻辑回归 / softmax 都是**线性分类器**,边界是直的——弯曲边界需非线性(深度网络),见多层感知机。
+
+---
+### 参考链接
+- [d2l 3.4 softmax 回归](https://zh.d2l.ai/chapter_linear-networks/softmax-regression.html) · [3.7 简洁实现](https://zh.d2l.ai/chapter_linear-networks/softmax-regression-concise.html)
+- [逻辑回归 · Wikipedia](https://zh.wikipedia.org/wiki/逻辑回归) · [Softmax 函数](https://zh.wikipedia.org/wiki/Softmax函数) · [广义线性模型](https://zh.wikipedia.org/wiki/廣義線性模型)
+- 严谨推导跳转:[数学基础 · 概率 §5–6(极大似然 ⇄ 交叉熵)](node:prob#极大似然)
+</script>
+<script type="text/markdown" data-node="dl">
+# 🧠 深度学习
+
+> 背景:深度学习是机器学习的一个**子集**,特指用**多层神经网络**(多层非线性变换的堆叠)来学习数据的表示。它与 [机器学习基础](node:ml) 共享同一套框架(损失 / 优化 / 泛化),此处因内容体量与重要性单独成块。
+
+从 [多层感知机](node:mlp) 起,模型获得隐藏层与非线性,表达力发生质变;[反向传播](node:backprop) 提供了高效训练多层网络的算法;随后是面向不同数据结构的代表架构——[CNN](node:cnn)(图像)、[RNN](node:rnn)(序列)、[注意力 / Transformer](node:attn)(现代主流)。实验主线的终点,是从零实现一个 mini-GPT。
+</script>
+<script type="text/markdown" data-node="mlp">
+# 感知机 → 多层感知机(MLP)
+
+> 上一章的逻辑回归 / softmax 都是**线性分类器**,决策边界只能是直线 / 超平面——遇到环形、异或这类**线性不可分**的数据就无能为力。多层感知机的突破在于:在线性层之间插入**非线性激活**并堆叠多层,从而表达任意复杂的边界。它是所有现代神经网络的基石。记号锚定 d2l 4.1。
+
+## 1. 为什么需要隐藏层与非线性
+
+📖 **权威详解**:[感知机 · Wikipedia](https://zh.wikipedia.org/wiki/感知器)
+
+单层线性模型(感知机 / 逻辑回归)的决策边界是直的,**线性不可分**问题(经典反例:异或 XOR)它根本学不会。一个自然的想法是堆叠多个线性层,但——**纯线性层叠加仍是线性**:$W_2(W_1\mathbf x)=(W_2W_1)\mathbf x$,等价于单个线性层(已在 [线性代数 · 矩阵乘法](node:linalg#矩阵乘法) 节强调)。
+
+所以**必须在层之间插入非线性激活函数** $\sigma$,多层才有意义:
+$$\mathbf h=\sigma(W_1\mathbf x+\mathbf b_1),\qquad \mathbf o=W_2\mathbf h+\mathbf b_2$$
+有了非线性,网络才能弯曲特征空间、画出弯曲的决策边界。
+
+![线性分类器画不出环形边界,MLP 可以](../../assets/mlp-boundary.png)
+
+> 这条"线性套线性仍是线性、必须靠非线性换空间"的几何直觉,以及"隐藏单元越多、边界越圆"的逐步演示,见子篇 [MLP 引入非线性的作用](node:nonlinear)。
+
+## 2. 多层感知机的结构
+
+📖 **权威详解**:[多层感知机 · Wikipedia](https://zh.wikipedia.org/wiki/多层感知器)
+
+MLP = 输入层 + 一个或多个**隐藏层** + 输出层,层与层**全连接**。每个隐藏单元先做仿射变换(加权和 + 偏置)再过激活函数;它正是 [线性回归 = 单神经元](node:linreg) 那张图的大规模堆叠。
+
+![MLP:输入 → 隐藏层(仿射+激活)→ 输出](../../assets/mlp-arch.png)
+
+层数(深度)与每层宽度是关键超参数;隐藏层让网络逐层把数据变换到更易分离的表示。
+
+## 3. 激活函数
+
+📖 **权威详解**:[激活函数 · Wikipedia](https://zh.wikipedia.org/wiki/激活函数)
+
+隐藏层在仿射变换后套一个非线性 $\sigma$。三种常用激活横向对比:
+
+| | ReLU | Sigmoid | Tanh |
+|---|---|---|---|
+| 公式 | $\max(0,z)$ | $\dfrac{1}{1+e^{-z}}$ | $\dfrac{e^{z}-e^{-z}}{e^{z}+e^{-z}}$ |
+| 输出范围 | $[0,\infty)$ | $(0,1)$,**非零中心** | $(-1,1)$,**零中心** |
+| 导数 | 正区恒 $1$、负区 $0$ | 最大仅 $0.25$,两端 $\to 0$ | 最大 $1$,两端 $\to 0$ |
+| 算得快 | 一个 $\max$,极快 | 要算 $e^{z}$ | 要算 $e^{z}$ |
+| 主要毛病 | 死亡 ReLU(负区永不更新) | **梯度消失最重 + 非零中心** | 梯度消失(两端饱和) |
+| 放哪儿 | **隐藏层默认** | **输出层**(二分类概率) | 隐藏层(优于 sigmoid) |
+
+![三种激活函数及其导数:sigmoid/tanh 两端饱和→梯度消失,ReLU 不饱和](../../assets/mlp-activation.png)
+
+**为什么隐藏层默认 ReLU**:反向传播把各层导数连乘回去。sigmoid 导数最大才 $0.25$、tanh 最大 $1$,两端还都趋 0——网络一深,这些 $<1$ 的数连乘使梯度**指数级衰减(梯度消失)**,深层学不动;ReLU 在激活路径上导数恒为 $1$,连乘不衰减,梯度能一路传到底(2012 年 AlexNet 之后深网络能堆深的关键之一)。
+
+**sigmoid 尤其不适合隐藏层**:① 导数最大仅 $0.25$,梯度消失比 tanh 更重;② 输出**非零中心**(恒正),使同一神经元各权重的梯度同号、更新走 Z 字形、收敛慢。它更适合放在**输出层**输出概率;若隐藏层要用饱和型激活,tanh 也优于 sigmoid。
+
+## 4. 通用近似定理
+
+📖 **权威详解**:[通用近似定理 · Wikipedia](https://zh.wikipedia.org/wiki/通用近似定理)
+
+理论保证:**含单个隐藏层、足够多神经元的 MLP,可以以任意精度逼近任意连续函数**。这解释了 MLP 表达力的来源。但"存在"不等于"好训练":实践中**更深**(而非一味更宽)的网络往往更高效、更易学到层次化表示——这把我们引向"深度"学习。
+
+## 5. 怎么训练:仍是损失 + 梯度下降
+
+MLP 的训练与前面完全一致:定义损失(回归用 MSE、分类用交叉熵)→ 用梯度下降更新所有 $W,\mathbf b$。唯一的新问题是多层复合函数的梯度如何高效计算——这由 [反向传播](node:backprop) 解决(下一节)。
+
+## 6. 网络如何学出这条弯曲边界
+
+一个常见困惑:我们从"上帝视角"一眼能看出该画个圆,**但机器并不"看见"边界,也没有"圆"的概念**——它只有三样东西:数据、标签、一个损失数字。弯曲的边界是**最小化损失的副产物**,不是预设目标。分两层理解:
+
+**① 隐藏层不是在"画弯线",而是在"掰弯空间"。** 输出层自始至终只是个**线性分类器**(一条直线 / 超平面)。隐藏层 $\sigma(W_1\mathbf x+\mathbf b_1)$ 先把输入空间**非线性地变形**(承接 [线性代数](node:linalg#矩阵):每层 $W\mathbf x$ 都是一次空间变换),把原本绕成一圈、线性分不开的数据,**揉到一个新空间里变得线性可分**;输出层在新空间里划一条直线,这条直线**映射回原始坐标**看起来就是弯的(这里是一圈)。所以"弯"不是直接画出来的,而是"先把数据掰直、再用直线分开"的结果。
+
+**② 参数靠梯度下降一步步试出来,没有蓝图。** 训练就是第 5 节那个循环:
+- 随机初始化 → 边界是条**乱七八糟的曲线**,准确率约 50%(几乎瞎猜);
+- 反向传播算出"每个权重往哪个方向微调能让损失下降一点点"(梯度);
+- 沿梯度走一小步,边界**挪动一丁点**,错分的点少一些;
+- 重复成百上千次。每一步都只是**局部的笨拙改进**,谁也没规划"要成圆"——但当损失被推到最小,边界自然就贴合了数据的环形结构。
+
+![一个真实小 MLP 的训练过程:决策边界从随机乱形逐步收紧成环(准确率 53% → 100%)](../../assets/mlp-learn-boundary.gif)
+
+这和你看过的**线性回归 SGD 动画**是同一个机制,只是函数更灵活、参数更多:那里是直线旋转去贴点,这里是边界变形去贴环。
+
+**至于为何恰好弯成圆、而非别的怪形状**:环形数据让"圆"成为损失最低的解;同时网络容量有限、梯度下降倾向**平滑**的解。若隐藏单元过多(容量过大),它也能学出锯齿状、把每个噪声点都单独圈进去的边界——那就是 [机器学习概述](node:mlwhat#过拟合) 里说的**过拟合**(记住噪声而非规律)。
+
+> 一句话直觉:机器像在**浓雾里下山**——看不见整个山谷(全局最优边界),只能凭脚下的**坡度**(梯度)往低处迈步,迈着迈着就到了谷底。"圆"是它走到谷底后回头才显现的形状,不是出发时瞄准的目标。
+
+## 应掌握的要点
+- 线性分类器边界是直的;线性层叠加仍线性,**必须有非线性激活**多层才有意义;
+- MLP = 输入 + 隐藏层(仿射+激活)+ 输出,全连接;是单神经元的堆叠;
+- ReLU 因不饱和、缓解梯度消失成为默认激活;sigmoid / tanh 两端饱和;
+- 通用近似定理:单隐藏层 MLP 可逼近任意连续函数;但实践偏好更深;
+- 训练仍是"损失 + 梯度下降",梯度由反向传播计算;
+- **弯曲边界是怎么来的**:隐藏层"掰弯空间"让数据线性可分 + 梯度下降逐步逼近;边界形状是最小化损失的**副产物**,机器从不"看见"它。
+
+---
+### 参考链接
+- [d2l 4.1 多层感知机](https://zh.d2l.ai/chapter_multilayer-perceptrons/mlp.html) · [4.2 从零实现](https://zh.d2l.ai/chapter_multilayer-perceptrons/mlp-scratch.html)
+- [多层感知机](https://zh.wikipedia.org/wiki/多层感知器) · [激活函数](https://zh.wikipedia.org/wiki/激活函数) · [通用近似定理](https://zh.wikipedia.org/wiki/通用近似定理)(维基百科)
+</script>
+<script type="text/markdown" data-node="nonlinear">
+# MLP 引入非线性的作用
+
+> 父篇介绍了 MLP 的结构与激活函数。本篇回答一个核心问题:线性模型(感知机 / 逻辑回归)的边界只能是直线,遇到线性不可分的数据(例如一类被另一类包成一圈)便无能为力,**而 MLP 凭什么能画出弯曲的边界**。主线只有一句:**最终用于分类的"那一刀"始终是线性的,改变的只是"在哪个空间里切"——把数据搬进那个空间,正是隐藏层非线性的职责。** 下面用一份 50 点的环形数据逐步说明;**本文全部图与数据均可复现**,可运行代码与数据见 [实验 · MLP非线性可视化](node:lab)(坐标也在文末附录)。
+
+## 1. 线性模型的局限
+
+📖 **权威详解**:[线性可分性 · Wikipedia](https://zh.wikipedia.org/wiki/線性可分)
+
+逻辑回归常被称作"线性模型",但它套了一层 sigmoid,容易让人误解"线性"指什么。把模型拆开看:打分 $z=\mathbf w\cdot\mathbf x+b$ 是**唯一**含可学参数的一步,也正是"线性"所指;sigmoid 只是把分数单调压进 $(0,1)$,不改变大小次序;交叉熵只衡量误差。决策边界是 $\hat p=0.5$,即 $z=0$,即 $\mathbf w\cdot\mathbf x+b=0$——一个线性方程。**所以无论 sigmoid 多弯,边界恒为直线 / 超平面。** 感知机同理。
+
+面对"内圈一类、外圈一类"的环形数据,任何直线都必然大量错分:
+
+![线性分类器对环形数据无能为力](../../assets/nonlinear-data-linear.png)
+
+这是模型形式的天花板,而非参数没调好。出路不是寻找更强的直线,而是**换一个能用直线切开的空间**。
+
+## 2. 理想情形:已知分布时,一个隐藏单元即可
+
+若**已知**数据是一圈,只需一个人工设计的特征——到原点的距离平方:
+$$r^2=x_1^2+x_2^2$$
+内圈点 $r^2$ 小、外圈点 $r^2$ 大。把每个点映射到这一个数上,两类即在一维数轴上被一个阈值 $\tau$ 完全分开;阈值 $r^2=\tau$ 映射回原坐标,正是一个圆。这相当于一个仅含**一个隐藏单元**的网络,只是该单元并非通用激活,而是直接计算 $r^2$ 的**特制单元**:
+
+![一个特制单元 r²:降维到 1D、阈值分开、回到 2D 是圆](../../assets/nonlinear-step1-r2.png)
+
+两点值得强调:
+
+- 这一步是**降维**(2 维 → 1 维),而非升维。可见目标始终是"得到一个线性可分的表示",维度高低并非目的。
+- 弯曲的圆边界,是"在 $r^2$ 空间里做一次线性切分、再映射回原坐标"的结果。
+
+这正是深度学习之前的特征工程 / 核方法范式,其前提是**必须预先知道该构造什么特征**。环形可手写 $r^2$,但绝大多数任务(如图像识别)的有效特征无法人工指定。
+
+## 3. 一般情形:用通用激活 tanh,升到真实的三维
+
+不知道该构造什么特征时,改用**统一的通用单元**:每个隐藏单元都做"线性打分 + 同一个非线性 $\sigma$",即 $h_i=\sigma(\mathbf w_i\cdot\mathbf x+b_i)$,由训练自行决定构造什么。[激活函数](node:mlp#激活函数)通常在 tanh 与 ReLU 之间选取(两者都可一试、按结果取舍);本例用 **tanh**——它光滑,得到的边界是光滑曲线,而 ReLU 是分片线性、边界带硬棱角,对圆形目标不如 tanh 自然。
+
+放 **3 个 tanh 单元**,把"升维"这一步拆成三小步看清楚(全部基于真实训练出的网络,数据为文末 50 点)。
+
+### 3.1 算出每个点的新坐标
+
+训练好后,三个隐藏单元就是三个**确定的函数**;代入原始坐标,每个点 $(x_1,x_2)$ 被算成三个数 $(h_1,h_2,h_3)$,输出层再对它们做一次线性打分 $z$:
+
+![MLP 结构 + 三个隐藏单元的真实表达式 + 逐点算出 (h₁,h₂,h₃)](../../assets/nonlinear-h-a.png)
+
+这一步是纯计算:把一个点的 $x_1,x_2$ 代进三个 $\tanh$ 得到它的三维新坐标,再代进 $z$ 看正负。上图右下角验算了两个点——中心的内点 $z<0$ 判内、最外的外点 $z>0$ 判外。全部 50 点的新坐标见 `nonlinear_data_hidden.csv`。
+
+### 3.2 在真实的三维里,一张平面就能切开
+
+把 50 个点画到它们**真实的** $(h_1,h_2,h_3)$ 坐标上——注意这是和原始 $(x_1,x_2)$ **完全不同的空间**。原本绕成一圈、在 2D 里直线切不开的数据,到这里被输出层那张平面利落地分成两半:
+
+![真实隐藏坐标 (h₁,h₂,h₃):旋转 3D;转到侧面 edge-on 时平面缩成一条线,蓝 / 红清楚分居两侧](../../assets/nonlinear-h-b.gif)
+
+这就是"升维"的实质:**换一个空间,让原本线性不可分的数据变得线性可分**;输出层 $z=0$ 就是那张分隔平面。把动图转到平面的**侧面(edge-on)**,它会缩成一条线——此时蓝点全在一侧、红点全在另一侧,"一张平面分开两类"看得最清楚。(tanh 会把已分开的点压向 $\pm1$,故点会向立方体边缘聚集——这是它"使劲弯"的代价,不影响可分。)
+
+### 3.3 把平面映射回原 2D,就是那条弯曲边界
+
+回到原始平面:对每个点,代入 $h=\tanh(W\mathbf x+\mathbf b)$ 看它在三维里落到切面哪一侧——"翻面"的那条线,就是原 $(x_1,x_2)$ 平面上的决策边界:
+
+![回到原 2D:边界 = 平面的原像;同两点在 3D 分居切面两侧](../../assets/nonlinear-h-c.png)
+
+**这一步可以写成一条方程。** 三维里的切面是 $w^{\mathrm o}_1h_1+w^{\mathrm o}_2h_2+w^{\mathrm o}_3h_3+b^{\mathrm o}=0$;把每个 $h_i=\tanh(\mathbf w_i\cdot\mathbf x+b_i)$ 代进去,就得到一个**只含 $x_1,x_2$ 的方程**,它的解集就是原平面上那条曲线。所以 2D 边界正是这张平面在非线性映射 $\mathbf x\mapsto\mathbf h$ 下的**原像**:平面在 $\mathbf h$ 空间是直的,但 $\mathbf x\mapsto\mathbf h$ 这一步是弯的(tanh),把同一张平面拉回 $\mathbf x$ 空间就成了闭合曲线。实际作图就是:把整片输入平面网格逐点算出 $\mathbf h$、代入上式看符号,**符号翻转处**连起来即这条边界(上图左)。
+
+左右用同两个点(★)对照:**同一个点,在原 2D 有位置、在 3D 有它算出来的新坐标;它在三维里落在切面哪侧,就决定类别。这条 2D 边界,正是三维那张平面在原平面上的「原像」。** 3 个单元只够把边界围成圆角三角形(此实例约 98%;不同初始化会有出入,下一节比较"宽度"时用各宽度的典型表现)。
+
+## 4. 加大宽度:逼近精度随隐藏单元数提升
+
+增加隐藏单元(升到更高维),边界便有更多"边"去逼近圆:
+
+![3 / 5 / 8 个单元:三角形 → 五边形 → 八边形 ≈ 圆](../../assets/nonlinear-step3-width.png)
+
+3 个像三角形(94%)、5 个像五边形(96%)、8 个磨成八边形、几近圆(98%)。每个隐藏单元贡献一条"软边",边越多,围合的边界越接近真实的圆。[通用近似定理](node:mlp#通用近似)给出理论保证:单隐藏层、足够多的单元即可逼近任意边界——这正是"通用单元 + 足够宽度 + 训练"得以替代"人工设计的完美特征"的依据。
+
+(此处"整片区域判准"指在同分布上另采的密集点集上的正确率,用以衡量边界形状好坏,而非记住这 50 个训练点;详见附录。)
+
+## 5. 统一视角:隐藏层换空间,输出层线性切分
+
+贯穿全篇的主线有三条:
+
+- **最终的切分始终是线性的。** 逻辑回归在原始 2 维切一条直线;特制 $r^2$ 在 1 维卡一个阈值;MLP 在隐藏层升出的高维空间切一张超平面。三者最后那一刀都是线性的,区别仅在"于哪个空间切分"。MLP 输出层的 sigmoid 单元,扮演的正是这张超平面。
+- **非线性的职责,是把数据搬进那个空间**,即隐藏层激活。没有它,"线性套线性仍是线性"($W_2(W_1\mathbf x)=(W_2W_1)\mathbf x$,见 [线性代数 · 矩阵乘法](node:linalg#矩阵乘法)),堆叠再多层仍等价于一条直线。
+- **维度高低不是目的,线性可分才是。** 有完美先验可降维(一个 $r^2$);无先验则用通用单元升维(3→8)逼近。升的是**嵌入空间维度**(2→8),数据的**内在维度恒为 2**(8 个特征皆由 2 个输入算出,仅分布在 8 维空间中的一张 2 维曲面上)。
+
+掌握这条主线后,再看 [多层感知机](node:mlp) 的结构、[反向传播](node:backprop) 如何训练这些 $\mathbf w,b$,皆顺理成章。
+
+## 延伸
+- **特征工程 vs 神经网络**:前者人工设计特征(形式可各异,如 $x_1^2+x_2^2$、$x_1x_2$),依赖领域知识;后者用统一通用形式、由训练学得。两者都需人工设定超参(单元数、层数、激活种类——凭经验与验证集),但"每个单元最终表示什么"由训练决定。
+- **人工构造特征 = 注入先验(归纳偏置)**:先验正确则高效,错误则有害。现代做法在**架构**层面注入先验——[CNN](node:cnn) 的卷积对应平移不变性、[注意力](node:attn) 对应成对关系——而非手写单个神经元的形式。
+- **历史脉络**:人工特征(SIFT / HOG + SVM 核)→ 端到端自动学习特征(深度学习,2012 年 AlexNet 为分水岭)。本篇"手工 $r^2$ → 通用 tanh"即这一演进的缩影。
+
+## 应掌握的要点
+- 逻辑回归 / 感知机的"线性"指**打分 $\mathbf w\cdot\mathbf x+b$**;sigmoid 与损失都不改变"边界是直线";
+- 线性边界对环形等线性不可分数据无能为力,出路是**换空间**;
+- 有完美先验可手工造特征并**降维**($r^2\to$ 1D);无先验则用通用激活 tanh **升维**,单元越多边界越接近圆;
+- 全程是"线性切分,只换空间";非线性全在隐藏层激活,**线性套线性仍是线性**;
+- 升的是嵌入维度,数据内在维度不变;**维度高低非目的,线性可分才是**。
+
+## 附录:数据与实验设定(可复现)
+- 本文全部图、50 点数据、每点的 $(h_1,h_2,h_3)$ 新坐标,以及生成它们的完整代码,都在 [实验 · MLP非线性可视化](node:lab)(`nonlinear_data.csv` / `nonlinear_data_hidden.csv` / `nonlinear_demo.py` / `.ipynb`)。
+- 数据生成规则:内圈半径 $r\in[0.05,\,1.0]$、外圈 $r\in[1.25,\,2.1]$,角度均匀(共 50 点,内 20 / 外 30);故 $r^2$ 严格可分(内 $\le1.0$ < 外 $\ge1.56$),阈值取 $\tau=1.3$。
+- 升维实验在同一份数据上训练 $2\to k\ \text{tanh}\to 1$ 的小网络($k=3,5,8$);"整片区域判准"为同分布另采密集点集上的正确率,衡量边界形状而非死记训练点。
+
+---
+### 参考链接
+- [d2l 4.1 多层感知机](https://zh.d2l.ai/chapter_multilayer-perceptrons/mlp.html)(线性不可分与非线性的动机)
+- [通用近似定理 · Wikipedia](https://zh.wikipedia.org/wiki/通用近似定理) · [核方法 · Wikipedia](https://zh.wikipedia.org/wiki/核方法)
+</script>
+<script type="text/markdown" data-node="backprop">
+# 反向传播与计算图
+
+> 多层网络是层层复合的函数,要训练它就得求"损失对每个参数的梯度"。**反向传播**给出了高效算法:它本质是「微积分」节链式法则的**系统化、向量化**应用,沿计算图从损失端**逐段回乘**局部梯度。框架(PyTorch 等)的自动微分就是它。记号锚定 d2l 4.7。
+
+## 1. 计算图:把复合函数画成图
+
+📖 **权威详解**:[反向传播算法 · Wikipedia](https://zh.wikipedia.org/wiki/反向传播算法)
+
+把一个复合表达式拆成基本运算,画成有向图:**节点是运算 / 变量,边是数据流向**。例如一个神经元的损失 $L=(\sigma(wx+b)-y)^2$ 可拆为:乘 → 加 → sigmoid → 平方误差。计算图让"先算什么、梯度怎么传"一目了然。
+
+## 2. 前向传播:沿图算出损失
+
+按图的方向(输入 → 输出)依次计算每个节点的值,直到得到损失 $L$。这一步顺便**缓存各中间结果**(如 $z,a$),供反向阶段复用。
+
+## 3. 反向传播:从损失端回乘梯度
+
+📖 **权威详解**:[链式法则 · Wikipedia](https://zh.wikipedia.org/wiki/链式法则);严谨定义跳转本库 [数学基础 · 微积分 §3 链式法则](node:calc#链式法则)
+
+反向传播 = **链式法则 + 复用**:从 $L$ 出发($\partial L/\partial L=1$),沿图**逆向**逐节点计算"损失对该节点的梯度",每一步只需把下游传来的梯度乘以**本地导数**。因为复用了下游已算好的梯度,整张图只需**一次**反向遍历,代价与前向同阶——这正是它高效的原因(对比逐参数数值差商要前向无数次)。
+
+![反向传播:前向算值(黑),反向沿计算图回乘局部梯度(红)](../../assets/backprop-graph.png)
+
+上图是 $L=(\sigma(wx+b)-y)^2$ 在 $x=2,w=1,b=0,y=0$ 处的完整一遍:黑色是前向值,红色是反向梯度。注意 $\partial L/\partial w$ 就是把链上三段本地导数乘起来。
+
+![前向点亮 → 反向回传 的两趟扫描](../../assets/backprop-sweep.gif)
+
+## 4. 与自动微分 / 框架的关系
+
+📖 **权威详解**:[自动微分 · Wikipedia](https://zh.wikipedia.org/wiki/自动微分)
+
+深度学习框架在你写前向代码时**自动构建计算图**,调用 `loss.backward()` 即按上述规则反向求出所有参数梯度(这种模式称"反向模式自动微分")。所以实践中你几乎不手写梯度——但理解反向传播,才能看懂梯度消失 / 爆炸、调试 NaN、设计新层。它与本库 [矩阵求导 · 链式法则的矩阵形式](node:matcalc#矩阵形式) 的**雅可比连乘**,是同一件事的标量版与向量版。
+
+## 应掌握的要点
+- 计算图:节点 = 运算、边 = 数据;前向算值并缓存中间结果;
+- 反向传播 = 链式法则 + 复用下游梯度,**一次**反向遍历求出全部梯度,代价与前向同阶;
+- 能在小例子上手算前向值与反向梯度(本地导数逐段相乘);
+- 框架用反向模式自动微分实现它;本质 = 微积分链式法则 / 矩阵求导雅可比连乘的工程化。
+
+---
+### 参考链接
+- [d2l 4.7 前向传播、反向传播和计算图](https://zh.d2l.ai/chapter_multilayer-perceptrons/backprop.html) · [2.5 自动微分](https://zh.d2l.ai/chapter_preliminaries/autograd.html)
+- [反向传播算法](https://zh.wikipedia.org/wiki/反向传播算法) · [自动微分](https://zh.wikipedia.org/wiki/自动微分)(维基百科)
+- [3Blue1Brown · 神经网络与反向传播](https://www.3blue1brown.com/topics/neural-networks)
+- 本库内链:[微积分 · 链式法则](node:calc#链式法则) · [矩阵求导 · 雅可比连乘](node:matcalc#矩阵形式)
+</script>
+<script type="text/markdown" data-node="cnn">
+# 卷积神经网络 CNN
+
+> 处理图像若用全连接 [MLP](node:mlp),参数会爆炸(百万像素 × 隐藏单元),且没利用图像的**空间结构**。CNN 用**卷积**替代全连接:局部连接 + 参数共享,大幅减少参数,并自带**平移不变性**——是计算机视觉的基石。记号锚定 d2l 第 6 章。
+
+## 1. 为什么不用全连接处理图像
+
+一张 $1000\times1000$ 的图展平就是百万维输入,接一个千单元的全连接层就有十亿参数——既算不动也极易过拟合。而且全连接**打乱了像素的空间关系**,没利用"相邻像素相关、同一特征可出现在任意位置"这些先验。
+
+## 2. 卷积运算:局部加权和 + 参数共享
+
+📖 **权威详解**:[卷积神经网络 · Wikipedia](https://zh.wikipedia.org/wiki/卷积神经网络)
+
+用一个小的**卷积核(filter)**在输入上滑动,每到一处就和覆盖的局部区域做**逐元素相乘再求和**,得到输出**特征图**的一个值(深度学习里实际用的是"互相关")。
+
+![卷积核在输入上滑动,每处做局部加权和,生成特征图](../../assets/cnn-conv.gif)
+
+两个关键性质:**局部连接**(每个输出只看一小块,不是全部像素)与**参数共享**(同一个核扫遍全图)。这让参数量从"与图像大小成正比"降到"只有一个小核",并带来**平移不变性**——同一特征(如边缘)出现在哪里都能被同一个核检测到。
+
+## 3. 关键概念:核 / 步幅 / 填充 / 通道
+
+- **卷积核大小**:如 $3\times3$,决定感受野;
+- **步幅(stride)**:核每次滑动的格数,步幅大则输出更小;
+- **填充(padding)**:在边缘补零,控制输出尺寸、保住边界信息;
+- **通道(channel)**:彩色图有 RGB 三通道,每个卷积核跨所有输入通道;一层用多个核 → 多张特征图(多个输出通道),分别检测不同特征。
+
+## 4. 池化:下采样
+
+在每个小区域取最大(**最大池化**)或平均,降低特征图分辨率:减少计算、扩大后续层的感受野,并增强对微小平移的鲁棒性。
+
+![最大池化:每 2×2 取最大值,下采样](../../assets/cnn-pool.png)
+
+## 5. 典型结构
+
+一个经典 CNN = 若干 **[卷积 + 激活 + 池化]** 块堆叠(逐层提取由低到高的特征:边缘 → 纹理 → 部件 → 物体)→ 末端接全连接层做分类。代表网络:**LeNet**(手写数字)、**AlexNet**(点燃深度学习热潮)、**VGG / ResNet**(更深,ResNet 用残差连接训练上百层)。
+
+## 应掌握的要点
+- 全连接处理图像:参数爆炸 + 不利用空间结构;
+- 卷积 = 局部加权和 + **参数共享**,带来平移不变、参数大减;
+- 核 / 步幅 / 填充 / 通道的作用;多核 → 多特征图;
+- 池化 = 下采样,减计算、增平移鲁棒;
+- 经典结构 = [卷积+激活+池化] 堆叠 + 全连接;逐层特征由低到高。
+
+---
+### 参考链接
+- [d2l 第 6 章 卷积神经网络](https://zh.d2l.ai/chapter_convolutional-neural-networks/index.html) · [第 7 章 现代卷积网络](https://zh.d2l.ai/chapter_convolutional-modern/index.html)
+- [卷积神经网络](https://zh.wikipedia.org/wiki/卷积神经网络) · [卷积](https://zh.wikipedia.org/wiki/卷积)(维基百科)
+</script>
+<script type="text/markdown" data-node="rnn">
+# 循环神经网络 RNN
+
+> [CNN](node:cnn) 擅长图像的空间结构,但**序列数据**(语言、语音、时间序列)需要"记忆":当前输出依赖于前面看过的内容。RNN 引入一个随时间传递的**隐藏状态**来承载记忆,并在每个时间步**共享同一组权重**。记号锚定 d2l 第 8–9 章。
+
+## 1. 序列数据与"记忆"的需求
+
+一句话里"它"指代谁、一段股价的趋势,都要求模型记住前文。固定输入的 MLP / CNN 做不到;RNN 的思路:**把上一步的隐藏状态也作为这一步的输入**,于是信息能沿序列流动。
+
+## 2. RNN 的结构:隐藏状态 + 权重共享
+
+📖 **权威详解**:[循环神经网络 · Wikipedia](https://zh.wikipedia.org/wiki/循环神经网络)
+
+每个时间步 $t$,用当前输入 $\mathbf x_t$ 和上一步隐藏状态 $\mathbf h_{t-1}$ 算出新的隐藏状态,再(可选)产生输出:
+$$\mathbf h_t=\sigma(W\mathbf h_{t-1}+U\mathbf x_t+\mathbf b),\qquad \mathbf y_t=V\mathbf h_t$$
+关键:$W,U,V$ 在**所有时间步共享**,参数量与序列长度无关。
+
+![RNN:折叠的自环 ↔ 按时间展开,隐藏状态沿时间传递](../../assets/rnn-unfold.png)
+
+## 3. 时间上展开与 BPTT
+
+把 RNN 沿时间"展开"成一条长链,就能像普通多层网络一样做 [反向传播](node:backprop)——称**沿时间反向传播(BPTT)**:梯度从最后时间步沿隐藏状态链一路回传到最早。
+
+## 4. 梯度消失 / 爆炸:长依赖之难
+
+📖 **权威详解**:[梯度消失问题 · Wikipedia](https://zh.wikipedia.org/wiki/梯度消失問題)
+
+回传时梯度要连乘很多个相近量级的因子:略小于 1 → 指数**衰减(消失)**,略大于 1 → 指数**膨胀(爆炸)**。后果是普通 RNN 很难学到**长距离依赖**(早期信息传不到后面)。爆炸可用梯度裁剪缓解,消失则需结构改进。
+
+## 5. LSTM / GRU:门控缓解长依赖
+
+📖 **权威详解**:[长短期记忆 · Wikipedia](https://zh.wikipedia.org/wiki/長短期記憶)
+
+**LSTM** 引入一条几乎不受阻的**细胞状态**(长期记忆传输带),并用**门**(sigmoid,输出 0~1)控制信息流:遗忘门决定丢弃多少旧记忆、输入门决定写入多少新信息、输出门决定输出多少。这让梯度能沿细胞状态稳定回传,显著缓解梯度消失。**GRU** 是其简化版(更少的门)。
+
+![LSTM:用门控保护细胞状态,缓解长依赖](../../assets/rnn-lstm.png)
+
+## 应掌握的要点
+- 序列需要记忆;RNN 用隐藏状态 $\mathbf h_t$ 沿时间传递,**权重跨时间共享**;
+- 训练 = 时间展开后做反向传播(BPTT);
+- 梯度连乘导致**消失 / 爆炸**,长依赖难学(爆炸→裁剪,消失→改结构);
+- LSTM / GRU 用**门控 + 细胞状态**缓解长依赖,是 RNN 的主力变体。
+
+---
+### 参考链接
+- [d2l 第 8 章 循环神经网络](https://zh.d2l.ai/chapter_recurrent-neural-networks/index.html) · [第 9 章 现代循环网络(LSTM/GRU)](https://zh.d2l.ai/chapter_recurrent-modern/index.html)
+- [循环神经网络](https://zh.wikipedia.org/wiki/循环神经网络) · [长短期记忆 LSTM](https://zh.wikipedia.org/wiki/長短期記憶)(维基百科)
+- [Colah · Understanding LSTM Networks](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+</script>
+<script type="text/markdown" data-node="attn">
+# 注意力机制 → Transformer
+
+> 这一节讲两件事:先是**注意力机制**——让序列里每个位置直接"看"到所有位置、按相关度聚合信息,解决 RNN 串行慢、长依赖弱的瓶颈;再是 **Transformer**——把注意力堆成一个完全基于注意力(无循环、无卷积)的架构,它是当今大模型的骨架,也是本库实验主线 mini-GPT 的终点。注意力的两个零件(点积、softmax)正是前面「线性代数」「概率」两节的直接复用。记号锚定 d2l 第 10–11 章。
+
+## 一、注意力机制
+
+### 1. 从 RNN 瓶颈到注意力
+
+RNN 把整段历史压在一个隐藏状态里逐步传递:远处信息易丢失,且必须**串行**计算(第 $t$ 步要等第 $t-1$ 步)。注意力换一条路——让任意两个位置**一步直连**:每个位置直接对序列里所有位置算"相关度",再加权汇总。这既缓解长依赖,又能大规模并行,是它取代 [循环神经网络](node:rnn) 的根本原因。
+
+### 2. Query / Key / Value:一次注意力怎么算
+
+📖 **权威详解**:[注意力机制 · Wikipedia](https://zh.wikipedia.org/wiki/注意力机制)
+
+每个位置生成三组向量:**Query**(我要找什么)、**Key**(我能提供什么)、**Value**(我携带的信息)。计算分三步——用 Query 与各 Key 做**点积**得相关度分数,经 softmax 归一化成权重,再对 Value 加权求和:
+$$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V.$$
+除以 $\sqrt{d_k}$ 是防止点积过大把 softmax 推向饱和。两个零件都是旧识:打分核心 $QK^\top$ 就是 [线性代数 · 点积](node:linalg#点积) 的相似度,归一化用的 [softmax](node:softmax) 来自分类那一节——注意力是前面知识的直接组合。
+
+![注意力:Q 与各 K 点积打分 → softmax → 对 V 加权求和](../../assets/attn-qkv.png)
+
+### 3. 自注意力与多头
+
+**自注意力(self-attention)**:Q、K、V 都来自同一序列,于是序列内部两两互相关注,一步捕捉任意距离的依赖。
+
+![自注意力权重:每个词关注序列里哪些词](../../assets/attn-heatmap.png)
+
+**多头注意力**:并行做多组注意力(多个"头"),每头在不同子空间关注不同关系,再把结果拼接——类似 CNN 用多个卷积核提取不同特征。
+
+### 4. 位置编码
+
+注意力本身**无序**(打乱输入顺序,输出只是跟着换位、关系不变),但语言有语序。于是给每个位置叠加**位置编码**(正弦函数或可学习向量),把"第几个"注入表示。
+
+## 二、Transformer 架构 → mini-GPT
+
+### 1. Transformer 块
+
+📖 **权威详解**:[Transformer 模型 · Wikipedia](https://zh.wikipedia.org/wiki/Transformer模型)
+
+Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Add & Norm → 前馈网络 FFN → Add & Norm**;其中 Add 是**残差连接**(缓解深层训练,与 [卷积神经网络](node:cnn) 里 ResNet 同一思路),Norm 是层归一化。
+
+![Transformer 编码器块:自注意力 + FFN + 残差 + 层归一化](../../assets/transformer-block.png)
+
+编码器、解码器都由这种块堆成;GPT 这类生成模型用的是**带掩码的解码器**堆叠(每个位置只能看到左侧已生成的词)。
+
+### 2. 通往 mini-GPT
+
+至此,从数学基础一路到注意力,理解大模型所需的核心拼图已齐备。实验主线的终点正是从零搭一个 mini-GPT:词嵌入 + 位置编码 + 多层带掩码自注意力块 + 语言建模损失(预测下一个词,本质就是 [交叉熵](node:prob#交叉熵))。
+
+## 应掌握的要点
+- 注意力让任意位置一步直连,缓解 RNN 长依赖与串行瓶颈;
+- $\operatorname{softmax}(QK^\top/\sqrt{d_k})V$:点积打分(相似度)→ softmax 权重 → 加权 Value;
+- 自注意力 = 序列内部互相关注;多头 = 并行多组关注不同关系;
+- 注意力无序,需位置编码;
+- Transformer 块 = 多头自注意力 + FFN + 残差 + 层归一化;GPT = 带掩码解码器堆叠 → mini-GPT。
+
+---
+### 参考链接
+- [d2l 第 10 章 注意力机制](https://zh.d2l.ai/chapter_attention-mechanisms/index.html) · [Transformer 一节](https://zh.d2l.ai/chapter_attention-mechanisms/transformer.html)
+- [注意力机制](https://zh.wikipedia.org/wiki/注意力机制) · [Transformer 模型](https://zh.wikipedia.org/wiki/Transformer模型)(维基百科)
+- [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) · [The Annotated Transformer](http://nlp.seas.harvard.edu/annotated-transformer/)
+- 本库内链:[线性代数 · 点积](node:linalg#点积) · [概率 · 交叉熵](node:prob#交叉熵) · [循环神经网络](node:rnn)
+</script>
+<script type="text/markdown" data-node="lab">
+# 🧪 实验
+
+可运行的动手项目都放在仓库的 `实验/` 目录下:每个子项目自带数据与代码,能直接在 Jupyter / VS Code 跑起来复现。**服务于理解**(以最小可运行、讲清机制为准,不追求工程完整)。下面每个项目的链接可点开查看源文件。
+
+## 已完成
+
+### MLP 引入非线性的作用
+配套知识点 [MLP 引入非线性的作用](node:nonlinear)。一份 50 点环形数据、numpy 手写 MLP,演示「线性模型为何分不开环形 → 手工 r² 降维 → 通用 tanh 升维(真实 $(h_1,h_2,h_3)$ + 切面)→ 加大宽度逼近圆」。**该知识点里的全部图都由本项目代码生成,数据统一来自同一份 csv**,故可逐图复现。
+
+- 说明:[实验/MLP非线性可视化/README.md](实验/MLP非线性可视化/README.md)
+- 代码:[nonlinear_demo.ipynb](实验/MLP非线性可视化/nonlinear_demo.ipynb) · [nonlinear_demo.py](实验/MLP非线性可视化/nonlinear_demo.py)(同一份代码,`.ipynb` 由 `.py` 同步,二者一致)
+- 数据:`nonlinear_data.csv`(50 点)、`nonlinear_data_hidden.csv`(每点经隐藏层的 $h_1,h_2,h_3$)
+
+## 实验主线:从零搭建 mini-GPT(规划中)
+一条贯穿的实践线,层层递进,终点是 mini-GPT:
+
+1. 线性回归(从零实现)
+2. softmax 分类(Fashion-MNIST)
+3. 多层感知机训练循环(观察过拟合与正则化)
+4. 卷积网络处理图像
+5. 字符级语言模型
+6. **mini-GPT**(终点)
+
+每个实验开始前先对齐设计:确认目标、数据、需观察的现象,以及与前序内容的衔接。
+</script>
+<script>
+const TREE=[{"id": "refs", "label": "📚 参考资料"}, {"id": "math", "label": "🧮 数学基础", "children": [{"id": "calc", "label": "微积分:导数与梯度"}, {"id": "prob", "label": "概率基础"}, {"id": "linalg", "label": "线性代数"}, {"id": "matcalc", "label": "矩阵求导(按需)"}]}, {"id": "ml", "label": "🤖 机器学习基础", "children": [{"id": "mlwhat", "label": "机器学习概述"}, {"id": "linreg", "label": "线性回归"}, {"id": "softmax", "label": "逻辑回归 / softmax 回归"}]}, {"id": "dl", "label": "🧠 深度学习", "children": [{"id": "mlp", "label": "感知机 → 多层感知机", "children": [{"id": "nonlinear", "label": "MLP 引入非线性的作用"}]}, {"id": "backprop", "label": "反向传播与计算图"}, {"id": "cnn", "label": "卷积神经网络 CNN"}, {"id": "rnn", "label": "循环神经网络 RNN"}, {"id": "attn", "label": "注意力 → Transformer"}]}, {"id": "lab", "label": "🧪 实验"}];
+const CONTENT={},LABEL={};
+document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
+(function walk(ns){ns.forEach(n=>{LABEL[n.id]=n.label;if(n.children)walk(n.children)})})(TREE);
+let done=JSON.parse(localStorage.getItem("dlkb_done")||"{}");
+function inline(t){return t
+  .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,function(m,alt,src){return '<img src="'+src.replace(/^(?:\.\.\/)+/,'')+'" alt="'+alt+'">'})
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="#" class="xref" onclick="openNode(\''+nid+'\''+(an?',\''+an+'\'':'')+');return false">'+txt+'</a>';}return '<a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>';});}
+function md(src){
+  src=src.replace(/\r/g,'');
+  var M=[];
+  src=src.replace(/\$\$([\s\S]+?)\$\$/g,function(_,x){M.push('$$'+x+'$$');return '@@M'+(M.length-1)+'@@';}).replace(/\$([^\$\n]+?)\$/g,function(_,x){M.push('$'+x+'$');return '@@M'+(M.length-1)+'@@';});
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const out=[];let list=false,olist=false,quote=false,para=[];
+  const fp=()=>{if(para.length){out.push('<p>'+inline(esc(para.join(' ')))+'</p>');para=[]}};
+  const cl=()=>{if(list){out.push('</ul>');list=false}if(olist){out.push('</ol>');olist=false}};const cq=()=>{if(quote){out.push('</blockquote>');quote=false}};
+  const cells=s=>s.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>c.trim());
+  const L=src.split('\n');
+  for(let i=0;i<L.length;i++){
+    const t=L[i].trim();let m;
+    if(/^\|.*\|$/.test(t)&&i+1<L.length&&/^\|[\s:|-]+\|$/.test(L[i+1].trim())){
+      fp();cl();cq();
+      var hd=cells(t),bd=[],j=i+2;
+      while(j<L.length&&/^\|.*\|$/.test(L[j].trim())){bd.push(cells(L[j].trim()));j++;}
+      var tb='<div class="tw"><table><thead><tr>';
+      hd.forEach(c=>{tb+='<th>'+inline(esc(c))+'</th>';});tb+='</tr></thead><tbody>';
+      bd.forEach(r=>{tb+='<tr>';r.forEach(c=>{tb+='<td>'+inline(esc(c))+'</td>';});tb+='</tr>';});
+      out.push(tb+'</tbody></table></div>');i=j-1;continue;
+    }
+    if(t===''){fp();cl();cq();continue;}
+    if(m=t.match(/^(#{1,4})\s+(.*)/)){fp();cl();cq();out.push('<h'+m[1].length+'>'+inline(esc(m[2]))+'</h'+m[1].length+'>');continue;}
+    if(t==='---'){fp();cl();cq();out.push('<hr>');continue;}
+    if(m=t.match(/^[-*]\s+(.*)/)){fp();cq();if(olist){out.push('</ol>');olist=false}if(!list){out.push('<ul>');list=true}out.push('<li>'+inline(esc(m[1]))+'</li>');continue;}
+    if(m=t.match(/^\d+\.\s+(.*)/)){fp();cq();if(list){out.push('</ul>');list=false}if(!olist){out.push('<ol>');olist=true}out.push('<li>'+inline(esc(m[1]))+'</li>');continue;}
+    if(m=t.match(/^>\s?(.*)/)){fp();cl();if(!quote){out.push('<blockquote>');quote=true}out.push(inline(esc(m[1]))+'<br>');continue;}
+    para.push(t);
+  }
+  fp();cl();cq();
+  var html=out.join('\n');
+  html=html.replace(/@@M(\d+)@@/g,function(_,i){return M[+i];});
+  return html;
+}
+function typeset(){if(window.MathJax&&MathJax.typesetPromise){MathJax.typesetPromise([document.getElementById("reader")]).catch(function(){});}}
+function tnode(n,lvl){
+  const kids=n.children&&n.children.length;
+  let h='<div class="tnode lvl'+lvl+'" data-id="'+n.id+'"><span class="cv">'+(kids?'▸':'·')+'</span><span class="lbl">'+n.label+'</span><span class="chk">'+(done[n.id]?'✓':'')+'</span></div>';
+  if(kids){h+='<div class="kids" data-kids="'+n.id+'" style="display:none">'+n.children.map(c=>tnode(c,lvl+1)).join('')+'</div>';}
+  return h;
+}
+function buildTree(){document.getElementById("tree").innerHTML=TREE.map(n=>tnode(n,0)).join('');}
+function openNode(id,anchor){
+  let body=CONTENT[id];
+  if(!body) body="# "+(LABEL[id]||id)+"\n\n> 🚧 本知识点待编写。";
+  const isDone=!!done[id];
+  const rd=document.getElementById("reader");
+  rd.innerHTML='<div class="rdrhead"><button class="markbtn '+(isDone?'done':'')+'" onclick="toggleDone(\''+id+'\',this)">'+(isDone?'✓ 已掌握':'标记已掌握')+'</button></div>'+md(body);
+  typeset();
+  document.querySelectorAll('.tnode').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+  if(anchor){setTimeout(function(){var hs=rd.querySelectorAll('h1,h2,h3,h4');for(var i=0;i<hs.length;i++){if(hs[i].textContent.indexOf(anchor)>=0){hs[i].scrollIntoView({behavior:'smooth',block:'start'});return;}}},80);}
+  else{rd.scrollTop=0;}
+}
+function toggleDone(id,btn){
+  done[id]=!done[id]; if(!done[id])delete done[id];
+  localStorage.setItem("dlkb_done",JSON.stringify(done));
+  buildTree();bind();updateProg();
+  openNode(id);
+}
+function updateProg(){
+  const ids=Object.keys(LABEL).filter(i=>['math','ml','dl'].indexOf(i)<0);
+  const d=ids.filter(i=>done[i]).length;
+  document.getElementById("prog").textContent='已掌握 '+d+'/'+ids.length;
+}
+function bind(){
+  document.querySelectorAll('.tnode').forEach(el=>{
+    el.onclick=function(e){e.stopPropagation();const id=el.dataset.id;
+      const kidsBox=document.querySelector('[data-kids="'+id+'"]');
+      if(kidsBox){const showing=kidsBox.style.display!=='none';kidsBox.style.display=showing?'none':'';el.querySelector('.cv').classList.toggle('open',!showing);}
+      openNode(id);
+    };
+  });
+}
+buildTree();bind();updateProg();openNode("root");
+</script>
+</body>
+</html>

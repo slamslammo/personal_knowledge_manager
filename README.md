@@ -1,2 +1,40 @@
 # personal_knowledge_manager
-A structured personal knowledge base for organizing, recording, and sharing learning insights across technical domains.A structured personal knowledge base for organizing, recording, and sharing learning insights across technical domains.
+
+一个面向长期学习的个人知识管理项目。目标不是简单收集资料,而是把学习过程沉淀为可复用的知识库构建范式:用 AI 协作完成资料筛选、主线梳理、可视化解释、实验验证和阶段迭代。
+
+## 当前板块
+
+- [深度学习](深度学习/)  
+  第一个实验板块,从数学基础、机器学习基础、深度学习核心模型一路到注意力与 Transformer。阅读入口是 [深度学习/知识地图.html](深度学习/知识地图.html),下载仓库后可直接用浏览器打开。
+
+## 项目结构
+
+```text
+personal_knowledge_manager/
+├── README.md
+├── 项目说明.md
+├── 项目管理/
+│   ├── 01-项目协作指南.md
+│   └── 02-迭代记录.md
+├── 工具轨backlog.md
+└── 深度学习/
+    ├── 知识库/
+    ├── 实验/
+    ├── assets/
+    ├── build.py
+    └── 知识地图.html
+```
+
+## 使用方式
+
+打开某个知识板块的 `知识地图.html` 即可阅读。每个板块的内容源在该板块的 `知识库/` 中,修改后进入板块目录运行:
+
+```bash
+python3 build.py
+```
+
+生成的 HTML 使用相对路径引用本板块内的图片和内容,不依赖作者本机的绝对路径。
+
+## 协作方式
+
+项目规则见 [项目管理/01-项目协作指南.md](项目管理/01-项目协作指南.md),迭代状态见 [项目管理/02-迭代记录.md](项目管理/02-迭代记录.md)。后续新增知识领域时,应以独立板块目录与现有 `深度学习/` 并列。
