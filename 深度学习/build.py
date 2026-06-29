@@ -18,10 +18,11 @@ SRC = "\n\n".join(p.read_text(encoding="utf-8") for p in sorted((BASE / "知识�
 TREE = [
   {"id":"refs","label":"📚 参考资料"},
   {"id":"math","label":"🧮 数学基础","children":[
-    {"id":"calc","label":"微积分:导数与梯度"},
     {"id":"prob","label":"概率基础"},
     {"id":"linalg","label":"线性代数"},
-    {"id":"matcalc","label":"矩阵求导(按需)"},
+    {"id":"calc","label":"微积分:导数、梯度与矩阵求导","children":[
+      {"id":"mathexample","label":"例子:Xw、均方误差与梯度下降"},
+    ]},
   ]},
   {"id":"ml","label":"🤖 机器学习基础","children":[
     {"id":"mlwhat","label":"机器学习概述"},
