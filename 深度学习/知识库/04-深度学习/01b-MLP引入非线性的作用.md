@@ -5,7 +5,7 @@
 
 ## 1. 线性模型的局限
 
-📖 **权威详解**:[线性可分性 · Wikipedia](https://zh.wikipedia.org/wiki/線性可分)
+📌 **前置承接**:[逻辑回归 / softmax 回归](node:softmax) · [线性分类的几何视角](node:geometry)
 
 逻辑回归常被称作"线性模型",但它套了一层 sigmoid,容易让人误解"线性"指什么。把模型拆开看:打分 $z=\mathbf w\cdot\mathbf x+b$ 是**唯一**含可学参数的一步,也正是"线性"所指;sigmoid 只是把分数单调压进 $(0,1)$,不改变大小次序;交叉熵只衡量误差。决策边界是 $\hat p=0.5$,即 $z=0$,即 $\mathbf w\cdot\mathbf x+b=0$——一个线性方程。**所以无论 sigmoid 多弯,边界恒为直线 / 超平面。** 感知机同理。
 
