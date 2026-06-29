@@ -11,7 +11,7 @@ RNN 把整段历史压在一个隐藏状态里逐步传递:远处信息易丢失
 
 ### 2. Query / Key / Value:一次注意力怎么算
 
-📖 **权威详解**:[注意力机制 · Wikipedia](https://zh.wikipedia.org/wiki/注意力机制)
+📌 **前置承接**:注意力直接复用 [线性代数 · 点积](node:linalg#点积) 做相似度打分,再用 [softmax](node:softmax) 归一化权重。
 
 每个位置生成三组向量:**Query**(当前要匹配的查询)、**Key**(可被匹配的标识)、**Value**(实际汇总的信息)。计算分三步——用 Query 与各 Key 做**点积**得相关度分数,经 softmax 归一化成权重,再对 Value 加权求和:
 $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V.$$
@@ -35,7 +35,7 @@ $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\s
 
 ### 1. Transformer 块
 
-📖 **权威详解**:[Transformer 模型 · Wikipedia](https://zh.wikipedia.org/wiki/Transformer模型)
+📌 **结构承接**:Transformer 把自注意力堆叠成主干结构,接在 [RNN](node:rnn) 的序列建模问题之后,也是实验主线 mini-GPT 的前置概念。
 
 Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Add & Norm → 前馈网络 FFN → Add & Norm**;其中 Add 是**残差连接**(缓解深层训练,与 [卷积神经网络](node:cnn) 里 ResNet 同一思路),Norm 是层归一化。
 
