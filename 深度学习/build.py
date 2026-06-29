@@ -30,6 +30,7 @@ TREE = [
   ]},
   {"id":"dl","label":"🧠 深度学习","children":[
     {"id":"mlp","label":"感知机 → 多层感知机","children":[
+      {"id":"geometry","label":"线性分类的几何视角"},
       {"id":"nonlinear","label":"MLP 引入非线性的作用"},
     ]},
     {"id":"backprop","label":"反向传播与计算图"},
