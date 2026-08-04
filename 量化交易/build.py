@@ -19,7 +19,7 @@ TREE = [
   {"id":"map","label":"🧭 学习路线图"},
   {"id":"refs","label":"📚 资料清单","children":[
     {"id":"learningmainline","label":"当前学习主线"},
-    {"id":"c365","label":"🎓 365 天量化课程","href":"365天量化课程.html"},
+    {"id":"c365","label":"🎓 365 天量化课程","embed":"365天量化课程.html"},
     {"id":"dwq","label":"🐣 Datawhale 量化入门","children":[
       {"id":"dwqrandomwalk","label":"随机游走与布朗运动"},
       {"id":"dwqkelly","label":"概率优势与凯利仓位"},
@@ -205,6 +205,8 @@ TEMPLATE = r"""<!doctype html>
   .relchips{display:flex;flex-wrap:wrap;gap:6px}
   .relchips a{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--bg);text-decoration:none}
   .relchips a:hover{border-color:var(--accent)}
+  main.embed{max-width:none;padding:12px 18px 16px}
+  .pageframe{width:100%;height:calc(100vh - 128px);border:1px solid var(--line);border-radius:10px;background:var(--panel)}
   mjx-container{overflow-x:auto;overflow-y:hidden}
 </style>
 <script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
@@ -448,6 +450,18 @@ function finishScroll(anchor,opts){
   run();setTimeout(run,80);setTimeout(run,250);
 }
 function renderNode(id,anchor,opts){
+  const nd=NODES[id];
+  const rd0=document.getElementById("reader");
+  if(nd&&nd.embed){
+    currentRoute={id:id,anchor:""};
+    rd0.classList.add("wide");rd0.classList.add("embed");
+    rd0.innerHTML='<div class="rdrhead"><a class="markbtn" style="text-decoration:none" href="'+attr(nd.embed)+'" target="_blank" rel="noopener">在新标签页打开 ↗</a></div><iframe class="pageframe" src="'+attr(nd.embed)+'" title="'+attr(LABEL[id]||id)+'"></iframe>';
+    revealNode(id);
+    document.querySelectorAll('.tnode').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+    setScrollY(0);
+    return;
+  }
+  rd0.classList.remove("embed");
   let body=CONTENT[id];
   if(!body) body="# "+(LABEL[id]||id)+"\n\n> 🚧 本知识点待编写。";
   currentRoute={id:id,anchor:anchor||""};
