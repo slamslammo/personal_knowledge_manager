@@ -20,6 +20,7 @@ TREE = [
   {"id":"refs","label":"📚 资料清单","children":[
     {"id":"learningmainline","label":"当前学习主线"},
     {"id":"c365","label":"🎓 365 天量化课程","children":[
+      {"id":"c365map","label":"课程大纲与本地映射","href":"../../pam-video-captures/365-days-quant-finance/knowledge-map.html"},
       {"id":"c365guide","label":"课程学习指引"},
       {"id":"c365p1","label":"P1 量化基础要点"},
       {"id":"c365p2","label":"P2 工具栈要点"},
@@ -487,7 +488,7 @@ function toggleDone(id,btn){
 }
 function updateProg(){
   const groups=['map','refs','c365','dwq','framework','market','datareturns','strategy','backtest','riskportfolio','execution','advanced','practice'];
-  const ids=Object.keys(LABEL).filter(i=>groups.indexOf(i)<0);
+  const ids=Object.keys(LABEL).filter(i=>groups.indexOf(i)<0&&!HREF[i]);
   const d=ids.filter(i=>done[i]).length;
   document.getElementById("prog").textContent='已掌握 '+d+'/'+ids.length;
 }
