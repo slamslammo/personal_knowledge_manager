@@ -19,7 +19,7 @@ TREE = [
   {"id":"map","label":"🧭 学习路线图"},
   {"id":"refs","label":"📚 资料清单","children":[
     {"id":"learningmainline","label":"当前学习主线"},
-    {"id":"c365","label":"🎓 365 天量化课程","href":"../../pam-video-captures/365-days-quant-finance/knowledge-map.html"},
+    {"id":"c365","label":"🎓 365 天量化课程","href":"365天量化课程.html"},
     {"id":"dwq","label":"🐣 Datawhale 量化入门","children":[
       {"id":"dwqrandomwalk","label":"随机游走与布朗运动"},
       {"id":"dwqkelly","label":"概率优势与凯利仓位"},
