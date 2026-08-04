@@ -111,41 +111,25 @@
 <script type="text/markdown" data-node="map">
 # 量化学习路线图
 
-本板块分两层：**资料清单**承载正在学的课程与参考材料，**自有量化体系**（下面九章）是最终要沉淀成的知识结构。当前处于广度学习期——先把两门主线课程各自学透，再把知识点整理进自己的体系。
+本地图的主体是「自有量化体系」九章——最终要沉淀的知识结构，当前只保留概念边界说明，正文待课程学完、有判断能力后逐章讨论整理。正在学的课程与参考材料统一放在[资料清单](node:refs)。
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
-| 1. 课程学习 | 两门主线课程各自成体系地学，笔记留在各自课程目录下 | 🔄 进行中 |
-| 2. 对照去重 | 用[两门课程对照](node:coursecompare)判断哪些概念只学一遍，避免重复 | 🔄 随学随更新 |
-| 3. 融会整理 | 学到一定程度后讨论确定自有体系每章包含什么，再写入下面九章 | 待启动 |
+| 1. 课程学习 | 两门主线课程各自成体系地学 | 🔄 进行中 |
+| 2. 对照去重 | 用[两门课程对照](node:coursecompare)决定哪些概念只学一遍 | 🔄 随学随更新 |
+| 3. 融会整理 | 讨论确定九章各章内容，从课程材料提炼写入 | 待启动 |
 | 4. 实践闭环 | 基于自有体系开展研究实验 | 规划中 |
 
-## 两条课程主线
+## 快速入口
 
-- **[365 天量化课程](node:c365)**：中文理解主线，11 阶段 365 课。已整理 88 课；P1 量化基础与 P2 工具栈完成学习整理并各有 30 余个可运行实验；P3 数据与因子工程学习中。日常学习直接打开[课程大纲与本地映射](../../pam-video-captures/365-days-quant-finance/knowledge-map.html)，用法见[课程学习指引](node:c365guide)。
-- **[Datawhale 量化入门](node:dwq)**：Python 实践主线，8 章。第 82 期组队学习进行中，已完成环境搭建与第一章理论原点实验。
+- **365 天量化课程（日常学习）**：[课程大纲与本地映射](../../pam-video-captures/365-days-quant-finance/knowledge-map.html)，按官方大纲 11 阶段组织，每节课直达本地图文口播页与实验。
+- **[Datawhale 量化入门](node:dwq)**：章节进度与已完成实验记录。
+- **[两门课程对照](node:coursecompare)**：学任何概念前先查，决定看哪门课。
+- **[实验环境](node:env)**：`pkm-quant`，两门课与自有实验共用。
 
-学任何一个概念之前，先查[两门课程对照](node:coursecompare)决定看哪门课——这是减少重复学习的关键一步。两门课与后续自有实验共用同一个开发环境 `pkm-quant`（见[实验环境](node:env)）。
+## 首页知识网络怎么读
 
-## 自有量化体系（九章）
-
-下面九章是最终的目标结构，按研究闭环组织：
-
-```text
-市场与数据 → 研究假设 → 信号与策略 → 回测与评估
-                                      ↓
-执行与监控 ← 风险与组合 ← 仓位与组合构建
-      ↓
-复盘、修正假设并进入下一轮研究
-```
-
-当前各章只保留概念边界说明。**正文不急于写**：等对应课程学完、有了判断材料好坏的能力，再逐章讨论确定该写什么，然后从课程笔记里提炼进来。课程观点未经验证不直接写成项目结论。
-
-## 怎么读这张地图
-
-- 首页知识网络：上半部是两条课程轨（实心节点已有笔记），下半部是自有体系九章（虚线节点待整理），曲线是节点互引。
-- **跨轨连线是整理信号**：两门课都讲到同一概念时会互相链接，连线密集处就是自有体系里该独立成节点的地方。
-- 逐课进度记录在项目管理的课程学习台账，知识节点只承载稳定结论，不承载学习状态。
+下方网络图就是自有体系九章：章为层、知识点为网点。实心节点已成文，虚线节点只有边界说明；曲线是节点互引。悬停看关联，点击进入正文。课程内容不进此图——图上只呈现最终属于自己的知识。
 </script>
 <script type="text/markdown" data-node="learningmainline">
 # 当前学习主线
@@ -197,6 +181,8 @@ Datawhale 提供“亲手做”的抓手，365 天课程提供“为什么值得
 <script type="text/markdown" data-node="freefinance">
 # 免费金融与量化阅读
 
+> 本页是[资料清单](node:refs)「免费金融阅读」分类的详情页：记录选读章节、适用场景和边界；资料入口以清单主页的表格为准。数学类前置查[数学基础与量化](node:mathrefs)，读到的结论需要数据核验时配合[数据与财经信息源](node:infosystems)。
+
 本页只收录无需购买即可阅读核心内容、信息密度较高、能承接当前实践的材料。阅读方式是按问题选章节，不要求从第一页读到最后一页。
 
 ## 第一层：金融和市场底座
@@ -234,6 +220,8 @@ OpenStax 已提供免费网页和 PDF；Varsity 明确无注册、无付费墙�
 </script>
 <script type="text/markdown" data-node="mathrefs">
 # 数学基础与量化
+
+> 本页是[资料清单](node:refs)「数学基础」分类的详情页：记录每份数学资料的取舍理由、量化主题映射和使用边界；资料入口以清单主页的表格为准。遇到统计推断类问题可与[免费金融与量化阅读](node:freefinance)中的教材互补。
 
 ## 定位
 
@@ -300,6 +288,8 @@ OpenStax 已提供免费网页和 PDF；Varsity 明确无注册、无付费墙�
 <script type="text/markdown" data-node="opensourcetools">
 # 开源系统与 GitHub 工具
 
+> 本页是[资料清单](node:refs)「开源工具」分类的详情页：记录选型顺序、验收规则和使用边界；资料入口以清单主页的表格为准。工具取数时的来源规范见[数据与财经信息源](node:infosystems)，运行环境统一使用[实验环境](node:env)的 `pkm-quant`。
+
 ## 选型顺序
 
 工具按研究阶段选择，不追求一次安装完整量化平台。
@@ -356,6 +346,8 @@ QuantDinger 的 [抖音搜索入口](https://www.douyin.com/search/quantdinger?a
 <script type="text/markdown" data-node="infosystems">
 # 数据与财经信息源
 
+> 本页是[资料清单](node:refs)「数据与信息源」分类的详情页：记录一手来源入口与数据记录规范；资料入口以清单主页的表格为准。接口工具（AkShare、yfinance）的选型见[开源系统与 GitHub 工具](node:opensourcetools)，实验中的数据边界见[实验环境](node:env)。
+
 当前优先级低于课程、实验和工具选型。本页先建立一手来源入口，不建设实时新闻聚合系统。
 
 ## A 股与中国宏观的一手入口
@@ -390,355 +382,6 @@ QuantDinger 的 [抖音搜索入口](https://www.douyin.com/search/quantdinger?a
 每份正式实验数据至少记录：来源页面或接口、访问日期、市场和标的、开始结束日期、频率、时区、价格和数量单位、复权口径、公司行动、缺失处理、是否包含退市样本、许可证或使用限制。
 
 财经新闻和分析系统以后再建立。届时先接公告、监管、公司原始披露和宏观发布，再引入媒体摘要；AI 摘要只能作为检索入口，不能替代原文和事件时间戳。
-</script>
-<script type="text/markdown" data-node="c365">
-# 365 天量化课程
-
-「365 天量化金融」（作者：工作姐博士在读，[Bilibili](https://www.bilibili.com/video/BV1yR9qBUE7w/) / [YouTube 播放列表](https://www.youtube.com/playlist?list=PLSTdjIlFps_EsTFQMdAOCnbHokT5gtaLw)）是本项目的中文理解主线。它符合“有交易经验、在实践中补理论”的路径：视频负责连接真实交易问题并建立概念证据链，Datawhale 与本项目实验负责计算和验证。
-
-**日常学习入口：[课程大纲与本地映射](../../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)**——按官方大纲组织的唯一浏览入口，每节课直达本地图文口播页、Notebook 与实验报告。用法见[课程学习指引](node:c365guide)，与另一门课的分工见[两门课程对照](node:coursecompare)。
-
-## 阶段与进度
-
-| 阶段 | 课次 | 主题 | 本地整理 | 学习与沉淀 |
-|---|---:|---|---:|---|
-| P1 | 1–30 | 量化基础 | 30 | ✅ 已完成，见 [P1 量化基础要点](node:c365p1) |
-| P2 | 31–60 | Python 量化工具栈 | 30 | ✅ 已完成，见 [P2 工具栈要点](node:c365p2) |
-| P3 | 61–90 | 数据与因子工程 | 28 | 🔄 学习中，要点节点见下表 |
-| P4 | 91–130 | 经典策略详解 | 0 | 大纲已上线 26 课，待采集 |
-| P5–P11 | 131–365 | 回测稳健性、机器学习、衍生品、风控、微结构、实盘、实战 | 0 | 大纲规划中 |
-
-已知源异常：第 82 课源视频与标题不符（实为第 81 课重复），第 90 课作者尚未发布，均已隔离不伪造材料。
-
-## P3 主题簇与要点节点
-
-学习按主题簇推进，每学完一簇蒸馏一批要点节点：
-
-| 主题簇 | 课次 | 要点节点 | 状态 |
-|---|---:|---|---|
-| 数据质量与口径 | 61–63 | [数据质量与清洗](node:c365data) | ✅ 已整理 |
-| 数据质量与口径 | 64–65 | [复权与数据对齐](node:c365adjust) | ✅ 已整理 |
-| 数据质量与口径 | 66 | [未来函数与时点](node:c365lookahead) | ✅ 已整理 |
-| 因子图谱 | 67–76 | 学完后新增节点 | 待学习 |
-| 因子处理与检验 | 77–82 | 学完后新增节点 | 待学习 |
-| 组合与多因子模型 | 83–89 | 学完后新增节点 | 待学习 |
-
-## 维护规则
-
-- 逐课状态（素材 / 学习 / 蒸馏三列）以项目管理中的课程学习台账为唯一状态源，本节点只维护阶段结论与簇到节点的映射。
-- 不为未学课程预建空节点。
-- 课程素材包由采集流水线（Codex）维护，本知识库只读引用，分工见协作契约；两个项目必须保持兄弟目录。
-- 课程观点未经验证前不写入[自有量化体系](node:framework)的章节。
-</script>
-<script type="text/markdown" data-node="c365p1">
-# P1 量化基础要点（1–30 课）
-
-P1 不是金融词条集合，而是一条可审计的策略研究证据链：
-
-> 交易想法 → 可证伪的市场假设 → 数据契约 → 收益、风险与基准 → 统计证据 → 成交、成本与可执行性 → 策略研究报告。
-
-第 29 课的策略报告是阶段产物，第 30 课的能力矩阵是阶段验收；前 28 课的每一课都在为报告中的某个判断提供证据。整理产物：30 课知识讲解、25 个逐课 Notebook、6 个综合实验，全部在 `pkm-quant` 环境执行通过。
-
-## 六个模块与综合实验
-
-| 模块 | 课次 | 研究贡献 | 综合实验 |
-|---|---:|---|---|
-| M1 研究问题与市场假设 | 1–4 | 明确交易对象、市场机制、策略类型和优势来源 | [L1 研究假设卡](../../实验/p1-quant-foundations/reports/L1_研究假设卡.html) |
-| M2 收益、时间价值与风险 | 5–8 | 统一收益、复利、波动、协方差与相关性的口径 | [L2 收益—风险账本](../../实验/p1-quant-foundations/reports/L2_收益风险账本.html) |
-| M3 统计证据与可预测性 | 9–16 | 区分相关、解释、预测与统计证据 | [L3 信号证据审计](../../实验/p1-quant-foundations/reports/L3_信号证据审计.html) |
-| M4 随机模型与衍生品风险 | 17–21 | 区分模拟、预测、定价和对冲 | [L4 随机场景与期权风险](../../实验/p1-quant-foundations/reports/L4_随机场景与期权风险.html) |
-| M5 市场微观结构与执行 | 22–25 | 把理论收益还原为订单、成交、成本和场所规则 | [L5 执行可行性与成本](../../实验/p1-quant-foundations/reports/L5_执行可行性与成本.html) |
-| M6 数据契约与策略报告 | 26–30 | 固定数据口径，完成研究报告与能力验收 | [L6 数据契约与策略报告](../../实验/p1-quant-foundations/reports/L6_数据契约与策略报告.html) |
-
-## 各模块核心结论
-
-**M1（1–4 课）**：量化用数据、规则和可重复计算辅助决策，区别于主观判断的不是"更准"，而是可证伪、可复盘。三大流派（基本面量化、量价技术、微观结构/高频）优势来源不同，新手应先明确自己策略的优势假设来自哪里。七类资产的可比性要靠统一净值口径建立。
-
-**M2（5–8 课）**：收益率口径（简单/对数/累计/年化）必须先固定再比较；复利与贴现是同一枚硬币的两面（NPV、IRR）。风险从方差入手，但下行风险与波动不是同一概念；协方差与相关性决定分散化的效果边界。
-
-**M3（9–16 课）**：OLS 回归给出 Beta 与 Alpha，但 $R^2$ 高不等于样本外可预测。真实收益分布厚尾，正态只是基准；中心极限定理约束抽样误差，假设检验要同时看效应大小与功效。非平稳序列直接回归会产生伪回归；自相关接近零意味着可预测性边界很紧。这一模块的总红线：**统计显著不等于经济有效**。
-
-**M4（17–21 课）**：蒙特卡洛是情景生成工具，不是预测器；几何布朗运动的价值在假设显式化。风险中性概率、二叉树与 Black–Scholes 属于定价与对冲工具，**定价模型不等于预测模型**；Greeks 是局部敏感度，只在小扰动内有效。
-
-**M5（22–25 课）**：订单簿的价差、深度与不平衡决定了成交成本；滑点与冲击把纸面收益变成成本后收益；价格时间优先的撮合规则和场所规则约束了策略容量。**回测收益不等于可交易收益**。
-
-**M6（26–30 课）**：数据源要用契约固定（字段、频率、复权、时区、as-of）；公司行动与复权口径详见 [复权与数据对齐](node:c365adjust)；重采样只能降频不能造信息。第 29 课把全部证据组装成十节结构的[策略研究报告](../../实验/p1-quant-foundations/reports/29_策略研究报告闭环.html)，第 30 课用[能力矩阵](../../实验/p1-quant-foundations/reports/30_P1能力矩阵与阶段验收.html)按五级标准验收。
-
-## 贯穿 P1 的三条红线
-
-1. 统计显著 ≠ 经济有效：同时报告效应大小、样本外表现、基准、成本和稳健性。
-2. 回测结果 ≠ 可交易收益：信号时点、成交规则、费用、滑点、冲击、容量分开说明。
-3. 定价模型 ≠ 预测模型：风险中性工具用于定价对冲，不用于真实世界预测。
-
-## 入口
-
-- 逐课讲解与 Notebook：[课程大纲与本地映射](../../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)（第 1–30 课区块）。
-- 实验目录：`实验/p1-quant-foundations/`（31 个 Notebook 全部可复现，默认离线）。
-</script>
-<script type="text/markdown" data-node="c365guide">
-# 365 课程学习指引
-
-课程的唯一浏览入口是[课程大纲与本地映射](../../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)。该页面按官方大纲的 11 个阶段、365 节组织，每节课卡片直接进入本地整理好的图文口播页；有 Python 实操的课次同时挂 Notebook 与静态报告入口。本节点说明**怎么用这个入口学**，不复制其内容。
-
-## 入口页面提供什么
-
-| 区块 | 内容 | 学习用途 |
-|---|---|---|
-| 阶段导航 | P1–P11 快速跳转，每阶段标注课数、本地整理数、大纲上线数 | 判断当前学到哪、哪些还没采集 |
-| 课程卡片 | 大纲标准标题 + 本地视频题名 + 状态 | 用标准标题理解知识点，营销式视频标题只作辅助 |
-| 图文口播页 | 课件截图与对应口播逐段配对，另附内容摘要 | 主学习界面：读摘要抓主线，读逐段核对细节 |
-| 模块区块 | P1-M1–M6 / P2-M1–M6 模块说明与 L1–L6 综合实验合并呈现 | 学完一个模块做一次综合实验，检验是否真的连起来了 |
-| Notebook 与报告 | 逐课实验的 `.ipynb` 与静态 HTML | 报告用于快速回顾，Notebook 用于动手改参数 |
-
-## 单节课的学习动作
-
-1. **先读摘要**：每集 `summary.md` 固定四段——本集主线、关键概念与计算、方法边界、对量化项目的价值。先读这四段建立预期。
-2. **再看图文口播**：带着预期扫课件截图，只在概念没懂的地方读对应口播原文。不必逐段通读。
-3. **有实操就跑 Notebook**：改参数、改标的，观察结论是否稳定。跑不通先查环境（`pkm-quant`），不要误判为原理错误。
-4. **记边界不记结论**：课程的简化假设（不含手续费、固定年化天数、单一样本区间）要显式记下来，这些是后续被推翻的地方。
-
-## 阶段与模块的学习节奏
-
-- **P1（1–30）量化基础**：反向设计——第 29 课策略报告是产物，第 30 课能力矩阵是验收，前 28 课都在为报告的某个判断提供证据。学的时候常问：这一课支撑报告的哪一节？要点见 [P1 量化基础要点](node:c365p1)。
-- **P2（31–60）Python 工具栈**：重点不是语法，是同一个工具在金融时间序列中的数据语义和失效边界。要点见 [P2 工具栈要点](node:c365p2)。
-- **P3（61–90）数据与因子工程**：当前阶段。按主题簇推进（数据质量与口径 61–66、因子图谱 67–76、因子处理与检验 77–82、组合与多因子 83–89），学完一簇沉淀一批笔记。
-- **P4 起**：大纲已上线但本地尚未采集，进度以入口页面的实际状态为准。
-
-## 使用这套材料时的三条纪律
-
-1. **课程观点不等于项目结论**：未经代码或一手资料验证的说法标为「课程观点」，不直接写进自有体系。
-2. **以本地整理状态为准**：大纲标记「已上线」与本地「已整理」是两个状态，入口页面不会把未采集的课程标为完成；第 82 课源视频与标题冲突、第 90 课尚未发布，均已隔离。
-3. **字幕仍是机器转写稿**：本地 Whisper 转写并做过金融术语校订，但未逐句人工听校；关键数字和公式以 Notebook 运行结果为准。
-
-## 材料维护边界
-
-课程素材包（视频、字幕、截图、摘要、入口页面）由采集流水线维护，本知识库只读引用，分工见项目管理中的协作契约。两个项目必须保持兄弟目录，否则入口页面与实验报告之间的相对链接会失效。
-</script>
-<script type="text/markdown" data-node="c365p2">
-# P2 工具栈要点（31–60 课）
-
-P2 把 Python 工具在金融时间序列中的**数据语义、性能取舍和失效边界**讲清楚，而不是重复语法教学。整理产物：30 个逐课 Notebook + 6 个综合实验，全部在 `pkm-quant` 环境 `Restart Kernel and Run All` 通过，默认离线运行。
-
-## 六个模块与综合实验
-
-| 模块 | 课次 | 综合实验 |
-|---|---:|---|
-| 环境与数值计算 | 31–33 | [L1 收益矩阵与组合风险](../../实验/p2-python-toolchain/reports/L1_收益矩阵与组合风险.html) |
-| 时间序列处理 | 34–39 | [L2 行情清洗与时间对齐](../../实验/p2-python-toolchain/reports/L2_行情清洗与时间对齐.html) |
-| 数据与可视化 | 40–46 | [L3 数据获取、存储与报告](../../实验/p2-python-toolchain/reports/L3_数据获取存储与报告.html) |
-| 统计与模型 | 47–50 | [L4 防泄漏统计建模](../../实验/p2-python-toolchain/reports/L4_防泄漏统计建模.html) |
-| 工程与性能 | 51–58 | [L5 可测试的量化计算模块](../../实验/p2-python-toolchain/reports/L5_可测试的量化计算模块.html) |
-| 自动化交付 | 59–60 | [L6 一键生成月报](../../实验/p2-python-toolchain/reports/L6_一键生成月报.html) |
-
-## 各模块核心结论
-
-**环境与数值计算（31–33 课）**：可复现研究从环境固定和 manifest 记录开始。NumPy 广播天然适配「日期 × 资产」收益矩阵；矩阵运算支撑协方差与 PCA，但进入 NumPy 之前必须先由 Pandas 完成标签对齐——只比 shape 不比标签是隐蔽错误的主要来源。
-
-**时间序列处理（34–39 课）**：DatetimeIndex 承载时区与交易日历语义；OHLCV 重采样只能降频聚合，不能上采样造信息。rolling 窗口与回撤计算要区分观察窗与决策时点；MultiIndex 分组支撑行业中性化；缺失值处理必须区分「停牌不可交易」与「数据缺失」（详见 [数据质量与清洗](node:c365data)）；财报与行情合并必须按 `available_at` 做时点一致连接（详见 [复权与数据对齐](node:c365adjust)）。
-
-**数据与可视化（40–46 课）**：同一张结果表驱动全部图表，避免图与数不一致。yfinance / AkShare 只放在适配层，复权口径入库时显式记录；SQLite 行情库用幂等增量写入；完整数据流水线要能一键重建并输出 manifest。
-
-**统计与模型（47–50 课）**：技术指标先写公式再谈时点可执行性；SciPy 拟合厚尾分布评估极端风险；statsmodels 因子回归配稳健标准误；sklearn 时序建模的核心是防泄漏——按时间切分、scaler 只在训练折拟合（详见 [未来函数与时点](node:c365lookahead)）。
-
-**工程与性能（51–58 课）**：装饰器管理重试与缓存边界；asyncio 做受控并发获取；进程/线程并行有回测语义边界（不能跨期并行有状态回测）；Numba 加速数值循环但必须与原实现验算一致；pytest 固定量化计算的行为；Git 管实验版本，Docker 管环境版本。
-
-**自动化交付（59–60 课）**：月报流水线幂等交付——同一输入重跑得到同一报告；阶段完成度用机器可读 manifest 审计。
-
-## 贯穿 P2 的工程原则
-
-1. **先透明、后封装**：首次出现的计算在 Notebook 展开，重复后才下沉到模块，不让封装遮蔽时间对齐、成本和未来信息。
-2. **断言验证完整对象**：核对日期、证券顺序与数值，不只比行数和 shape。
-3. **计算正确 ≠ 金融语义成立**：再平衡频率、信号/成交时点、年化常数、成本假设必须紧贴结果说明。
-4. **默认离线**：教学数据用固定种子快照，真实接口只在适配层出现。
-
-## 入口
-
-- 逐课讲解与 Notebook：[课程大纲与本地映射](../../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)（第 31–60 课区块）。
-- 实验目录：`实验/p2-python-toolchain/`。
-</script>
-<script type="text/markdown" data-node="c365data">
-# 数据质量与清洗
-
-量化模型只能从输入数据中提取结构，不能修复它看不见的错误：错价、错时点、被删掉的退市股票都会原样进入结论。因此干净数据的标准不是“没有空值”，而是三件事：**语义正确**（每个数字代表它声称代表的经济量）、**时点真实**（回测时只使用当时可以获得的版本）、**来源可追溯**（每次修复都能回到原值）。
-
-## 数据质量的五个维度
-
-工程上通常把数据质量拆成可检查的维度：
-
-- **完整性**（completeness）：应有的记录和字段是否齐全，可量化为缺失率 missing/expected；
-- **有效性**（validity）：取值是否落在字段允许的范围和类型内；
-- **一致性**（consistency）：同一事实在不同表、不同来源中是否吻合；
-- **唯一性**（uniqueness）：主键是否重复，可量化为重复率 duplicates/rows；
-- **及时性**（timeliness）：数据到达时间是否满足使用场景。
-
-检查依赖一份显式的模式约束（schema）：字段、类型、单位、时区、主键和允许范围。要注意的是，数据行通过 schema 检查只说明格式合法，不能证明金融含义正确——单位错一千倍的市值字段完全可以是“合法”的浮点数。
-
-## 分层保存与可追溯
-
-数据处理按 **Raw → Clean → Feature** 分层：原始层保持下载时的原貌；清洗层只做可解释的变换，每条修复规则保留原值和修复原因；特征层才进入因子和模型。清洗规则变化时，下游结果应当能够重算，形成完整的血缘关系。
-
-删除异常值是最容易破坏研究的操作：统计上的离群点可能是真实的涨跌停、除权跳空或危机行情。按 z-score 一刀切会把最有信息量的样本删掉，正确做法是隔离并标记，而不是静默修改。
-
-## 行情数据清洗
-
-日线行情的主键通常是（代码，交易日，复权口径）。清洗顺序是先统一交易所日历、时区和排序，再做检查：
-
-- **OHLC 合法性**：$L \le \min(O,C) \le \max(O,C) \le H$，且成交量、成交额非负。违反约束的记录应隔离，不能改成“看起来合理”的值。
-- **缺失 K 线**：必须结合交易日历、上市区间、停牌和退市判断。停牌日没有成交，把前一天收盘价填充成“可交易价格”会让回测在不可交易的日子成交。
-- **陈旧价格**（stale price）：用连续相同价格、零成交量、跨数据源差异共同识别；但真实的一字板也会长时间价格不变，识别规则不能单独作为删除依据。
-- **对价格插值**会制造历史上不存在的成交路径，通常不适用于回测。
-
-清洗的目标是产出带 `quality_flag`、`tradable_flag` 和复权版本标识的行情表：让下游能排除坏数据，同时保留停牌和极端行情的真实信息，而不是把曲线修得好看。
-
-## 财务数据清洗
-
-财务数据比行情多出一层难度：同一个数字有四个时间属性——
-
-| 字段 | 含义 |
-|---|---|
-| report_period | 报告期，数字描述的经济区间 |
-| published_at | 公告时间，数字何时公开 |
-| available_at | 策略可用时间，数据源何时能取到 |
-| revision_id | 重述版本，同一报告期的第几个版本 |
-
-在此之上还有口径问题：
-
-- A 股利润表和现金流量表通常是年初至报告期的**累计值**，单季度需要差分：$Q_t = \mathrm{YTD}_t - \mathrm{YTD}_{t-1}$，一季度 $Q_1 = \mathrm{YTD}_{Q1}$；
-- 滚动十二个月 $\mathrm{TTM}_t = \sum_{j=0}^{3} Q_{t-j}$，只有四个可比单季齐全时才有明确含义；
-- 同比 $\mathrm{YoY} = X_t / X_{t-4} - 1$ 在分母为负或接近零时失去解释力；
-- 币种、单位、正负号、合并报表与母公司口径都要在字段映射时统一；
-- **缺失不等于零**，零也不一定代表没有业务，必须保留原始状态；
-- 银行、保险与一般工商企业报表结构不同，不能共用同一套质量和估值字段。
-
-## 三类典型偏差
-
-数据错误之外，“选了什么数据”本身也会制造系统性偏差：
-
-1. **幸存者偏差**：只回看今天仍存在的股票，等于提前剔除了退市和被吞并的失败样本，策略收益被高估。
-2. **重述覆盖**：用后来修订的财务数据回测，等于让历史决策用上了未来的更正版本。Point-in-time 连接应选择交易时点之前最新可得的版本，按 available_at 做 as-of 匹配，见 [复权、交易日历与数据对齐](node:c365adjust)。
-3. **成分股回看**：用当前指数成分名单回测过去，泄露了“谁活到了今天”的信息。成分变更必须带有效日期。
-
-这三类偏差的共同解法是 point-in-time 原则：回测中的每个决策只使用当时已经公开且可获得的数据版本。它在回测层的对应约束见 [信号时序与因果](node:c365lookahead)。
-
-## 适用边界
-
-- 模型精度高不能反过来证明数据正确——数据泄漏往往让模型看起来更好。
-- 免费数据同样需要许可、来源和口径记录，“可以下载”不等于“可以不治理”。
-- 质量指标（缺失率、重复率）应按日期和标的持续监控，一次性检查只能保证当时的快照。
-
-## 课程来源
-
-- 第 61 课 [为什么干净数据这么重要](../../../../pam-video-captures/365-days-quant-finance/61_youtube-yeWi1f97JAo/index.html)
-- 第 62 课 [行情数据清洗](../../../../pam-video-captures/365-days-quant-finance/62_youtube-ER7iuCHoNHU/index.html)
-- 第 63 课 [财务数据清洗](../../../../pam-video-captures/365-days-quant-finance/63_youtube-WBzZiXRgxM8/index.html)
-</script>
-<script type="text/markdown" data-node="c365adjust">
-# 复权与数据对齐
-
-分红、送股、配股和拆并股会让名义价格出现与经营无关的断点：股价“腰斩”可能只是十送十。复权把这些断点连接成连续序列，但复权方式的选择、交易日历的差异和多源数据的对齐，都会直接改变收益率与信号，必须在研究开始前固定口径。
-
-## 公司行动与复权因子
-
-正确的组织方式是三张表分开保存：**原始价**（当时真实报价）、**公司行动事件表**（分红、送转、配股，各自带除权日）、**复权因子**（由事件表推导，把公司行动映射到价格调整比例）。复权价是推导结果，不是数据源头。
-
-前复权与后复权的区别只在锚定时点：
-
-| 口径 | 锚点 | 特点 |
-|---|---|---|
-| 前复权 qfq | 最新价格保持接近真实值 | 历史价格向过去调整；**新公司行动发生后整段历史会被重算** |
-| 后复权 hfq | 早期价格保持不变 | 向未来累乘；绝对价格不能解释为真实成交价 |
-
-在同一数据快照和一致的公司行动口径下，区间总收益由复权价比值得到：
-
-$$R = \frac{P^{adj}_T}{P^{adj}_0} - 1$$
-
-qfq 与 hfq 的绝对价格不同，但算出的区间收益应近似一致——两者不一致时优先怀疑事件表或因子口径有错。
-
-前复权的“历史会被重算”性质对可复现研究是个陷阱：每次重新下载最新 qfq 数据，等于悄悄换了一份历史。可复现回测需要保存**复权因子快照**（factor_as_of），或保存原始价加事件表自行复权。
-
-不同用途应选不同口径：图形观察用前复权（价格直觉正确）；收益与信号研究用点时一致的复权价；**成交回放必须回到原始可交易价格**——复权价不能用于委托价格、涨跌停和滑点判断，现金分红和持仓数量变化要单独处理。
-
-## 交易日历与缺失
-
-不同市场、不同标的的交易日历不同。多标的合并时，内连接、外连接和缺失填充各自隐含假设：删除所有缺失行会改变样本范围；向前填充会把停牌误作正常可交易。填充还应有最大有效期——财报和宏观指标不能无限期向前延伸。
-
-## 因子面板与时点对齐
-
-因子研究把数据组织成以（日期，代码）为主键的面板。对齐的核心不是表格能否 merge 成功，而是两个时间约束：
-
-1. **特征在信号时点已知**：因子值 $f_{i,t}$ 只能使用 $t$ 时点已公开的数据。财务数据按 available_at 与交易日做 backward as-of 匹配——只取当时最近的已公开版本，不能按报告期直接连接。
-2. **收益区间严格在信号之后**：因子 $f_{i,t}$ 应与未来收益 $r_{i,t \to t+h}$ 配对。若收盘后算信号、次日开盘成交，标签应写成 $y_{i,t} = P_{i,t+h}/P_{i,t+1} - 1$，从 $t+1$ 起算而不是 $t$。
-
-截面比较还要求同一日期使用同一股票池和同一处理规则：停牌、涨跌停、新股、退市和指数成分变更都必须带有效日期（universe as-of），否则会引入 [成分股回看偏差](node:c365data)。
-
-## 对齐的验收
-
-对齐规则应当做成可测试的数据契约，显式声明 signal_time、available_at、execution_time、holding_period 和 universe_as_of。验收手段包括：
-
-- 行数与唯一键检查；
-- 滞后分布检查：每个因子值与其数据源公开时间的间隔应落在预期范围；
-- 抽样事件回放：挑几个财报公告日，人工核对回测在公告前后分别看到哪个版本；
-- 失败条件：任何因子日期晚于 signal_time，或收益起点早于 execution_time，测试即失败。
-
-## 适用边界
-
-- Pandas merge 成功只表示键匹配，不表示时点语义正确。
-- 数据商对配股、税费和复权基准的定义可能不同，qfq/hfq 的名称本身不保证口径一致。
-- 只比较策略净值而不检查复权因子，可能把公司行动错误当成 Alpha。
-- 时点对齐在回测层的延伸（未来函数的完整分类与检测）见 [信号时序与因果](node:c365lookahead)。
-
-## 课程来源
-
-- 第 64 课 [公司行动处理：前复权 vs 后复权](../../../../pam-video-captures/365-days-quant-finance/64_youtube-opsOjZPNS2A/index.html)
-- 第 65 课 [时点 vs 时段数据：因子对齐](../../../../pam-video-captures/365-days-quant-finance/65_youtube-fp7Up6W-_CA/index.html)
-</script>
-<script type="text/markdown" data-node="c365lookahead">
-# 未来函数与时点
-
-回测必须保证每个决策只使用当时已经知道的信息。**未来函数**（look-ahead bias，前视偏差）指任何让历史决策用上当时不可得信息的计算或数据选择——它远不止显式的 `shift(-1)`，也藏在标准化方式、股票池选择、财报版本和成交价假设里。回测很美、实盘变脸，未来函数是第一嫌疑人。
-
-## 最小时序模型
-
-若用第 $t$ 日收盘价计算信号，该信号最早在下一个可交易时点执行，通常不能赚取 $t$ 日当天的收益。最小的日线约定是：
-
-$$\mathrm{position}_t = \mathrm{signal}_{t-1}$$
-
-$$\mathrm{strategy\_return}_t = \mathrm{position}_t \times \mathrm{return}_t - \mathrm{cost}_t$$
-
-更真实的设计需要显式声明四个时刻：信号计算时刻、下单时刻、成交价格、数据发布时间，并统一市场时区。
-
-## 显式与隐式未来函数
-
-显式风险容易检查：
-
-- `shift(-k)`：直接取未来值；
-- `rolling(center=True)`：滚动窗口以当前点为中心，右半窗全是未来数据；
-- `bfill()`：用未来价格向后填补缺失。
-
-隐式风险更危险，因为每一步单独看都“合理”：
-
-- **全样本标准化**：用整段历史的均值和标准差缩放特征，早期样本用上了后期的统计量；
-- **最新指数成分**：用今天的成分名单回测过去（见 [数据质量与偏差](node:c365data) 的成分股回看）；
-- **最新重述财报**：历史决策用上了后来修正的版本（应按 available_at 做 as-of 匹配，见 [复权、交易日历与数据对齐](node:c365adjust)）；
-- **同价成交假设**：假设能以产生信号的那个价格成交，忽略了信号计算和撮合之间的时间差。
-
-## 训练与验证中的泄漏
-
-机器学习进入回测后，数据泄漏（data leakage）的面更宽：训练阶段间接看到测试数据也算。时间序列必须按时间切分训练与测试；标准化器（scaler）、特征选择和模型都只能在训练折上拟合，再应用到验证折——在全样本上先 fit 再切分，等于让模型提前看过未来的分布。
-
-## 截断不变性测试
-
-识别未来依赖有一条强验收规则：**删除时点 $T$ 之后的全部数据重新计算，$T$ 及以前的特征与信号必须逐值不变。** 任何随截断点变化的历史值，都说明该计算依赖了未来信息。这条测试可以自动化，应纳入因子上线前的固定检查，与时序切分测试、成交延迟测试并列。
-
-## 适用边界
-
-- `shift(1)` 不是万能修复：实际延迟取决于数据发布时间、计算完成时间和市场撮合，可能不止一期。
-- 消除未来函数不等于回测可信：幸存者偏差、数据挖掘和不可成交问题独立存在。
-- 实时数据的修订与延迟要用 point-in-time 快照验证，不能凭当前下载结果推断历史可得性。
-
-## 课程来源
-
-- 第 66 课 [point-in-time 防未来函数](../../../../pam-video-captures/365-days-quant-finance/66_youtube-G48ijrn2kfI/index.html)
 </script>
 <script type="text/markdown" data-node="dwq">
 # Datawhale 量化入门
@@ -1067,7 +710,7 @@ $$\max_{\boldsymbol{w}}E\left[\log\left(1+\boldsymbol{w}^{\mathsf{T}}\boldsymbol
 ## 一句话定位
 
 - **[Datawhale 量化入门](node:dwq)**：8 章走完一条最小闭环，从环境到双均线回测。优点是快、能立刻跑出结果；代价是每个概念都点到为止。
-- **[365 天量化课程](node:c365)**：11 阶段 365 课，按研究证据链系统展开。优点是深度和边界讲得透；代价是周期长，且 P4 之后尚未上线。
+- **[365 天量化课程](../../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)**：11 阶段 365 课，按研究证据链系统展开。优点是深度和边界讲得透；代价是周期长，且 P4 之后尚未上线。
 
 ## 概念覆盖对照
 
@@ -1124,7 +767,7 @@ $$\max_{\boldsymbol{w}}E\left[\log\left(1+\boldsymbol{w}^{\mathsf{T}}\boldsymbol
 | [Datawhale Quant-for-Beginners](https://github.com/datawhalechina/quant-for-beginners) | Python 实践主线 | 环境、金融基础、行情数据、收益风险、策略和回测入门。 | 跟随 Task 运行 Notebook；将课程计算改写为自己的实验。 |
 | [365 天量化课程（Bilibili）](https://www.bilibili.com/video/BV1yR9qBUE7w/) / [YouTube 公开列表](https://www.youtube.com/playlist?list=PLSTdjIlFps_EsTFQMdAOCnbHokT5gtaLw) | 中文理解主线 | 市场、概率统计、Python 工具链、数据质量、回测与因子。 | 连接已有炒股经验与理论；课程观点再用代码和一手材料核验。 |
 
-两条主线互补：视频负责提出问题和建立交易语境，Datawhale 与本项目实验负责计算、验证和沉淀。具体推进方式见[当前学习主线](node:learningmainline)，课程目录与归档计划见[365 天量化课程](node:c365)。
+两条主线互补：视频负责提出问题和建立交易语境，Datawhale 与本项目实验负责计算、验证和沉淀。具体推进方式见[当前学习主线](node:learningmainline)，两门课的分工与去重见[两门课程对照](node:coursecompare)。365 课程日常学习入口：[课程大纲与本地映射](../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)。
 
 ## 数学基础
 
@@ -1274,7 +917,7 @@ $$r_t=\frac{P_t-P_{t-1}}{P_{t-1}}=\frac{P_t}{P_{t-1}}-1$$
 
 不同市场和标的可能拥有不同交易日历。多标的合并时，内连接、外连接和缺失填充隐含不同假设；简单删除所有缺失行可能改变样本范围，向前填充也可能把停牌误作正常可交易。
 
-> 🚧 本节点是自有体系的目标位置，正文待课程学完后整理。当前可参考课程笔记 [复权与数据对齐](node:c365adjust)。
+> 🚧 本节点是自有体系的目标位置，正文待课程学完后讨论整理。
 </script>
 <script type="text/markdown" data-node="databias">
 # 数据质量与偏差
@@ -1283,7 +926,7 @@ $$r_t=\frac{P_t-P_{t-1}}{P_{t-1}}=\frac{P_t}{P_{t-1}}-1$$
 
 回看今天仍存在的股票会产生幸存者偏差；使用后来修订的财务数据会破坏时点真实性；用未来成分股列表回测过去也会提前泄露信息。可靠数据应尽量满足“在当时能够获得”的 point-in-time 原则。
 
-> 🚧 本节点是自有体系的目标位置，正文待课程学完后整理。当前可参考课程笔记 [数据质量与清洗](node:c365data)。
+> 🚧 本节点是自有体系的目标位置，正文待课程学完后讨论整理。
 </script>
 <script type="text/markdown" data-node="randomwalk">
 # 随机游走与布朗运动
@@ -1292,7 +935,7 @@ $$r_t=\frac{P_t-P_{t-1}}{P_{t-1}}=\frac{P_t}{P_{t-1}}-1$$
 
 它的价值不在于描述真实市场的全部规律，而在于提供一个可计算、可证伪的基准：任何声称能预测价格的规则，都应证明自己优于“下一步不可预测”。
 
-> 🚧 本节点是自有体系的目标位置，正文待课程学完后整理。当前可参考课程笔记 [随机游走与布朗运动](node:dwqrandomwalk)。
+> 🚧 本节点是自有体系的目标位置，正文待课程学完后讨论整理。
 </script>
 <script type="text/markdown" data-node="strategy">
 # 策略与信号
@@ -1336,7 +979,7 @@ $$r_t=\frac{P_t-P_{t-1}}{P_{t-1}}=\frac{P_t}{P_{t-1}}-1$$
 
 最小日线示例可以把信号延后一日形成实际仓位，再用仓位乘以当日收益。更真实的设计还需说明信号计算时刻、下单时刻、成交价格、数据发布时间和市场时区。
 
-> 🚧 本节点是自有体系的目标位置，正文待课程学完后整理。当前可参考课程笔记 [未来函数与时点](node:c365lookahead)。
+> 🚧 本节点是自有体系的目标位置，正文待课程学完后讨论整理。
 </script>
 <script type="text/markdown" data-node="costbenchmark">
 # 交易成本与基准
@@ -1421,7 +1064,7 @@ $$\beta=\frac{\operatorname{Cov}(R_i,R_m)}{\operatorname{Var}(R_m)}$$
 
 仓位决策因此不是“越大越好”，而是在优势估计误差、回撤承受力和长期增长率之间取平衡。
 
-> 🚧 本节点是自有体系的目标位置，正文待课程学完后整理。当前可参考课程笔记 [概率优势与凯利仓位](node:dwqkelly)。
+> 🚧 本节点是自有体系的目标位置，正文待课程学完后讨论整理。
 </script>
 <script type="text/markdown" data-node="execution">
 # 执行与系统
@@ -1749,9 +1392,9 @@ jupyter kernelspec list
 5. 划分样本内外区间，形成含成本和稳健性检验的策略研究报告（沿用 365 P1 第 29 课的报告结构）。
 </script>
 <script>
-const TREE=[{"id": "map", "label": "🧭 学习路线图"}, {"id": "refs", "label": "📚 资料清单", "children": [{"id": "learningmainline", "label": "当前学习主线"}, {"id": "c365", "label": "🎓 365 天量化课程", "children": [{"id": "c365map", "label": "课程大纲与本地映射", "href": "../../pam-video-captures/365-days-quant-finance/knowledge-map.html"}, {"id": "c365guide", "label": "课程学习指引"}, {"id": "c365p1", "label": "P1 量化基础要点"}, {"id": "c365p2", "label": "P2 工具栈要点"}, {"id": "c365data", "label": "数据质量与清洗"}, {"id": "c365adjust", "label": "复权与数据对齐"}, {"id": "c365lookahead", "label": "未来函数与时点"}]}, {"id": "dwq", "label": "🐣 Datawhale 量化入门", "children": [{"id": "dwqrandomwalk", "label": "随机游走与布朗运动"}, {"id": "dwqkelly", "label": "概率优势与凯利仓位"}]}, {"id": "coursecompare", "label": "🔀 两门课程对照"}, {"id": "mathrefs", "label": "数学基础与量化"}, {"id": "freefinance", "label": "免费金融与量化阅读"}, {"id": "opensourcetools", "label": "开源系统与 GitHub 工具"}, {"id": "infosystems", "label": "数据与财经信息源"}]}, {"id": "framework", "label": "🧩 量化研究框架", "children": [{"id": "hypothesis", "label": "研究问题与假设"}, {"id": "researchloop", "label": "从研究到交易的闭环"}]}, {"id": "market", "label": "🏛️ 市场与交易基础", "children": [{"id": "instruments", "label": "市场与交易标的"}, {"id": "orders", "label": "价格、订单与成交"}, {"id": "positionpnl", "label": "仓位、资金与盈亏"}]}, {"id": "datareturns", "label": "📊 数据与收益", "children": [{"id": "ohlcv", "label": "OHLCV 行情数据"}, {"id": "returns", "label": "收益率与净值"}, {"id": "randomwalk", "label": "随机游走与布朗运动"}, {"id": "alignment", "label": "复权、交易日历与数据对齐"}, {"id": "databias", "label": "数据质量与偏差"}]}, {"id": "strategy", "label": "🎯 策略与信号", "children": [{"id": "signalposition", "label": "信号、仓位与调仓"}, {"id": "movingaverage", "label": "趋势与移动平均线"}, {"id": "factorsignal", "label": "因子与截面信号"}]}, {"id": "backtest", "label": "🧪 回测与评估", "children": [{"id": "timing", "label": "信号时序与因果"}, {"id": "costbenchmark", "label": "交易成本与基准"}, {"id": "metrics", "label": "绩效指标"}, {"id": "backtestbias", "label": "回测偏差与过拟合"}, {"id": "validation", "label": "样本外与滚动验证"}]}, {"id": "riskportfolio", "label": "🛡️ 风险与组合", "children": [{"id": "volatility", "label": "波动率"}, {"id": "sharpebeta", "label": "Sharpe 与 Beta"}, {"id": "drawdownposition", "label": "最大回撤与仓位管理"}, {"id": "kellyposition", "label": "概率优势与凯利仓位"}, {"id": "correlation", "label": "相关性与分散化"}, {"id": "portfolio", "label": "组合构建与再平衡"}]}, {"id": "execution", "label": "⚙️ 执行与系统", "children": [{"id": "transaction", "label": "交易成本与流动性"}, {"id": "paperlive", "label": "从模拟盘到实盘"}, {"id": "monitoring", "label": "监控、日志与风控"}]}, {"id": "advanced", "label": "🚀 进阶专题", "children": [{"id": "multifactor", "label": "因子与多因子"}, {"id": "timeseries", "label": "时间序列研究"}, {"id": "mlquant", "label": "机器学习量化"}, {"id": "dlquant", "label": "深度学习与 AI 量化"}]}, {"id": "practice", "label": "🔬 实验实践", "children": [{"id": "env", "label": "实验环境"}, {"id": "experiments", "label": "实验路线"}]}];
-const EDGES=[["map", "coursecompare"], ["map", "c365"], ["map", "c365guide"], ["map", "dwq"], ["map", "env"], ["c365", "c365guide"], ["c365", "coursecompare"], ["c365", "c365p1"], ["c365", "c365p2"], ["c365", "c365data"], ["c365", "c365adjust"], ["c365", "c365lookahead"], ["c365", "framework"], ["c365p1", "c365adjust"], ["c365guide", "c365p1"], ["c365guide", "c365p2"], ["c365p2", "c365data"], ["c365p2", "c365adjust"], ["c365p2", "c365lookahead"], ["c365data", "c365adjust"], ["c365data", "c365lookahead"], ["c365adjust", "c365data"], ["c365adjust", "c365lookahead"], ["c365lookahead", "c365data"], ["c365lookahead", "c365adjust"], ["dwq", "env"], ["dwq", "coursecompare"], ["dwq", "dwqrandomwalk"], ["dwq", "dwqkelly"], ["dwq", "framework"], ["coursecompare", "dwq"], ["coursecompare", "c365"], ["refs", "learningmainline"], ["refs", "c365"], ["refs", "mathrefs"], ["refs", "freefinance"], ["refs", "opensourcetools"], ["refs", "infosystems"], ["alignment", "c365adjust"], ["databias", "c365data"], ["randomwalk", "dwqrandomwalk"], ["timing", "c365lookahead"], ["kellyposition", "dwqkelly"]];
-const META={"map": {"full": true}, "learningmainline": {"full": true}, "freefinance": {"full": true}, "mathrefs": {"full": true}, "opensourcetools": {"full": true}, "infosystems": {"full": true}, "c365": {"full": true}, "c365p1": {"full": true}, "c365guide": {"full": true}, "c365p2": {"full": true}, "c365data": {"full": true}, "c365adjust": {"full": true}, "c365lookahead": {"full": true}, "dwq": {"full": true}, "dwqrandomwalk": {"full": true}, "dwqkelly": {"full": true}, "coursecompare": {"full": true}, "refs": {"full": true}, "framework": {"full": false}, "hypothesis": {"full": false}, "researchloop": {"full": false}, "market": {"full": false}, "instruments": {"full": false}, "orders": {"full": false}, "positionpnl": {"full": false}, "datareturns": {"full": false}, "ohlcv": {"full": false}, "returns": {"full": false}, "alignment": {"full": false}, "databias": {"full": false}, "randomwalk": {"full": false}, "strategy": {"full": false}, "signalposition": {"full": false}, "movingaverage": {"full": false}, "factorsignal": {"full": false}, "backtest": {"full": false}, "timing": {"full": false}, "costbenchmark": {"full": false}, "metrics": {"full": false}, "backtestbias": {"full": false}, "validation": {"full": false}, "riskportfolio": {"full": false}, "volatility": {"full": false}, "sharpebeta": {"full": false}, "drawdownposition": {"full": false}, "correlation": {"full": false}, "portfolio": {"full": false}, "kellyposition": {"full": false}, "execution": {"full": false}, "transaction": {"full": false}, "paperlive": {"full": false}, "monitoring": {"full": false}, "advanced": {"full": false}, "multifactor": {"full": false}, "timeseries": {"full": false}, "mlquant": {"full": false}, "dlquant": {"full": false}, "practice": {"full": false}, "env": {"full": true}, "experiments": {"full": true}};
+const TREE=[{"id": "map", "label": "🧭 学习路线图"}, {"id": "refs", "label": "📚 资料清单", "children": [{"id": "learningmainline", "label": "当前学习主线"}, {"id": "c365", "label": "🎓 365 天量化课程", "href": "../../pam-video-captures/365-days-quant-finance/knowledge-map.html"}, {"id": "dwq", "label": "🐣 Datawhale 量化入门", "children": [{"id": "dwqrandomwalk", "label": "随机游走与布朗运动"}, {"id": "dwqkelly", "label": "概率优势与凯利仓位"}]}, {"id": "coursecompare", "label": "🔀 两门课程对照"}, {"id": "mathrefs", "label": "数学基础与量化"}, {"id": "freefinance", "label": "免费金融与量化阅读"}, {"id": "opensourcetools", "label": "开源系统与 GitHub 工具"}, {"id": "infosystems", "label": "数据与财经信息源"}]}, {"id": "framework", "label": "🧩 量化研究框架", "children": [{"id": "hypothesis", "label": "研究问题与假设"}, {"id": "researchloop", "label": "从研究到交易的闭环"}]}, {"id": "market", "label": "🏛️ 市场与交易基础", "children": [{"id": "instruments", "label": "市场与交易标的"}, {"id": "orders", "label": "价格、订单与成交"}, {"id": "positionpnl", "label": "仓位、资金与盈亏"}]}, {"id": "datareturns", "label": "📊 数据与收益", "children": [{"id": "ohlcv", "label": "OHLCV 行情数据"}, {"id": "returns", "label": "收益率与净值"}, {"id": "randomwalk", "label": "随机游走与布朗运动"}, {"id": "alignment", "label": "复权、交易日历与数据对齐"}, {"id": "databias", "label": "数据质量与偏差"}]}, {"id": "strategy", "label": "🎯 策略与信号", "children": [{"id": "signalposition", "label": "信号、仓位与调仓"}, {"id": "movingaverage", "label": "趋势与移动平均线"}, {"id": "factorsignal", "label": "因子与截面信号"}]}, {"id": "backtest", "label": "🧪 回测与评估", "children": [{"id": "timing", "label": "信号时序与因果"}, {"id": "costbenchmark", "label": "交易成本与基准"}, {"id": "metrics", "label": "绩效指标"}, {"id": "backtestbias", "label": "回测偏差与过拟合"}, {"id": "validation", "label": "样本外与滚动验证"}]}, {"id": "riskportfolio", "label": "🛡️ 风险与组合", "children": [{"id": "volatility", "label": "波动率"}, {"id": "sharpebeta", "label": "Sharpe 与 Beta"}, {"id": "drawdownposition", "label": "最大回撤与仓位管理"}, {"id": "kellyposition", "label": "概率优势与凯利仓位"}, {"id": "correlation", "label": "相关性与分散化"}, {"id": "portfolio", "label": "组合构建与再平衡"}]}, {"id": "execution", "label": "⚙️ 执行与系统", "children": [{"id": "transaction", "label": "交易成本与流动性"}, {"id": "paperlive", "label": "从模拟盘到实盘"}, {"id": "monitoring", "label": "监控、日志与风控"}]}, {"id": "advanced", "label": "🚀 进阶专题", "children": [{"id": "multifactor", "label": "因子与多因子"}, {"id": "timeseries", "label": "时间序列研究"}, {"id": "mlquant", "label": "机器学习量化"}, {"id": "dlquant", "label": "深度学习与 AI 量化"}]}, {"id": "practice", "label": "🔬 实验实践", "children": [{"id": "env", "label": "实验环境"}, {"id": "experiments", "label": "实验路线"}]}];
+const EDGES=[["map", "refs"], ["map", "coursecompare"], ["map", "dwq"], ["map", "env"], ["freefinance", "refs"], ["freefinance", "mathrefs"], ["freefinance", "infosystems"], ["mathrefs", "refs"], ["mathrefs", "freefinance"], ["opensourcetools", "refs"], ["opensourcetools", "infosystems"], ["opensourcetools", "env"], ["infosystems", "refs"], ["infosystems", "opensourcetools"], ["infosystems", "env"], ["dwq", "env"], ["dwq", "coursecompare"], ["dwq", "dwqrandomwalk"], ["dwq", "dwqkelly"], ["dwq", "framework"], ["coursecompare", "dwq"], ["refs", "learningmainline"], ["refs", "coursecompare"], ["refs", "mathrefs"], ["refs", "freefinance"], ["refs", "opensourcetools"], ["refs", "infosystems"]];
+const META={"map": {"full": true}, "learningmainline": {"full": true}, "freefinance": {"full": true}, "mathrefs": {"full": true}, "opensourcetools": {"full": true}, "infosystems": {"full": true}, "dwq": {"full": true}, "dwqrandomwalk": {"full": true}, "dwqkelly": {"full": true}, "coursecompare": {"full": true}, "refs": {"full": true}, "framework": {"full": false}, "hypothesis": {"full": false}, "researchloop": {"full": false}, "market": {"full": false}, "instruments": {"full": false}, "orders": {"full": false}, "positionpnl": {"full": false}, "datareturns": {"full": false}, "ohlcv": {"full": false}, "returns": {"full": false}, "alignment": {"full": false}, "databias": {"full": false}, "randomwalk": {"full": false}, "strategy": {"full": false}, "signalposition": {"full": false}, "movingaverage": {"full": false}, "factorsignal": {"full": false}, "backtest": {"full": false}, "timing": {"full": false}, "costbenchmark": {"full": false}, "metrics": {"full": false}, "backtestbias": {"full": false}, "validation": {"full": false}, "riskportfolio": {"full": false}, "volatility": {"full": false}, "sharpebeta": {"full": false}, "drawdownposition": {"full": false}, "correlation": {"full": false}, "portfolio": {"full": false}, "kellyposition": {"full": false}, "execution": {"full": false}, "transaction": {"full": false}, "paperlive": {"full": false}, "monitoring": {"full": false}, "advanced": {"full": false}, "multifactor": {"full": false}, "timeseries": {"full": false}, "mlquant": {"full": false}, "dlquant": {"full": false}, "practice": {"full": false}, "env": {"full": true}, "experiments": {"full": true}};
 const CONTENT={},LABEL={},PARENT={},HREF={},NODES={};
 document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
 (function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;NODES[n.id]=n;if(n.href)HREF[n.id]=n.href;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");
@@ -1863,7 +1506,7 @@ function bindXrefs(){
 }
 function pillW(s){var w=0;for(var i=0;i<s.length;i++){w+=s.charCodeAt(i)>255?13:7.2;}return Math.round(w)+26;}
 function overviewHtml(){
-  var order=["#\u8bfe\u7a0b\u5b66\u4e60\uff08\u8d44\u6599\u6e05\u5355\uff09","c365","dwq","#\u81ea\u6709\u91cf\u5316\u4f53\u7cfb\uff08\u6b63\u6587\u5f85\u6574\u7406\uff09","framework","market","datareturns","strategy","backtest","riskportfolio","execution","advanced","practice"];
+  var order=["framework","market","datareturns","strategy","backtest","riskportfolio","execution","advanced","practice"];
   var W=1056,x0=200,xmax=1046,ph=30,y=16,pos={},layers=[],seps=[];
   order.forEach(function(gid){
     if(gid.charAt(0)==="#"){seps.push({y:y,label:gid.slice(1)});y+=30;return;}
@@ -1909,7 +1552,7 @@ function overviewHtml(){
     s+='<g class="pill '+(full?'full':'stub')+'" data-id="'+attr(id)+'"><rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+ph+'" rx="8"/><text x="'+(p.x+13)+'" y="'+(p.y+19)+'">'+(LABEL[id]||id)+(done[id]?'<tspan class="dk"> ✓</tspan>':'')+'</text></g>';
   });
   s+='</svg>';
-  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">上半是两条课程轨（已有笔记），下半是自有体系九章（正文待整理）。实心节点已成文，虚线节点只有边界说明；曲线是节点互引。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 待整理</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉互引</span></div></section>';
+  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">自有量化体系九章：章为层、知识点为网点，课程内容不进此图。实心节点已成文，虚线节点只有边界说明；曲线是节点互引。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 待整理</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉互引</span></div></section>';
 }
 function bindNet(){
   var svg=document.querySelector('#reader svg.net');if(!svg)return;
@@ -1981,7 +1624,7 @@ function renderNode(id,anchor,opts){
   currentRoute={id:id,anchor:anchor||""};
   const isDone=!!done[id];
   const rd=document.getElementById("reader");
-  rd.classList.toggle("wide",["map","refs","c365","c365guide","c365p1","c365p2","coursecompare","dwq"].indexOf(id)>=0);
+  rd.classList.toggle("wide",["map","refs","coursecompare","dwq"].indexOf(id)>=0);
   rd.innerHTML='<div class="rdrhead"><button class="markbtn '+(isDone?'done':'')+'" onclick="toggleDone(\''+id+'\',this)">'+(isDone?'✓ 已掌握':'标记已掌握')+'</button></div>'+(id==="map"?overviewHtml():"")+(id==="framework"?frameworkOverviewHtml():"")+md(body)+relatedHtml(id);
   bindXrefs();
   if(id==="map")bindNet();

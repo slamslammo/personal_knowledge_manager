@@ -19,15 +19,7 @@ TREE = [
   {"id":"map","label":"🧭 学习路线图"},
   {"id":"refs","label":"📚 资料清单","children":[
     {"id":"learningmainline","label":"当前学习主线"},
-    {"id":"c365","label":"🎓 365 天量化课程","children":[
-      {"id":"c365map","label":"课程大纲与本地映射","href":"../../pam-video-captures/365-days-quant-finance/knowledge-map.html"},
-      {"id":"c365guide","label":"课程学习指引"},
-      {"id":"c365p1","label":"P1 量化基础要点"},
-      {"id":"c365p2","label":"P2 工具栈要点"},
-      {"id":"c365data","label":"数据质量与清洗"},
-      {"id":"c365adjust","label":"复权与数据对齐"},
-      {"id":"c365lookahead","label":"未来函数与时点"},
-    ]},
+    {"id":"c365","label":"🎓 365 天量化课程","href":"../../pam-video-captures/365-days-quant-finance/knowledge-map.html"},
     {"id":"dwq","label":"🐣 Datawhale 量化入门","children":[
       {"id":"dwqrandomwalk","label":"随机游走与布朗运动"},
       {"id":"dwqkelly","label":"概率优势与凯利仓位"},
@@ -343,7 +335,7 @@ function bindXrefs(){
 }
 function pillW(s){var w=0;for(var i=0;i<s.length;i++){w+=s.charCodeAt(i)>255?13:7.2;}return Math.round(w)+26;}
 function overviewHtml(){
-  var order=["#\u8bfe\u7a0b\u5b66\u4e60\uff08\u8d44\u6599\u6e05\u5355\uff09","c365","dwq","#\u81ea\u6709\u91cf\u5316\u4f53\u7cfb\uff08\u6b63\u6587\u5f85\u6574\u7406\uff09","framework","market","datareturns","strategy","backtest","riskportfolio","execution","advanced","practice"];
+  var order=["framework","market","datareturns","strategy","backtest","riskportfolio","execution","advanced","practice"];
   var W=1056,x0=200,xmax=1046,ph=30,y=16,pos={},layers=[],seps=[];
   order.forEach(function(gid){
     if(gid.charAt(0)==="#"){seps.push({y:y,label:gid.slice(1)});y+=30;return;}
@@ -389,7 +381,7 @@ function overviewHtml(){
     s+='<g class="pill '+(full?'full':'stub')+'" data-id="'+attr(id)+'"><rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+ph+'" rx="8"/><text x="'+(p.x+13)+'" y="'+(p.y+19)+'">'+(LABEL[id]||id)+(done[id]?'<tspan class="dk"> ✓</tspan>':'')+'</text></g>';
   });
   s+='</svg>';
-  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">上半是两条课程轨（已有笔记），下半是自有体系九章（正文待整理）。实心节点已成文，虚线节点只有边界说明；曲线是节点互引。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 待整理</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉互引</span></div></section>';
+  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">自有量化体系九章：章为层、知识点为网点，课程内容不进此图。实心节点已成文，虚线节点只有边界说明；曲线是节点互引。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 待整理</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉互引</span></div></section>';
 }
 function bindNet(){
   var svg=document.querySelector('#reader svg.net');if(!svg)return;
@@ -461,7 +453,7 @@ function renderNode(id,anchor,opts){
   currentRoute={id:id,anchor:anchor||""};
   const isDone=!!done[id];
   const rd=document.getElementById("reader");
-  rd.classList.toggle("wide",["map","refs","c365","c365guide","c365p1","c365p2","coursecompare","dwq"].indexOf(id)>=0);
+  rd.classList.toggle("wide",["map","refs","coursecompare","dwq"].indexOf(id)>=0);
   rd.innerHTML='<div class="rdrhead"><button class="markbtn '+(isDone?'done':'')+'" onclick="toggleDone(\''+id+'\',this)">'+(isDone?'✓ 已掌握':'标记已掌握')+'</button></div>'+(id==="map"?overviewHtml():"")+(id==="framework"?frameworkOverviewHtml():"")+md(body)+relatedHtml(id);
   bindXrefs();
   if(id==="map")bindNet();
