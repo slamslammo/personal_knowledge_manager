@@ -19,30 +19,75 @@ TREE = [
   {"id":"map","label":"🧭 学习路线图"},
   {"id":"refs","label":"📚 资料清单","children":[
     {"id":"learningmainline","label":"当前学习主线"},
+    {"id":"c365","label":"🎓 365 天量化课程","children":[
+      {"id":"c365guide","label":"课程学习指引"},
+      {"id":"c365p1","label":"P1 量化基础要点"},
+      {"id":"c365p2","label":"P2 工具栈要点"},
+      {"id":"c365data","label":"数据质量与清洗"},
+      {"id":"c365adjust","label":"复权与数据对齐"},
+      {"id":"c365lookahead","label":"未来函数与时点"},
+    ]},
+    {"id":"dwq","label":"🐣 Datawhale 量化入门","children":[
+      {"id":"dwqrandomwalk","label":"随机游走与布朗运动"},
+      {"id":"dwqkelly","label":"概率优势与凯利仓位"},
+    ]},
+    {"id":"coursecompare","label":"🔀 两门课程对照"},
     {"id":"mathrefs","label":"数学基础与量化"},
     {"id":"freefinance","label":"免费金融与量化阅读"},
-    {"id":"quant365","label":"365 天量化课程"},
     {"id":"opensourcetools","label":"开源系统与 GitHub 工具"},
     {"id":"infosystems","label":"数据与财经信息源"},
   ]},
-  {"id":"c365","label":"🎓 365 天量化课程","children":[
-    {"id":"c365overview","label":"课程总览与进度"},
-    {"id":"c365p1","label":"P1 量化基础要点"},
-    {"id":"c365p2","label":"P2 工具栈要点"},
-    {"id":"databias","label":"数据质量与清洗"},
-    {"id":"alignment","label":"复权与数据对齐"},
-    {"id":"timing","label":"未来函数与时点"},
+  {"id":"framework","label":"🧩 量化研究框架","children":[
+    {"id":"hypothesis","label":"研究问题与假设"},
+    {"id":"researchloop","label":"从研究到交易的闭环"},
   ]},
-  {"id":"dwq","label":"🐣 Datawhale 量化入门","children":[
-    {"id":"dwqoverview","label":"课程总览与进度"},
+  {"id":"market","label":"🏛️ 市场与交易基础","children":[
+    {"id":"instruments","label":"市场与交易标的"},
+    {"id":"orders","label":"价格、订单与成交"},
+    {"id":"positionpnl","label":"仓位、资金与盈亏"},
+  ]},
+  {"id":"datareturns","label":"📊 数据与收益","children":[
+    {"id":"ohlcv","label":"OHLCV 行情数据"},
+    {"id":"returns","label":"收益率与净值"},
     {"id":"randomwalk","label":"随机游走与布朗运动"},
-    {"id":"kellyposition","label":"概率优势与凯利仓位"},
+    {"id":"alignment","label":"复权、交易日历与数据对齐"},
+    {"id":"databias","label":"数据质量与偏差"},
   ]},
-  {"id":"practice","label":"🔬 实践与环境","children":[
+  {"id":"strategy","label":"🎯 策略与信号","children":[
+    {"id":"signalposition","label":"信号、仓位与调仓"},
+    {"id":"movingaverage","label":"趋势与移动平均线"},
+    {"id":"factorsignal","label":"因子与截面信号"},
+  ]},
+  {"id":"backtest","label":"🧪 回测与评估","children":[
+    {"id":"timing","label":"信号时序与因果"},
+    {"id":"costbenchmark","label":"交易成本与基准"},
+    {"id":"metrics","label":"绩效指标"},
+    {"id":"backtestbias","label":"回测偏差与过拟合"},
+    {"id":"validation","label":"样本外与滚动验证"},
+  ]},
+  {"id":"riskportfolio","label":"🛡️ 风险与组合","children":[
+    {"id":"volatility","label":"波动率"},
+    {"id":"sharpebeta","label":"Sharpe 与 Beta"},
+    {"id":"drawdownposition","label":"最大回撤与仓位管理"},
+    {"id":"kellyposition","label":"概率优势与凯利仓位"},
+    {"id":"correlation","label":"相关性与分散化"},
+    {"id":"portfolio","label":"组合构建与再平衡"},
+  ]},
+  {"id":"execution","label":"⚙️ 执行与系统","children":[
+    {"id":"transaction","label":"交易成本与流动性"},
+    {"id":"paperlive","label":"从模拟盘到实盘"},
+    {"id":"monitoring","label":"监控、日志与风控"},
+  ]},
+  {"id":"advanced","label":"🚀 进阶专题","children":[
+    {"id":"multifactor","label":"因子与多因子"},
+    {"id":"timeseries","label":"时间序列研究"},
+    {"id":"mlquant","label":"机器学习量化"},
+    {"id":"dlquant","label":"深度学习与 AI 量化"},
+  ]},
+  {"id":"practice","label":"🔬 实验实践","children":[
     {"id":"env","label":"实验环境"},
     {"id":"experiments","label":"实验路线"},
   ]},
-  {"id":"blueprint","label":"🧩 体系蓝图"},
 ]
 
 sections = {}
@@ -186,9 +231,9 @@ __BLOCKS__
 const TREE=__TREE__;
 const EDGES=__EDGES__;
 const META=__META__;
-const CONTENT={},LABEL={},PARENT={},HREF={};
+const CONTENT={},LABEL={},PARENT={},HREF={},NODES={};
 document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
-(function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;if(n.href)HREF[n.id]=n.href;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");
+(function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;NODES[n.id]=n;if(n.href)HREF[n.id]=n.href;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");
 let done=JSON.parse(localStorage.getItem("quantkb_done")||"{}");
 let currentRoute={id:"map",anchor:""};
 if("scrollRestoration" in history){history.scrollRestoration="manual";}
@@ -297,10 +342,11 @@ function bindXrefs(){
 }
 function pillW(s){var w=0;for(var i=0;i<s.length;i++){w+=s.charCodeAt(i)>255?13:7.2;}return Math.round(w)+26;}
 function overviewHtml(){
-  var order=["c365","dwq","practice"];
-  var W=1056,x0=200,xmax=1046,ph=30,y=16,pos={},layers=[];
+  var order=["#\u8bfe\u7a0b\u5b66\u4e60\uff08\u8d44\u6599\u6e05\u5355\uff09","c365","dwq","#\u81ea\u6709\u91cf\u5316\u4f53\u7cfb\uff08\u6b63\u6587\u5f85\u6574\u7406\uff09","framework","market","datareturns","strategy","backtest","riskportfolio","execution","advanced","practice"];
+  var W=1056,x0=200,xmax=1046,ph=30,y=16,pos={},layers=[],seps=[];
   order.forEach(function(gid){
-    var g=null;TREE.forEach(function(n){if(n.id===gid)g=n;});
+    if(gid.charAt(0)==="#"){seps.push({y:y,label:gid.slice(1)});y+=30;return;}
+    var g=NODES[gid];
     if(!g)return;
     var rowY=y,x=x0;
     layers.push({id:gid,y:rowY,label:g.label});
@@ -330,6 +376,10 @@ function overviewHtml(){
     }
     s+='<path class="edge" data-a="'+attr(e[0])+'" data-b="'+attr(e[1])+'" d="'+d+'"/>';
   });
+  seps.forEach(function(sp){
+    s+='<text class="sep" x="24" y="'+(sp.y+16)+'">'+sp.label+'</text>';
+    s+='<line class="sepline" x1="24" y1="'+(sp.y+23)+'" x2="'+(W-16)+'" y2="'+(sp.y+23)+'"/>';
+  });
   layers.forEach(function(l){
     s+='<text class="lyr" x="24" y="'+(l.y+19)+'" data-id="'+attr(l.id)+'">'+l.label+'</text>';
   });
@@ -338,7 +388,7 @@ function overviewHtml(){
     s+='<g class="pill '+(full?'full':'stub')+'" data-id="'+attr(id)+'"><rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+ph+'" rx="8"/><text x="'+(p.x+13)+'" y="'+(p.y+19)+'">'+(LABEL[id]||id)+(done[id]?'<tspan class="dk"> ✓</tspan>':'')+'</text></g>';
   });
   s+='</svg>';
-  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">每一层是一条学习轨。实心节点已成文，虚线节点待蒸馏；曲线是节点互引，跨轨连线密集处即阶段三的合并候选。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 待蒸馏</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉互引</span></div></section>';
+  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">上半是两条课程轨（已有笔记），下半是自有体系九章（正文待整理）。实心节点已成文，虚线节点只有边界说明；曲线是节点互引。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 待整理</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉互引</span></div></section>';
 }
 function bindNet(){
   var svg=document.querySelector('#reader svg.net');if(!svg)return;
@@ -410,7 +460,7 @@ function renderNode(id,anchor,opts){
   currentRoute={id:id,anchor:anchor||""};
   const isDone=!!done[id];
   const rd=document.getElementById("reader");
-  rd.classList.toggle("wide",["map","refs","c365overview","c365p1","c365p2","dwqoverview"].indexOf(id)>=0);
+  rd.classList.toggle("wide",["map","refs","c365","c365guide","c365p1","c365p2","coursecompare","dwq"].indexOf(id)>=0);
   rd.innerHTML='<div class="rdrhead"><button class="markbtn '+(isDone?'done':'')+'" onclick="toggleDone(\''+id+'\',this)">'+(isDone?'✓ 已掌握':'标记已掌握')+'</button></div>'+(id==="map"?overviewHtml():"")+(id==="framework"?frameworkOverviewHtml():"")+md(body)+relatedHtml(id);
   bindXrefs();
   if(id==="map")bindNet();
@@ -436,7 +486,7 @@ function toggleDone(id,btn){
   renderNode(id,st.anchor,{scroll:st.scroll,restore:true});
 }
 function updateProg(){
-  const groups=['map','refs','c365','dwq','practice','blueprint'];
+  const groups=['map','refs','c365','dwq','framework','market','datareturns','strategy','backtest','riskportfolio','execution','advanced','practice'];
   const ids=Object.keys(LABEL).filter(i=>groups.indexOf(i)<0);
   const d=ids.filter(i=>done[i]).length;
   document.getElementById("prog").textContent='已掌握 '+d+'/'+ids.length;
