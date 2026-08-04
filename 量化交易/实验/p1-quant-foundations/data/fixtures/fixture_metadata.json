@@ -1,0 +1,39 @@
+{
+  "schema": "p1.quant-fixtures.v1",
+  "identity": "synthetic",
+  "seed": 365,
+  "warning": "固定随机种子生成的模拟教学数据，不是真实证券行情，不可用于投资结论。",
+  "timezone_convention": "Asia/Shanghai",
+  "annualization_periods": 252,
+  "files": {
+    "daily_prices.csv": {
+      "shape": [
+        4536,
+        6
+      ],
+      "frequency": "1 business day",
+      "adjustment": "simulated adjusted close"
+    },
+    "order_book.csv": {
+      "shape": [
+        10,
+        5
+      ],
+      "frequency": "single L2 snapshot"
+    },
+    "intraday_ticks.csv": {
+      "shape": [
+        240,
+        4
+      ],
+      "frequency": "5 seconds"
+    },
+    "corporate_actions.csv": {
+      "shape": [
+        2,
+        5
+      ],
+      "frequency": "event"
+    }
+  }
+}

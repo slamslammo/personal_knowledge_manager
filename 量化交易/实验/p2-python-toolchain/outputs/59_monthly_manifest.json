@@ -1,0 +1,11 @@
+{
+  "lesson": 59,
+  "as_of_date": "2025-11-25",
+  "period_start": "2025-11-01",
+  "period_end": "2025-11-30",
+  "input_sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+  "report_sha256": "5fd3e63a6668cd7127bab67be76e2edc92ee093044c8f55d620e36506784914e",
+  "report": "59_monthly_report.html",
+  "chart": "59_monthly_nav.png",
+  "status": "ready-local"
+}

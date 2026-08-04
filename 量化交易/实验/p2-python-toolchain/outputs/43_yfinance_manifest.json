@@ -1,0 +1,13 @@
+{
+  "adapter": "yfinance-style-offline",
+  "yfinance_version": "1.5.1",
+  "auto_adjust": false,
+  "price_fields": [
+    "Close",
+    "Adj Close",
+    "Volume"
+  ],
+  "date_start": "2023-01-03",
+  "date_end": "2025-11-25",
+  "sha256": "15af57f865410ff035563ea5afea510a41eebb1446876747fe429e440addbeb4"
+}

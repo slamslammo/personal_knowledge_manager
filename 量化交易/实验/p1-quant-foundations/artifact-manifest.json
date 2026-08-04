@@ -1,0 +1,483 @@
+{
+  "schema": "p1.quant-foundations.artifacts.v1",
+  "courseRange": [
+    1,
+    30
+  ],
+  "environment": "pkm-quant",
+  "dataDefault": "offline-synthetic-fixtures",
+  "singleBrowserEntry": "/Users/mojiawen/Documents/学习资料归档/_暂存/pam-video-captures/365-days-quant-finance/knowledge-map.html",
+  "modules": [
+    {
+      "id": "M1",
+      "title": "研究问题与市场假设",
+      "start": 1,
+      "end": 4,
+      "focus": "交易对象、市场机制、策略类型、优势来源与可证伪条件",
+      "report_field": "研究问题、市场范围与假设",
+      "lab": {
+        "id": "L1",
+        "title": "研究假设卡",
+        "basename": "L1_研究假设卡",
+        "description": "把模糊交易想法改写为有资产范围、可观测机制和反证条件的研究假设。"
+      }
+    },
+    {
+      "id": "M2",
+      "title": "收益、时间价值与风险",
+      "start": 5,
+      "end": 8,
+      "focus": "收益口径、几何复利、贴现、波动、协方差与组合分散",
+      "report_field": "收益、风险与基准口径",
+      "lab": {
+        "id": "L2",
+        "title": "收益—风险账本",
+        "basename": "L2_收益风险账本",
+        "description": "用统一时点和频率核算收益、复利、波动、相关性与组合风险。"
+      }
+    },
+    {
+      "id": "M3",
+      "title": "统计证据与可预测性",
+      "start": 9,
+      "end": 16,
+      "focus": "回归、分布、厚尾、抽样、检验、样本外、平稳性与自相关",
+      "report_field": "统计证据、效应大小与样本外验证",
+      "lab": {
+        "id": "L3",
+        "title": "信号证据审计",
+        "basename": "L3_信号证据审计",
+        "description": "同时检查效应大小、显著性、时间依赖、样本外表现和多重检验边界。"
+      }
+    },
+    {
+      "id": "M4",
+      "title": "随机模型与衍生品风险",
+      "start": 17,
+      "end": 21,
+      "focus": "蒙特卡洛、GBM、风险中性定价、Black–Scholes 与 Greeks",
+      "report_field": "模型假设、情景风险与对冲敏感度",
+      "lab": {
+        "id": "L4",
+        "title": "随机场景与期权风险",
+        "basename": "L4_随机场景与期权风险",
+        "description": "区分真实世界模拟、风险中性定价和局部对冲，检查模型假设变化的影响。"
+      }
+    },
+    {
+      "id": "M5",
+      "title": "市场微观结构与执行",
+      "start": 22,
+      "end": 25,
+      "focus": "订单簿、价差、流动性、冲击、撮合优先级与交易场所差异",
+      "report_field": "成交规则、成本、容量与可执行性",
+      "lab": {
+        "id": "L5",
+        "title": "执行可行性与成本",
+        "basename": "L5_执行可行性与成本",
+        "description": "从订单簿和撮合规则推导成交价格、滑点、费用和容量后的净收益。"
+      }
+    },
+    {
+      "id": "M6",
+      "title": "数据契约与策略报告",
+      "start": 26,
+      "end": 30,
+      "focus": "数据来源、复权、频率、报告生成、能力矩阵与 P2 衔接",
+      "report_field": "数据契约、完整报告与阶段验收",
+      "lab": {
+        "id": "L6",
+        "title": "数据契约与策略报告",
+        "basename": "L6_数据契约与策略报告",
+        "description": "把数据、信号、基准、风险、成本和稳健性证据组装成可复现报告。"
+      }
+    }
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "title": "课程总览：365天能学到什么",
+      "module": "M1",
+      "source": "01_youtube-XDiB1XbPKFQ/index.html",
+      "report": "reports/01_量化研究路线与阶段目标.html",
+      "notebook": null,
+      "artifactType": "knowledge-report",
+      "strategyReportField": "报告目录、研究流程与验收标准",
+      "status": "built"
+    },
+    {
+      "number": 2,
+      "title": "量化交易 vs 主观交易",
+      "module": "M1",
+      "source": "02_youtube-Mdb3dpYMunc/index.html",
+      "report": "reports/02_量化与主观决策边界.html",
+      "notebook": null,
+      "artifactType": "knowledge-report",
+      "strategyReportField": "决策规则、人工干预与治理边界",
+      "status": "built"
+    },
+    {
+      "number": 3,
+      "title": "量化的三大流派",
+      "module": "M1",
+      "source": "03_youtube-v7icairI4eU/index.html",
+      "report": "reports/03_策略流派与优势来源.html",
+      "notebook": null,
+      "artifactType": "knowledge-report",
+      "strategyReportField": "策略类型、优势来源和适用市场",
+      "status": "built"
+    },
+    {
+      "number": 4,
+      "title": "金融市场基础速览",
+      "module": "M1",
+      "source": "04_youtube-mjogM5-bYd0/index.html",
+      "report": "reports/04_资产类别与可比净值.html",
+      "notebook": "notebooks/04_资产类别与可比净值.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "资产范围、市场规则和比较基准",
+      "status": "built"
+    },
+    {
+      "number": 5,
+      "title": "收益率的几种算法",
+      "module": "M2",
+      "source": "05_youtube-8lEmreryblc/index.html",
+      "report": "reports/05_收益率口径与累计净值.html",
+      "notebook": "notebooks/05_收益率口径与累计净值.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "收益口径、累计净值和年化规则",
+      "status": "built"
+    },
+    {
+      "number": 6,
+      "title": "复利与贴现",
+      "module": "M2",
+      "source": "06_youtube-3YpcWCIDGXo/index.html",
+      "report": "reports/06_复利贴现NPV与IRR.html",
+      "notebook": "notebooks/06_复利贴现NPV与IRR.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "现金流时点、机会成本和资本占用",
+      "status": "built"
+    },
+    {
+      "number": 7,
+      "title": "风险与方差",
+      "module": "M2",
+      "source": "07_youtube-77BCwkiGHhQ/index.html",
+      "report": "reports/07_波动方差与下行风险.html",
+      "notebook": "notebooks/07_波动方差与下行风险.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "波动、下行风险和回撤",
+      "status": "built"
+    },
+    {
+      "number": 8,
+      "title": "协方差与相关性",
+      "module": "M2",
+      "source": "08_youtube-8lopnSDzetE/index.html",
+      "report": "reports/08_协方差相关性与分散化.html",
+      "notebook": "notebooks/08_协方差相关性与分散化.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "组合依赖结构和分散化证据",
+      "status": "built"
+    },
+    {
+      "number": 9,
+      "title": "线性回归与最小二乘",
+      "module": "M3",
+      "source": "09_youtube-O5IPAeu8X6w/index.html",
+      "report": "reports/09_OLS回归Beta与Alpha.html",
+      "notebook": "notebooks/09_OLS回归Beta与Alpha.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "基准归因、Beta 和 Alpha",
+      "status": "built"
+    },
+    {
+      "number": 10,
+      "title": "正态分布与金融",
+      "module": "M3",
+      "source": "10_youtube-pQir11RK3Lw/index.html",
+      "report": "reports/10_正态分布基准与偏离.html",
+      "notebook": "notebooks/10_正态分布基准与偏离.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "分布假设和基准风险模型",
+      "status": "built"
+    },
+    {
+      "number": 11,
+      "title": "厚尾与黑天鹅",
+      "module": "M3",
+      "source": "11_youtube-RkHMM_UcsTo/index.html",
+      "report": "reports/11_厚尾极端风险与模型误差.html",
+      "notebook": "notebooks/11_厚尾极端风险与模型误差.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "尾部风险、压力情景和模型风险",
+      "status": "built"
+    },
+    {
+      "number": 12,
+      "title": "中心极限定理在金融",
+      "module": "M3",
+      "source": "12_youtube-s3Kbk9TCZfI/index.html",
+      "report": "reports/12_中心极限定理与抽样误差.html",
+      "notebook": "notebooks/12_中心极限定理与抽样误差.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "估计误差、置信区间和有效样本量",
+      "status": "built"
+    },
+    {
+      "number": 13,
+      "title": "假设检验入门",
+      "module": "M3",
+      "source": "13_youtube-fRHsVq24XRg/index.html",
+      "report": "reports/13_假设检验效应大小与功效.html",
+      "notebook": "notebooks/13_假设检验效应大小与功效.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "原假设、效应大小、置信区间和检验功效",
+      "status": "built"
+    },
+    {
+      "number": 14,
+      "title": "R² 与策略评估",
+      "module": "M3",
+      "source": "14_youtube-N56u1XU5x80/index.html",
+      "report": "reports/14_R2解释力与样本外预测.html",
+      "notebook": "notebooks/14_R2解释力与样本外预测.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "样本内解释、样本外预测与基准",
+      "status": "built"
+    },
+    {
+      "number": 15,
+      "title": "时间序列与平稳性",
+      "module": "M3",
+      "source": "15_youtube-yro4gb2hNOg/index.html",
+      "report": "reports/15_平稳性差分与伪回归.html",
+      "notebook": "notebooks/15_平稳性差分与伪回归.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "序列变换、平稳性和伪回归风险",
+      "status": "built"
+    },
+    {
+      "number": 16,
+      "title": "自相关与预测",
+      "module": "M3",
+      "source": "16_youtube-xKjtlaYwWr0/index.html",
+      "report": "reports/16_自相关白噪声与预测边界.html",
+      "notebook": "notebooks/16_自相关白噪声与预测边界.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "滞后结构、预测信号和白噪声检验",
+      "status": "built"
+    },
+    {
+      "number": 17,
+      "title": "蒙特卡洛模拟入门",
+      "module": "M4",
+      "source": "17_youtube-WzDKG89SzQg/index.html",
+      "report": "reports/17_蒙特卡洛情景与概率误差.html",
+      "notebook": "notebooks/17_蒙特卡洛情景与概率误差.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "情景分布、尾部概率和模型参数",
+      "status": "built"
+    },
+    {
+      "number": 18,
+      "title": "几何布朗运动",
+      "module": "M4",
+      "source": "18_youtube-IP4xUfcXvRY/index.html",
+      "report": "reports/18_几何布朗运动与路径假设.html",
+      "notebook": "notebooks/18_几何布朗运动与路径假设.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "价格过程假设与情景生成",
+      "status": "built"
+    },
+    {
+      "number": 19,
+      "title": "风险中性概率",
+      "module": "M4",
+      "source": "19_youtube-ETWnhDFQEGs/index.html",
+      "report": "reports/19_风险中性概率与二叉树定价.html",
+      "notebook": "notebooks/19_风险中性概率与二叉树定价.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "定价测度、复制组合和无套利边界",
+      "status": "built"
+    },
+    {
+      "number": 20,
+      "title": "Black-Scholes 直觉",
+      "module": "M4",
+      "source": "20_youtube-vyfZ3EMp2rw/index.html",
+      "report": "reports/20_BlackScholes价格与假设敏感性.html",
+      "notebook": "notebooks/20_BlackScholes价格与假设敏感性.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "期权估值、输入参数和模型风险",
+      "status": "built"
+    },
+    {
+      "number": 21,
+      "title": "希腊字母全解析",
+      "module": "M4",
+      "source": "21_youtube-jhLFiq5FAvY/index.html",
+      "report": "reports/21_Greeks局部敏感度与对冲.html",
+      "notebook": "notebooks/21_Greeks局部敏感度与对冲.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "方向、曲率、时间和波动率风险",
+      "status": "built"
+    },
+    {
+      "number": 22,
+      "title": "订单簿基础",
+      "module": "M5",
+      "source": "22_youtube-1rJNDTqkucY/index.html",
+      "report": "reports/22_订单簿价差深度与不平衡.html",
+      "notebook": "notebooks/22_订单簿价差深度与不平衡.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "报价、深度、订单类型和流动性状态",
+      "status": "built"
+    },
+    {
+      "number": 23,
+      "title": "价差/流动性/冲击成本",
+      "module": "M5",
+      "source": "23_youtube-PQ62jZ8V_QQ/index.html",
+      "report": "reports/23_滑点冲击与成本后收益.html",
+      "notebook": "notebooks/23_滑点冲击与成本后收益.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "费用、滑点、冲击、换手和容量",
+      "status": "built"
+    },
+    {
+      "number": 24,
+      "title": "撮合机制全景",
+      "module": "M5",
+      "source": "24_youtube-nGSSR6jEM4s/index.html",
+      "report": "reports/24_价格时间优先与撮合模拟.html",
+      "notebook": "notebooks/24_价格时间优先与撮合模拟.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "成交模型、排队假设和未成交风险",
+      "status": "built"
+    },
+    {
+      "number": 25,
+      "title": "主流交易所对比",
+      "module": "M5",
+      "source": "25_youtube-PZayxmJOCMw/index.html",
+      "report": "reports/25_交易场所规则对照.html",
+      "notebook": null,
+      "artifactType": "knowledge-report",
+      "strategyReportField": "交易场所、产品规则和合规约束",
+      "status": "built"
+    },
+    {
+      "number": 26,
+      "title": "数据来源大全",
+      "module": "M6",
+      "source": "26_youtube-Ry5Ab7zZ9mw/index.html",
+      "report": "reports/26_数据源适配与契约.html",
+      "notebook": "notebooks/26_数据源适配与契约.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "数据来源、许可、schema 和版本",
+      "status": "built"
+    },
+    {
+      "number": 27,
+      "title": "复权处理",
+      "module": "M6",
+      "source": "27_youtube--H95z4T8cjI/index.html",
+      "report": "reports/27_公司行动与复权口径.html",
+      "notebook": "notebooks/27_公司行动与复权口径.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "公司行动、原始价、复权价和可得时间",
+      "status": "built"
+    },
+    {
+      "number": 28,
+      "title": "行情频率与场景",
+      "module": "M6",
+      "source": "28_youtube-Lh-qXaEe4Ok/index.html",
+      "report": "reports/28_行情频率重采样与信息边界.html",
+      "notebook": "notebooks/28_行情频率重采样与信息边界.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "频率、时区、聚合和信号可得时点",
+      "status": "built"
+    },
+    {
+      "number": 29,
+      "title": "第一阶段实战:画一份策略报告",
+      "module": "M6",
+      "source": "29_youtube-e3X6Ozwhz7k/index.html",
+      "report": "reports/29_策略研究报告闭环.html",
+      "notebook": "notebooks/29_策略研究报告闭环.ipynb",
+      "artifactType": "knowledge-report-and-notebook",
+      "strategyReportField": "完整策略研究报告",
+      "status": "built"
+    },
+    {
+      "number": 30,
+      "title": "第一阶段总结 + 学习路线图",
+      "module": "M6",
+      "source": "30_bilibili-BV1xPVu6BE4d/index.html",
+      "report": "reports/30_P1能力矩阵与阶段验收.html",
+      "notebook": null,
+      "artifactType": "knowledge-report",
+      "strategyReportField": "能力矩阵、缺口清单和 P2 学习计划",
+      "status": "built"
+    }
+  ],
+  "labs": [
+    {
+      "id": "L1",
+      "module": "M1",
+      "title": "研究假设卡",
+      "report": "reports/L1_研究假设卡.html",
+      "notebook": "labs/L1_研究假设卡.ipynb",
+      "status": "built"
+    },
+    {
+      "id": "L2",
+      "module": "M2",
+      "title": "收益—风险账本",
+      "report": "reports/L2_收益风险账本.html",
+      "notebook": "labs/L2_收益风险账本.ipynb",
+      "status": "built"
+    },
+    {
+      "id": "L3",
+      "module": "M3",
+      "title": "信号证据审计",
+      "report": "reports/L3_信号证据审计.html",
+      "notebook": "labs/L3_信号证据审计.ipynb",
+      "status": "built"
+    },
+    {
+      "id": "L4",
+      "module": "M4",
+      "title": "随机场景与期权风险",
+      "report": "reports/L4_随机场景与期权风险.html",
+      "notebook": "labs/L4_随机场景与期权风险.ipynb",
+      "status": "built"
+    },
+    {
+      "id": "L5",
+      "module": "M5",
+      "title": "执行可行性与成本",
+      "report": "reports/L5_执行可行性与成本.html",
+      "notebook": "labs/L5_执行可行性与成本.ipynb",
+      "status": "built"
+    },
+    {
+      "id": "L6",
+      "module": "M6",
+      "title": "数据契约与策略报告",
+      "report": "reports/L6_数据契约与策略报告.html",
+      "notebook": "labs/L6_数据契约与策略报告.ipynb",
+      "status": "built"
+    }
+  ],
+  "counts": {
+    "knowledgeReports": 30,
+    "lessonNotebooks": 25,
+    "labs": 6
+  }
+}

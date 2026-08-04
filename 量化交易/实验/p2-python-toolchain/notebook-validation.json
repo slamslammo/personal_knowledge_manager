@@ -1,0 +1,224 @@
+{
+  "validated_at": "2026-07-29T12:38:38.050622+00:00",
+  "environment": "pkm-quant",
+  "status": "pass",
+  "notebook_count": 36,
+  "results": [
+    {
+      "notebook": "notebooks/31_环境与可复现研究.ipynb",
+      "status": "pass",
+      "code_cells": 10,
+      "executed_code_cells": 10
+    },
+    {
+      "notebook": "notebooks/32_NumPy广播与收益矩阵.ipynb",
+      "status": "pass",
+      "code_cells": 11,
+      "executed_code_cells": 11
+    },
+    {
+      "notebook": "notebooks/33_NumPy矩阵运算与PCA.ipynb",
+      "status": "pass",
+      "code_cells": 18,
+      "executed_code_cells": 18
+    },
+    {
+      "notebook": "notebooks/34_Pandas标签与行情表.ipynb",
+      "status": "pass",
+      "code_cells": 13,
+      "executed_code_cells": 13
+    },
+    {
+      "notebook": "notebooks/35_时间索引与OHLCV重采样.ipynb",
+      "status": "pass",
+      "code_cells": 13,
+      "executed_code_cells": 13
+    },
+    {
+      "notebook": "notebooks/36_滚动窗口与回撤.ipynb",
+      "status": "pass",
+      "code_cells": 14,
+      "executed_code_cells": 14
+    },
+    {
+      "notebook": "notebooks/37_MultiIndex分组与行业中性化.ipynb",
+      "status": "pass",
+      "code_cells": 16,
+      "executed_code_cells": 16
+    },
+    {
+      "notebook": "notebooks/38_缺失值处理与可交易性.ipynb",
+      "status": "pass",
+      "code_cells": 12,
+      "executed_code_cells": 12
+    },
+    {
+      "notebook": "notebooks/39_财报行情合并与时点一致性.ipynb",
+      "status": "pass",
+      "code_cells": 15,
+      "executed_code_cells": 15
+    },
+    {
+      "notebook": "notebooks/40_同一结果表驱动策略可视化.ipynb",
+      "status": "pass",
+      "code_cells": 14,
+      "executed_code_cells": 14
+    },
+    {
+      "notebook": "notebooks/41_Plotly交互K线.ipynb",
+      "status": "pass",
+      "code_cells": 10,
+      "executed_code_cells": 10
+    },
+    {
+      "notebook": "notebooks/42_mplfinance复盘图.ipynb",
+      "status": "pass",
+      "code_cells": 9,
+      "executed_code_cells": 9
+    },
+    {
+      "notebook": "notebooks/43_yfinance数据适配与复权口径.ipynb",
+      "status": "pass",
+      "code_cells": 4,
+      "executed_code_cells": 4
+    },
+    {
+      "notebook": "notebooks/44_AkShare数据契约与时点.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/45_SQLite行情库与幂等增量.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "notebooks/46_可复现量化数据流水线.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/47_技术指标公式与可执行时点.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/48_SciPy厚尾收益与极端风险.ipynb",
+      "status": "pass",
+      "code_cells": 7,
+      "executed_code_cells": 7
+    },
+    {
+      "notebook": "notebooks/49_statsmodels因子回归与稳健推断.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "notebooks/50_sklearn防泄漏时序分类.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "notebooks/51_装饰器重试缓存与资源边界.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/52_asyncio受控并发数据获取.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/53_线程进程与回测并行边界.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "notebooks/54_Numba数值循环加速与验算.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/55_回测调试与未来函数审计.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/56_pytest量化单元测试.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/57_Git实验版本与结果追踪.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "notebooks/58_Docker可复现研究环境设计.ipynb",
+      "status": "pass",
+      "code_cells": 4,
+      "executed_code_cells": 4
+    },
+    {
+      "notebook": "notebooks/59_自动月报流水线与幂等交付.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "notebooks/60_P2工具链总结与完成度审计.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "labs/L1_收益矩阵与组合风险.ipynb",
+      "status": "pass",
+      "code_cells": 18,
+      "executed_code_cells": 18
+    },
+    {
+      "notebook": "labs/L2_行情清洗与时间对齐.ipynb",
+      "status": "pass",
+      "code_cells": 14,
+      "executed_code_cells": 14
+    },
+    {
+      "notebook": "labs/L3_数据获取存储与报告.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "labs/L4_防泄漏统计建模.ipynb",
+      "status": "pass",
+      "code_cells": 6,
+      "executed_code_cells": 6
+    },
+    {
+      "notebook": "labs/L5_可测试的量化计算模块.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    },
+    {
+      "notebook": "labs/L6_一键生成月报.ipynb",
+      "status": "pass",
+      "code_cells": 5,
+      "executed_code_cells": 5
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+name: pkm-quant
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - scipy
+  - statsmodels
+  - matplotlib
+  - seaborn
+  - plotly
+  - mplfinance
+  - scikit-learn
+  - jupyterlab
+  - ipykernel
+  - nbformat
+  - nbconvert
+  - numba
+  - pytest
+  # AkShare 的大体积/需构建依赖优先由 conda 提供，避免 pip 在
+  # macOS ARM 上重复构建和慢速下载。yfinance 在 pip 区固定新版，
+  # 避免 conda-forge 当前旧版的限流误判与 Cookie 处理问题。
+  - beautifulsoup4
+  - lxml
+  - requests
+  - html5lib
+  - jsonpath
+  - mini-racer
+  - openpyxl
+  - xlrd
+  - tqdm
+  - tabulate
+  - rich
+  - pip:
+      - curl_cffi
+      - yfinance==1.5.1
+      - akshare

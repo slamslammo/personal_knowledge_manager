@@ -1,0 +1,8 @@
+<!doctype html><meta charset='utf-8'>
+<title>P1 策略研究报告</title>
+<h1>P1 策略研究报告</h1>
+<h2>研究假设</h2><p>模拟价值资产的中期趋势是否产生基准和成本后的收益。</p>
+<h2>数据契约</h2><table><tr><th>identity</th><td>synthetic</td></tr><tr><th>frequency</th><td>1 business day</td></tr><tr><th>timezone</th><td>Asia/Shanghai (teaching convention)</td></tr><tr><th>adjustment</th><td>simulated adjusted close</td></tr><tr><th>signal_time</th><td>close t</td></tr><tr><th>earliest_position_time</th><td>t+1</td></tr><tr><th>cost_per_turnover</th><td>0.0005</td></tr></table>
+<h2>收益、风险与基准</h2><table><tr><th>strategy_annual_return</th><td>0.018240621394133072</td></tr><tr><th>benchmark_annual_return</th><td>-0.012623960095039632</td></tr><tr><th>strategy_annual_volatility</th><td>0.10572612482919715</td></tr><tr><th>max_drawdown</th><td>-0.15088475902857634</td></tr><tr><th>beta</th><td>0.43498867522616663</td></tr><tr><th>mean_daily_excess</th><td>0.0001058736475910916</td></tr><tr><th>observations</th><td>755.0</td></tr></table>
+<h2>执行与成本</h2><p>收盘形成信号，下一交易日持仓；单位换手成本 5 bps。</p>
+<h2>方法边界</h2><p>固定种子模拟行情；未完成参数稳健性、容量、税费、模拟盘和实盘风控。</p>

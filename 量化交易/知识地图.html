@@ -1,0 +1,1819 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>量化交易 知识地图</title>
+<style>
+  :root{--bg:#f7f7f4;--panel:#fff;--ink:#23211c;--sub:#6b6860;--line:#e3e0d8;--accent:#2f74d0;--ok:#1d9e75;--todo:#b9791a;--shadow:0 1px 3px rgba(0,0,0,.06)}
+  @media (prefers-color-scheme:dark){:root{--bg:#1c1b18;--panel:#26241f;--ink:#ece9e1;--sub:#a39e93;--line:#3a372f;--shadow:0 1px 3px rgba(0,0,0,.3)}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  header{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  header h1{margin:0;font-size:18px;font-weight:600}
+  header .note{font-size:12.5px;color:var(--sub)}
+  header .prog{margin-left:auto;font-size:12px;color:var(--sub)}
+  .wrap{display:flex;align-items:stretch;min-height:calc(100vh - 50px)}
+  aside{width:310px;flex:none;border-right:1px solid var(--line);padding:12px 8px;overflow:auto}
+  @media(max-width:760px){.wrap{flex-direction:column}aside{width:auto;border-right:none;border-bottom:1px solid var(--line)}}
+  .tnode{display:flex;align-items:center;gap:6px;padding:7px 9px;margin:3px 4px;border:1px solid transparent;border-radius:8px;cursor:pointer;font-size:14px}
+  .tnode:hover{background:var(--bg)}
+  .tnode.sel{background:var(--panel);border-color:var(--line);box-shadow:var(--shadow);font-weight:600}
+  .tnode .cv{width:14px;color:var(--sub);font-size:11px;flex:none;transition:transform .15s}
+  .tnode .cv.open{transform:rotate(90deg)}
+  .tnode .lbl{flex:1}
+  .tnode .chk{font-size:12px;color:var(--ok)}
+  .tnode.lvl0{font-weight:600;font-size:14.5px}
+  .kids{margin-left:6px;border-left:1px dashed var(--line)}
+  main{flex:1;overflow:auto;padding:22px 30px;max-width:880px}
+  main.wide{max-width:1180px}
+  .rdrhead{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .rdrhead .markbtn{margin-left:auto;font:12.5px/1 inherit;border:1px solid var(--line);background:var(--panel);color:var(--sub);border-radius:999px;padding:6px 12px;cursor:pointer}
+  .rdrhead .markbtn.done{color:var(--ok);border-color:var(--ok);background:rgba(29,158,117,.08)}
+  main h1{font-size:22px;margin:.2em 0 .5em} main h2{font-size:17px;margin:1.3em 0 .4em} main h3{font-size:15px;margin:1em 0 .3em;color:var(--sub)}
+  main p{margin:.5em 0} main ul,main ol{margin:.4em 0;padding-left:1.4em} main li{margin:.25em 0}
+  main code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.92em}
+  main blockquote{margin:.6em 0;padding:.5em .9em;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;color:var(--sub)}
+  main hr{border:none;border-top:1px solid var(--line);margin:1.4em 0}
+  main a{color:var(--accent)}
+  main img{max-width:100%;display:block;margin:.8em auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+  main pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto}
+  main .tw{overflow-x:auto;margin:.8em 0}
+  main table{border-collapse:collapse;width:100%;font-size:13.5px}
+  main th,main td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  main thead th{background:var(--bg);font-weight:600;white-space:nowrap}
+  main th:nth-child(1),main td:nth-child(1),main th:nth-child(2),main td:nth-child(2){white-space:nowrap}
+  main tbody tr:nth-child(even) td{background:rgba(127,127,127,.06)}
+  .atlas{margin:0 0 1.4em;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:var(--shadow)}
+  .atlas h2{margin:.1em 0 .25em;font-size:18px}
+  .atlas .hint{margin:0 0 12px;color:var(--sub);font-size:13px}
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow:visible;margin:12px 0 16px;padding-bottom:2px}
+  .flow a{display:inline-flex;align-items:center;min-height:34px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-weight:600;text-decoration:none}
+  .flow .arrow{color:var(--sub)}
+  .atlasgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+  @media(max-width:1180px){.flow{flex-wrap:wrap}.atlasgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:760px){.atlasgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:520px){.atlasgrid{grid-template-columns:1fr}}
+  .atlascard{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:8px;min-height:0}
+  .atlascard>a{display:block;font-weight:700;text-decoration:none;margin-bottom:6px;font-size:14px;line-height:1.25;white-space:nowrap}
+  .chips{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+  .chips a{font-size:11.5px;line-height:1.25;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:var(--panel)}
+  .featuremap{margin:0 0 1.4em;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .featureflow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .featurestep{padding:3px 14px;border-left:1px solid var(--line)}
+  .featurestep:first-child{border-left:none;padding-left:0}
+  .featurestep:last-child{padding-right:0}
+  .featurestep strong{display:block;color:var(--accent);font-size:13.5px;margin-bottom:4px}
+  .featurestep span{display:block;color:var(--sub);font-size:12px;line-height:1.45}
+  @media(max-width:900px){.featureflow{grid-template-columns:1fr 1fr}.featurestep{border-left:none;border-top:1px solid var(--line);padding:10px 0}.featurestep:first-child{border-top:none}}
+  .todo{color:var(--todo)}
+  .netwrap{margin:0 0 1.4em;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:var(--shadow)}
+  .netwrap h2{margin:.1em 0 .25em;font-size:18px}
+  .netwrap .hint{margin:0 0 10px;color:var(--sub);font-size:13px}
+  .netscroll{overflow-x:auto}
+  svg.net{display:block;min-width:940px;width:100%}
+  .net .lyr{font-size:13px;font-weight:600;fill:var(--ink);cursor:pointer}
+  .net .lyr:hover{fill:var(--accent)}
+  .net .pill{cursor:pointer}
+  .net .pill rect{fill:var(--bg);stroke:var(--line);transition:opacity .12s}
+  .net .pill.full rect{fill:rgba(47,116,208,.10);stroke:var(--accent)}
+  .net .pill.stub rect{stroke-dasharray:4 3}
+  .net .pill text{font-size:12.5px;fill:var(--ink)}
+  .net .pill .dk{fill:var(--ok);font-size:11px}
+  .net .edge{fill:none;stroke:var(--accent);stroke-opacity:.32;stroke-width:1.5;transition:stroke-opacity .12s}
+  .net.hl .edge{stroke-opacity:.05}
+  .net.hl .edge.on{stroke-opacity:.9;stroke-width:2}
+  .net.hl .pill{opacity:.22}
+  .net.hl .pill.on{opacity:1}
+  .net.hl .lyr{opacity:.35}
+  .net .flowarr{stroke:var(--sub);stroke-opacity:.45;stroke-width:1.2;fill:none}
+  .netlegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:10px}
+  .rel h3{margin:.8em 0 .4em}
+  .relrow{display:flex;gap:10px;align-items:flex-start;margin:.4em 0}
+  .relk{flex:none;color:var(--sub);font-size:12.5px;padding-top:4px;width:64px}
+  .relchips{display:flex;flex-wrap:wrap;gap:6px}
+  .relchips a{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--bg);text-decoration:none}
+  .relchips a:hover{border-color:var(--accent)}
+  mjx-container{overflow-x:auto;overflow-y:hidden}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<header>
+  <h1>量化交易 知识地图</h1>
+  <span class="prog" id="prog"></span>
+</header>
+<div class="wrap">
+  <aside id="tree"></aside>
+  <main id="reader"></main>
+</div>
+<script type="text/markdown" data-node="map">
+# 量化交易知识地图
+
+量化交易把一个关于市场的想法转化为可检验、可执行、可监控的规则。完整过程不是单次预测，而是持续循环：
+
+```text
+市场与数据 → 研究假设 → 信号与策略 → 回测与评估
+                                      ↓
+执行与监控 ← 风险与组合 ← 仓位与组合构建
+      ↓
+复盘、修正假设并进入下一轮研究
+```
+
+本知识库依次回答九类问题：
+
+1. 量化研究的对象、输入、输出和证据标准是什么；
+2. 市场、标的、订单、仓位和盈亏如何运作；
+3. 行情数据与收益率怎样定义、清洗和对齐；
+4. 研究假设怎样转化为信号、仓位和交易规则；
+5. 回测怎样保持时间因果并与基准公平比较；
+6. 风险怎样度量，多个标的怎样形成组合；
+7. 研究结果怎样进入模拟交易、执行和监控；
+8. 因子、时间序列与机器学习怎样接入同一研究闭环；
+9. 怎样用可重复实验检验以上概念。
+
+当前课程从真实行情、收益率、移动平均线和基础回测进入，再扩展到波动率、Sharpe、Beta、最大回撤、仓位和相关性。知识框架同时保留课程尚未展开的交易成本、数据偏差、样本外验证和系统运行部分。
+</script>
+<script type="text/markdown" data-node="learningmainline">
+# 当前学习主线
+
+## 两条课程并行，而不是互相替代
+
+| 主线 | 定位 | 具体产出 | 不承担什么 |
+|---|---|---|---|
+| [Datawhale Quant-for-Beginners](https://github.com/datawhalechina/quant-for-beginners) | 实践主线 | 运行 Notebook、理解数据结构、复现计算与最小回测。 | 不负责覆盖全部金融理论和生产系统。 |
+| [365 天量化课程（Bilibili）](https://www.bilibili.com/video/BV1yR9qBUE7w/) / [YouTube 公开列表](https://www.youtube.com/playlist?list=PLSTdjIlFps_EsTFQMdAOCnbHokT5gtaLw) | 中文理解主线 | 把已有炒股经验与金融、数据、工程、回测、因子知识连接起来。 | 视频中的结论不自动视为已验证知识。 |
+
+Datawhale 提供“亲手做”的抓手，365 天课程提供“为什么值得做、它和真实交易怎样连接”的语境。两条线遇到同一概念时，统一沉淀到本知识库，而不是生成两份课程笔记。
+
+## 当前学习循环
+
+```text
+看一节高相关视频 / 接到一个课程任务
+              ↓
+写出问题、关键主张和交易含义
+              ↓
+运行或改写一个最小实验
+              ↓
+只补实验真正需要的金融、统计和市场知识
+              ↓
+加入成本、时点、复权、样本外等现实约束
+              ↓
+形成知识节点、实验报告和待验证问题
+```
+
+## 统计数学怎样接入
+
+- 已经掌握的内容直接使用，不重复从定义开始学习。
+- 遇到概率、分布、抽样、推断和回归直觉问题时，优先使用 [看见统计·中文版](https://seeing-theory.brown.edu/cn.html)。
+- 需要公式、全彩图解或 Python 示例时，按问题查 [Visualize-ML](https://github.com/Visualize-ML) 的《数学要素》《矩阵力量》和《统计至简》。
+- 通用统计学习方法继续由 [机器学习知识地图](../../../机器学习/知识地图.html) 承接；QuantEcon 暂时只登记，不设学习任务。
+- 金融时间序列与普通机器学习不同：时间顺序、非平稳性、分布漂移、交易成本和多重试验必须单独处理，不能直接套用随机划分和普通交叉验证。
+
+## 近期推进顺序
+
+1. 跟随 Datawhale 完成真实行情、收益率和最小回测。
+2. 跟随 365 天课程补齐市场、收益、风险、交易成本、数据清洗和因子直觉。
+3. 用自己的持仓或关注标的提出一个可证伪问题。
+4. 在 pandas 最小回测跑通后，对照 RQAlpha 的事件回测。
+5. 学到因子与截面研究后，用 Qlib 复现一条标准研究工作流。
+6. 研究闭环稳定以后，再评估 QuantDinger、vn.py、WonderTrader 或 LEAN 等完整系统。
+
+> 学习完成的标准不是“视频看完”，而是能够解释假设、复现计算、指出数据和回测边界，并说明它是否改变自己的交易判断。
+</script>
+<script type="text/markdown" data-node="freefinance">
+# 免费金融与量化阅读
+
+本页只收录无需购买即可阅读核心内容、信息密度较高、能承接当前实践的材料。阅读方式是按问题选章节，不要求从第一页读到最后一页。
+
+## 第一层：金融和市场底座
+
+| 资料 | 建议选读 | 适用场景 | 边界 |
+|---|---|---|---|
+| [OpenStax Principles of Finance 2e](https://openstax.org/details/books/principles-of-finance-2e) | 第 1 章金融工具与市场、第 7 章货币时间价值、第 10–11 章债券与股票、第 15 章风险收益与 CAPM。 | 对收益、贴现、资产、组合和 Beta 建立统一定义。 | 美国市场举例较多；作为概念字典，不作为交易课程顺序通读。 |
+| [Zerodha Varsity](https://zerodha.com/varsity/) | Introduction to Stock Markets、Futures、Options、Risk Management、Trading Systems。 | 快速补市场机制、衍生品、仓位和交易成本，章节短且无登录墙。 | 印度交易规则不能直接套到 A 股；规则类结论要回到交易所核验。 |
+| [Damodaran Valuation](https://pages.stern.nyu.edu/~adamodar/New_Home_Page/equity.html) | Lecture Notes、Spreadsheets、Data、Practice Problems。 | 研究估值、基本面和价值因子时，用真实公司连接现金流与价格。 | 当前只取讲义、表格和案例，不顺序观看完整真人课程。 |
+
+OpenStax 已提供免费网页和 PDF；Varsity 明确无注册、无付费墙。两者分别解决“定义稳定”和“贴近交易”，不承担量化研究方法本身。
+
+## 第二层：从金融概念进入量化方法
+
+| 问题 | 免费材料 | 为什么保留 |
+|---|---|---|
+| 因子到底是什么，为什么可能存在溢价 | [MSCI: Foundations of Factor Investing](https://www.msci.com/downloads/web/msci-com/indexes/index-education/follow-the-market-or-try-to-beat-it/Foundations_of_Factor_Investing.pdf) | 33 页把价值、规模、低波、质量和动量连接到风险、行为解释、周期性与可投资指数。 |
+| 价值和动量是否独立 | [AQR: Value and Momentum Everywhere](https://www.aqr.com/Insights/Research/Journal-Article/Value-and-Momentum-Everywhere) | 直接查看跨资产、跨市场证据与研究设计，不只接受课程结论。 |
+| 为什么最高 Sharpe 可能只是试出来的 | [The Deflated Sharpe Ratio](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2460551) | 把多重试验、非正态收益和选择偏差纳入策略评价。 |
+| 怎样识别常见回测陷阱 | [QuantStart Backtesting 系列](https://www.quantstart.com/articles/Successful-Backtesting-of-Algorithmic-Trading-Strategies-Part-I/) | 文章短，能连接换手、交易成本、微观结构和回测实现；作为实践检查表，不作为最终权威。 |
+
+## 按当前课程触发阅读
+
+| 当前主题 | 先读什么 | 随后验证什么 |
+|---|---|---|
+| 收益率、复利、贴现 | OpenStax 第 7 章 | 简单收益、对数收益、累计净值与现金流时点。 |
+| 股票、债券和资产差异 | OpenStax 第 1、10、11 章；Varsity 市场入门 | 交易单位、价格形成、分红、复权和风险来源。 |
+| 风险、Beta、组合 | OpenStax 第 15 章；Varsity 风险管理 | 波动率、协方差、回撤和仓位对结果的影响。 |
+| 因子 | MSCI → AQR | 因子定义、排序、调仓、换手、周期性和样本外。 |
+| 策略参数很多、结果过好 | Deflated Sharpe Ratio | 记录尝试次数，保留真正未参与选型的测试期。 |
+
+## 中文材料的处理
+
+当前中文主线由 Datawhale 和 365 天量化课程承担。其他中文文章只有在能追溯数据、代码或一手来源时才加入；不为了“中文齐全”而收录大量营销号、付费专栏或过时教程。英文材料也不整篇搬运，只把与实验相关的定义、证据、反例和引用沉淀到对应知识节点。
+</script>
+<script type="text/markdown" data-node="mathrefs">
+# 数学基础与量化
+
+## 定位
+
+数学不作为开始量化实践前必须学完的前置课程，而是在研究问题出现时提供解释工具。本项目当前只保留三个经过确认的入口：看见统计、Visualize-ML 和 QuantEcon。
+
+```text
+量化问题
+   ├── 概率、分布、推断不直观 ──→ 看见统计
+   ├── 需要公式、图解或 Python ──→ Visualize-ML
+   └── 进入随机过程与经济模型 ──→ QuantEcon（暂存观察）
+```
+
+## 1. 看见统计：当前首选入口
+
+[看见统计·中文版](https://seeing-theory.brown.edu/cn.html)是面向概率统计的中文交互网站，源代码位于 [seeingtheory/Seeing-Theory](https://github.com/seeingtheory/Seeing-Theory)。它通过可操作图形解释六组内容：
+
+| 模块 | 量化中的连接 |
+|---|---|
+| 基础概率：随机事件、期望、方差 | 期望收益、收益方差、盈亏概率。 |
+| 进阶概率：集合、古典概型、条件概率 | 条件信号、胜率、贝叶斯更新。 |
+| 概率分布：随机变量、离散与连续分布、中心极限定理 | 收益分布、抽样误差、聚合收益。 |
+| 频率派推断：点估计、置信区间、Bootstrap | 策略指标不确定性、因子收益置信区间。 |
+| 贝叶斯推断：先验、似然、后验 | 根据新信息更新策略或市场状态判断。 |
+| 回归分析：最小二乘、相关性、方差分析 | Beta、因子暴露、相关性与回归诊断。 |
+
+使用方式：先操作图形并用自己的话解释变量变化，再用量化实验的数据重画对应图表。它解决直觉问题，不单独承担严谨推导和时间序列验证。
+
+## 2. Visualize-ML：共同数学底座
+
+[Visualize-ML](https://github.com/Visualize-ML)提供中文全彩图解、分章 PDF 和大量 Python/Jupyter 示例，适合作为机器学习和量化交易共用的数学资料库。当前只建立以下映射：
+
+| 项目 | 建议章节 | 量化用途 |
+|---|---|---|
+| [《数学要素》](https://github.com/Visualize-ML/Book3_Elements-of-Mathematics) | 函数、导数、偏导、微分、积分、优化入门、概率与统计入门。 | 连续复利、边际变化、梯度、损失函数和最优化。 |
+| [《矩阵力量》](https://github.com/Visualize-ML/Book4_Power-of-Matrix) | 向量与矩阵、投影、矩阵分解、特征值、SVD、拉格朗日乘子、数据分解。 | 协方差矩阵、因子暴露、PCA、风险模型和带约束组合优化。 |
+| [《统计至简》](https://github.com/Visualize-ML/Book5_Essentials-of-Probability-and-Statistics) | 分布、条件概率、高斯分布、协方差矩阵、蒙特卡洛、统计推断、贝叶斯、回归、PCA。 | 收益与风险分布、模拟、估计误差、因子检验和降维。 |
+
+使用顺序不是 Book 3 → Book 4 → Book 5。遇到问题后直接进入相应章节：
+
+- 不理解概率或估计含义：先看见统计，再查《统计至简》。
+- 不理解协方差、投影或 PCA：查《矩阵力量》，再回到《统计至简》的应用章节。
+- 不理解梯度、目标函数或约束：查《数学要素》和《矩阵力量》的优化相关章节。
+- 需要验证：运行仓库对应章节的 Notebook，并换成收益率、因子或组合数据。
+
+## 3. QuantEcon：先登记，暂不设学习路线
+
+[QuantEcon](https://quantecon.org/)聚合了开源 Python/Julia 讲义、书籍和代码库，其中 [Quantitative Economics with Python](https://python.quantecon.org/)涉及概率、马尔可夫过程、动态规划、经济模型与资产定价。
+
+它与量化的潜在连接较强，但内容以经济学模型为主、跨度和难度较大，目前还不能确定哪些章节最适合本项目。因此当前状态为“已发现、待映射”，不列入近期学习任务。
+
+后续只有在以下问题出现时再评估：
+
+- 市场状态转移和马尔可夫模型；
+- 随机贴现、资产定价和风险中性概率；
+- 动态资产配置或最优停止；
+- 需要把经济机制写成可运行 Python 模型。
+
+评估时记录“问题 → 具体讲义 → 最小代码实验”，不以浏览完整网站作为完成标准。
+
+## 暂不扩展
+
+本节点暂不加入数学视频、更多英文教材、资源大全或面试题仓库。先观察以上材料在真实学习中的命中率；只有现有三类入口无法解释具体问题时，才补充新来源。
+</script>
+<script type="text/markdown" data-node="quant365">
+# 365 天量化课程
+
+## 在本项目中的定位
+
+[Bilibili 课程入口](https://www.bilibili.com/video/BV1yR9qBUE7w/)符合当前“有交易经验，在实践中补理论”的路径，因此从普通参考资料提升为中文理解主线。它和 Datawhale 的关系是互补：视频负责连接真实交易问题，Notebook 和本项目实验负责验证。
+
+课程当前已经形成四段内容：
+
+| 当前集数 | 内容重心 | 对本项目的价值 |
+|---|---|---|
+| 01–30 | 金融资产、收益、风险、概率、衍生品、微观结构、交易成本 | 把炒股经验转成可讨论、可计算的概念。 |
+| 31–60 | Python、NumPy、pandas、数据、可视化、数据库、测试、Git、Docker | 建立研究工具链和工程习惯。 |
+| 61–66 | 数据清洗、复权、因子对齐、未来函数和 point-in-time | 直接提高回测可信度。 |
+| 67–74 | 价值、成长、质量、动量、反转、低波、规模等因子 | 进入 Qlib 和截面研究前的概念入口。 |
+
+## 公开目录与离线可行性核验
+
+核验日期：2026-07-15。
+
+- 作者的 [YouTube 公开播放列表](https://www.youtube.com/playlist?list=PLSTdjIlFps_EsTFQMdAOCnbHokT5gtaLw) 当前共有 73 个唯一视频，课程编号覆盖 01–74。
+- 缺少的是第 30 课；第 52、53 课标题使用“量化入门”而不是“365 天量化金融”，但视频本身在列表中。因此这是公开列表缺一集，不是重复计数或页面解析误差。
+- 因为第 75–365 课尚未发布，所以目前不能说“完整 365 集都能下载”。
+- 对已经发布的内容，可以确认公开目录和大部分公开视频存在；尚未逐集进行“不下载媒体、只检查格式和字幕”的模拟探测，因此也不能提前保证每一集都能离线取得。
+- 本轮没有下载视频、字幕或付费课件，也没有读取浏览器 Cookie。
+
+## 后续归档方案
+
+后续获得明确授权并开始归档时，复用机器学习视频笔记的结构，但增加来源和版权边界：
+
+```text
+资料/量化金融365/
+├── metadata.json                 # 集数、标题、URL、发布日期、时长、来源状态
+├── README.md                     # 归档范围、用途和更新方式
+└── episodes/
+    └── 01_量化路线图/
+        ├── 来源与学习记录.md
+        ├── selected_frames/      # 只保留表达关键概念的画面
+        └── 量化金融365笔记.html  # 转写、图片、论证、实验和延伸链接
+```
+
+处理顺序：
+
+1. 先建立全部已发布课程的元数据清单，不获取媒体文件。
+2. 对每集做模拟探测，记录公开视频、官方字幕、音视频格式和不可用原因。
+3. 优先使用作者公开的 YouTube 内容；Bilibili 付费内容只在用户合法访问范围内使用，不绕过付费或复制访问凭据。
+4. 有字幕先校对字幕，无字幕再做语音转写；转写不是最终笔记。
+5. 按概念切换选择关键帧，避免按固定时间间隔堆图。
+6. 把视频主张与一手文档、免费教材、论文和代码实验交叉验证。
+7. 最终材料仅用于个人学习，不发布或分发课程视频、完整课件和大段逐字稿。
+
+## 单集沉淀标准
+
+每集只记录五类内容：作者的关键主张、与真实交易的连接、公式或代码、证据与反例、进入知识地图的位置。没有经过验证的观点标为“课程观点”，不能直接写成项目结论。
+</script>
+<script type="text/markdown" data-node="opensourcetools">
+# 开源系统与 GitHub 工具
+
+## 选型顺序
+
+工具按研究阶段选择，不追求一次安装完整量化平台。
+
+```text
+pandas 最小回测
+      ↓
+RQAlpha 对照事件驱动       Qlib 对照因子 / ML 研究流
+      ↓                              ↓
+交易、组合和数据边界稳定以后再评估完整系统
+      ↓
+QuantDinger / vn.py / WonderTrader / LEAN / NautilusTrader
+```
+
+## 当前优先级
+
+| 优先级 | 项目 | 最适合解决的问题 | 当前判断与边界 |
+|---|---|---|---|
+| P0 | pandas / NumPy | 把信号、仓位、收益、成本和净值逐行算清楚。 | 当前继续使用；透明度高于过早引入框架。 |
+| P1 | [Microsoft Qlib](https://github.com/microsoft/qlib) | 因子表达式、数据集、模型、实验记录、信号分析和回测的研究工作流。 | 因子阶段优先试用；它是研究平台，不等同于券商执行系统，数据复权和 point-in-time 仍需自己审计。 |
+| P1 | [RQAlpha](https://github.com/ricequant/rqalpha) | A 股/期货的事件驱动回测、撮合、账户、税费和风险模块。 | 适合与 pandas 最小回测对照；许可证限制非商业使用，不能只看“代码公开”。 |
+| P2 | [VectorBT Community](https://github.com/polakowo/vectorbt) | 用 NumPy/Numba/Rust 快速做多参数、多资产和 walk-forward 实验。 | 社区版与 PRO 功能并存，许可证含 Commons Clause；用于研究前先确认功能和许可边界。 |
+| P2 | [PyPortfolioOpt](https://github.com/PyPortfolio/PyPortfolioOpt) | 均值方差、有效前沿、风险模型和组合优化。 | 等相关性、组合和约束实验开始后再引入。 |
+| P2 | [QuantStats](https://github.com/ranaroussi/quantstats) | 从收益序列生成绩效指标和报告。 | 作为报告与交叉检查工具，指标定义仍需自己核对。 |
+
+## 完整系统观察清单
+
+| 系统 | 架构定位 | 为什么值得跟踪 | 为什么现在不直接采用 |
+|---|---|---|---|
+| [QuantDinger](https://github.com/brokermr810/QuantDinger) | 2026 年出现的 Apache-2.0、本地优先 AI Trading OS，覆盖研究、Python 策略、回测、模拟/实盘和监控。 | 形态与本项目“AI + 研究到执行闭环”高度相关，Docker 自托管和审计思路值得研究。 | 项目很新、功能面很宽；A 股实盘链路、数据质量、撮合真实性、严格回测和风险隔离需要独立验收。首次评估只用样例数据和模拟盘，不放真实密钥。 |
+| [VeighNa / vn.py](https://github.com/vnpy/vnpy) | Python 事件驱动交易框架，覆盖国内外接口、策略应用和实盘。 | 中文生态成熟，适合以后理解网关、事件总线、订单、账户和实盘运维。 | 系统和接口较重，当前会遮蔽最小回测机制；许多实盘接口还依赖券商、操作系统和账户条件。 |
+| [WonderTrader](https://github.com/wondertrader/wondertrader) | C++ 核心 + Python 子框架，覆盖 CTA、截面、高频、执行、风控和调度。 | 国内市场、性能和多策略组合管理设计有参考价值。 | 更接近机构/生产工程；需要额外数据、接口和部署评估，不适合作为当前第一套回测框架。 |
+| [QuantConnect LEAN](https://github.com/QuantConnect/Lean) | Apache-2.0 的多资产事件驱动引擎，支持本地 Docker 回测和实盘适配。 | 工程完整，研究、回测和交易模型值得做架构对照。 | 本地引擎开源不代表数据、云服务和所有工作流免费；当前也不是 A 股优先路径。Learning Center 继续观察，不作为主课。 |
+| [NautilusTrader](https://github.com/nautechsystems/nautilus_trader) | Rust 核心、Python 策略接口的高性能事件驱动回测与交易引擎。 | 回测与实盘共用核心、订单簿/延迟模型和确定性设计值得后期研究。 | 学习和部署复杂度高，当前需求尚未到多场所、低延迟生产系统。 |
+
+QuantDinger 的 [抖音搜索入口](https://www.douyin.com/search/quantdinger?aid=8aa3d5cd-cee3-4530-8a50-36d550e1b99d&modal_id=7634178326050917641&type=general) 只用于发现演示，项目判断以 GitHub 代码、许可证、文档、测试和本地验收为准。
+
+用户提供的 [Bilibili Qlib 平台课程](https://www.bilibili.com/cheese/play/ep2655722?query_from=0&search_id=6176764068262669706&search_query=%E9%87%8F%E5%8C%96&is_PCend=1) 保留为“外部演示、待评估”。它需要登录或付费，不进入免费核心路线；学习 Qlib 首先使用官方仓库、官方文档和示例配置。
+
+## 项目验收模板
+
+任何开源量化系统进入本机环境前，都先回答：
+
+1. 许可证是否允许当前用途，核心模块是否真的开源；
+2. 最近发布、提交、Issue 和测试是否显示仍在维护；
+3. 数据从哪里来，是否包含退市股票、公司行动和披露时点；
+4. 回测是向量化还是事件驱动，成交、费用、滑点和订单生命周期怎样建模；
+5. 同一策略能否使用固定数据快照重复运行；
+6. 是否能与当前 pandas 基线得到可解释的一致或差异结果；
+7. 模拟盘和实盘是否强隔离，密钥、下单、风控和紧急停止是否可审计。
+
+在完成这些检查前，项目状态只标记为“雷达”或“试验”，不因为演示视频、Star 数或 AI 功能直接进入主工具链。
+</script>
+<script type="text/markdown" data-node="infosystems">
+# 数据与财经信息源
+
+当前优先级低于课程、实验和工具选型。本页先建立一手来源入口，不建设实时新闻聚合系统。
+
+## A 股与中国宏观的一手入口
+
+| 来源 | 主要内容 | 后续用途 |
+|---|---|---|
+| [上海证券交易所](https://www.sse.com.cn/) / [深圳证券交易所](https://www.szse.cn/) / [北京证券交易所](https://www.bse.cn/) | 交易规则、上市公司、公告、行情和指数说明。 | 核验 A 股交易机制、停复牌、涨跌幅和市场规则。 |
+| [巨潮资讯](https://www.cninfo.com.cn/) | 上市公司法定信息披露。 | 构建以真实披露日为准的 point-in-time 财务事件。 |
+| [中国证监会](https://www.csrc.gov.cn/) | 法规、政策、行政许可和监管信息。 | 核验制度变化，不依赖媒体转述。 |
+| [中国金融期货交易所](https://www.cffex.com.cn/) | 股指期货、国债期货、期权的合约和交易数据。 | 衍生品、套保、基差和合约规则研究。 |
+| [中国人民银行](https://www.pbc.gov.cn/) / [国家统计局](https://www.stats.gov.cn/) | 货币政策、利率、金融统计和宏观指标。 | 后续宏观因子和市场状态研究。 |
+
+## 海外与研究资料
+
+| 来源 | 主要内容 | 后续用途 |
+|---|---|---|
+| [SEC EDGAR](https://www.sec.gov/edgar/search/) | 美股公司原始申报文件。 | 核验 yfinance 等接口之外的公司事件和披露时间。 |
+| [FRED](https://fred.stlouisfed.org/) | 美国及国际宏观时间序列。 | 利率、通胀、信用和流动性因子。 |
+| [SSRN Financial Economics](https://www.ssrn.com/index.cfm/en/fen/) | 金融经济工作论文。 | 查找策略、因子、回测与风险研究的原论文。 |
+| [arXiv Quantitative Finance](https://arxiv.org/archive/q-fin) | q-fin 分类预印本。 | 跟踪新方法；预印本不等同于经过同行评议。 |
+
+## 接口不是原始来源
+
+| 接口 | 作用 | 必须补记的信息 |
+|---|---|---|
+| [AkShare](https://github.com/akfamily/akshare) | 聚合多个公开站点，方便研究 A 股、港美股、基金、期货和宏观数据。 | 具体函数的底层站点、字段、单位、复权、更新时间和接口变更。 |
+| [yfinance](https://github.com/ranaroussi/yfinance) | 方便获取 Yahoo Finance 可见的数据。 | 非 Yahoo 官方 SDK；记录版本、请求时间、调整参数和限流情况。 |
+| Qlib 数据工作流 | 把原始数据转成统一研究格式。 | 原始数据源、股票池历史、复权因子、缺失值和披露时点。 |
+
+## 数据沉淀最小记录
+
+每份正式实验数据至少记录：来源页面或接口、访问日期、市场和标的、开始结束日期、频率、时区、价格和数量单位、复权口径、公司行动、缺失处理、是否包含退市样本、许可证或使用限制。
+
+财经新闻和分析系统以后再建立。届时先接公告、监管、公司原始披露和宏观发布，再引入媒体摘要；AI 摘要只能作为检索入口，不能替代原文和事件时间戳。
+</script>
+<script type="text/markdown" data-node="refs">
+# 资料清单
+
+> 本页是量化交易项目的统一资料入口。结构参照机器学习板块：直接列出材料、链接、核心内容和使用方法；子页面再记录详细章节映射、适用边界和评估状态。
+
+## 当前学习主线
+
+| 资料 | 定位 | 核心内容 | 用法 |
+|---|---|---|---|
+| [Datawhale Quant-for-Beginners](https://github.com/datawhalechina/quant-for-beginners) | Python 实践主线 | 环境、金融基础、行情数据、收益风险、策略和回测入门。 | 跟随 Task 运行 Notebook；将课程计算改写为自己的实验。 |
+| [365 天量化课程（Bilibili）](https://www.bilibili.com/video/BV1yR9qBUE7w/) / [YouTube 公开列表](https://www.youtube.com/playlist?list=PLSTdjIlFps_EsTFQMdAOCnbHokT5gtaLw) | 中文理解主线 | 市场、概率统计、Python 工具链、数据质量、回测与因子。 | 连接已有炒股经验与理论；课程观点再用代码和一手材料核验。 |
+
+两条主线互补：视频负责提出问题和建立交易语境，Datawhale 与本项目实验负责计算、验证和沉淀。具体推进方式见[当前学习主线](node:learningmainline)，课程目录与归档计划见[365 天量化课程](node:quant365)。
+
+## 数学基础
+
+| 资料 | 定位 | 核心内容 | 用法 |
+|---|---|---|---|
+| [看见统计·中文版](https://seeing-theory.brown.edu/cn.html) / [GitHub](https://github.com/seeingtheory/Seeing-Theory) | 当前统计直觉入口 | 基础与进阶概率、概率分布、频率派与贝叶斯推断、回归分析。 | 优先使用交互图示理解概念；再回到收益、风险或因子数据验证。 |
+| [Visualize-ML 开源项目](https://github.com/Visualize-ML) | 机器学习与量化共用的数学底座 | 中文全彩图解、分章 PDF 和 Python 代码，覆盖数学、矩阵、概率统计与数据科学。 | 按当前问题查对应书和章节，不顺序通读整个系列。 |
+| [《数学要素》](https://github.com/Visualize-ML/Book3_Elements-of-Mathematics) | 微积分与优化参考 | 函数、导数、偏导、微分、积分、优化及概率统计入门。 | 遇到梯度、最优化和连续复利等数学表达时回查。 |
+| [《矩阵力量》](https://github.com/Visualize-ML/Book4_Power-of-Matrix) | 线性代数参考 | 向量、矩阵、投影、矩阵分解、特征值、SVD、拉格朗日乘子和数据分解。 | 用于协方差矩阵、PCA、因子模型和组合优化。 |
+| [《统计至简》](https://github.com/Visualize-ML/Book5_Essentials-of-Probability-and-Statistics) | 概率统计主参考 | 随机变量、分布、条件概率、协方差、蒙特卡洛、统计推断、贝叶斯、回归和 PCA。 | 与看见统计配合：先看图建立直觉，再查公式和运行 Python 示例。 |
+| [QuantEcon](https://quantecon.org/) / [Python Lectures](https://python.quantecon.org/) | 经济学与量化数学观察项 | 概率、马尔可夫过程、动态规划、经济模型和资产定价的 Python 讲义。 | 当前先登记；遇到随机过程、状态模型或资产定价问题后再确定具体章节和使用方式。 |
+
+数学资料的量化主题映射和取舍说明见[数学基础与量化](node:mathrefs)。现阶段不增加数学视频课程，也不扩展更多教材清单。
+
+## 免费金融与量化阅读
+
+| 资料 | 定位 | 核心内容 | 用法 |
+|---|---|---|---|
+| [OpenStax Principles of Finance 2e](https://openstax.org/details/books/principles-of-finance-2e) | 免费金融概念教材 | 市场、货币时间价值、股票、债券、风险收益和 CAPM。 | 按问题查第 1、7、10、11、15 章，不作为顺序主课。 |
+| [Zerodha Varsity](https://zerodha.com/varsity/) | 高密度市场实践读物 | 股票、期货、期权、风险管理和交易系统。 | 快速补市场机制；印度规则必须回到中国交易所复核。 |
+| [Damodaran Valuation](https://pages.stern.nyu.edu/~adamodar/New_Home_Page/equity.html) | 估值与基本面材料 | 讲义、数据、电子表格、案例和练习。 | 研究估值、公司基本面和价值因子时使用。 |
+| [MSCI — Foundations of Factor Investing](https://www.msci.com/downloads/web/msci-com/indexes/index-education/follow-the-market-or-try-to-beat-it/Foundations_of_Factor_Investing.pdf) | 因子入门 | 价值、规模、低波、质量和动量及其风险、行为解释。 | 建立因子分类、周期性和可投资性框架。 |
+| [AQR — Value and Momentum Everywhere](https://www.aqr.com/Insights/Research/Journal-Article/Value-and-Momentum-Everywhere) | 因子研究案例 | 价值与动量的跨资产、跨市场证据和研究设计。 | 对照课程结论，学习样本和组合构建方式。 |
+| [The Deflated Sharpe Ratio](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2460551) | 回测可信度 | 多重试验、非正态收益和策略选择偏差。 | 参数很多或 Sharpe 过高时，检查结果是否来自反复试验。 |
+
+章节选读和课程主题映射见[免费金融与量化阅读](node:freefinance)。
+
+## 开源量化系统与工具
+
+| 项目 | 定位 | 核心能力 | 当前用法 |
+|---|---|---|---|
+| [Microsoft Qlib](https://github.com/microsoft/qlib) | 因子与机器学习研究平台 | 因子表达式、数据集、模型、实验记录、信号分析和回测。 | 因子阶段优先研究；先复现官方工作流，再审计数据口径。 |
+| [RQAlpha](https://github.com/ricequant/rqalpha) | A 股/期货事件驱动回测 | 撮合、账户、税费、订单、风险和事件循环。 | 与 pandas 最小回测对照，理解真实引擎增加的约束。 |
+| [QuantDinger](https://github.com/brokermr810/QuantDinger) | AI 量化完整系统雷达 | 数据、Python 策略、回测、模拟/实盘、监控和本地部署。 | 当前只跟踪和沙盒验收，不接真实账户、密钥或资金。 |
+| [VeighNa / vn.py](https://github.com/vnpy/vnpy) | 国内交易执行生态 | 事件引擎、交易网关、订单账户、策略应用与实盘接口。 | 后续学习模拟盘、实盘执行与运维。 |
+| [WonderTrader](https://github.com/wondertrader/wondertrader) | 高性能国内量化框架 | CTA、截面、高频、执行、风控和多策略组合。 | 作为机构化和生产系统架构参考。 |
+| [QuantConnect LEAN](https://github.com/QuantConnect/Lean) | 全球多资产事件引擎 | 研究、回测、订单、组合、风险和实盘适配。 | 用于架构对照；开源引擎不代表数据和云服务全部免费。 |
+
+VectorBT、PyPortfolioOpt、QuantStats 等辅助工具及完整验收规则见[开源系统与 GitHub 工具](node:opensourcetools)。
+
+## 数据与财经信息源
+
+| 来源 | 定位 | 核心内容 | 用法 |
+|---|---|---|---|
+| [上交所](https://www.sse.com.cn/) / [深交所](https://www.szse.cn/) / [北交所](https://www.bse.cn/) | A 股一手市场来源 | 交易规则、证券资料、公告、行情和指数说明。 | 核验市场制度，不依赖二手文章。 |
+| [巨潮资讯](https://www.cninfo.com.cn/) | 法定信息披露 | 上市公司公告、财报和公司行动。 | 按真实披露时间构建基本面和事件数据。 |
+| [AkShare](https://github.com/akfamily/akshare) | 免费聚合接口 | A 股、港美股、基金、期货和宏观数据。 | 快速取数，同时记录底层来源、字段、单位和复权口径。 |
+| [yfinance](https://github.com/ranaroussi/yfinance) | Yahoo Finance 数据接口 | 海外股票、指数、ETF 行情和公司数据。 | 获取海外样例；记录版本、访问日期、调整参数和限流情况。 |
+| [SEC EDGAR](https://www.sec.gov/edgar/search/) / [FRED](https://fred.stlouisfed.org/) | 海外一手来源 | 美股原始申报与宏观时间序列。 | 海外基本面和宏观研究回到原始披露与官方数据。 |
+
+完整来源和数据记录规范见[数据与财经信息源](node:infosystems)。接口只是取数工具，不能替代原始来源说明。
+
+## 使用顺序
+
+1. Datawhale 做实验，365 天课程建立交易语境。
+2. 概率统计先查“看见统计”，需要完整公式和代码时查 Visualize-ML。
+3. 先用 pandas 把信号、仓位、成本和收益算透明，再用 RQAlpha 或 Qlib 对照。
+4. QuantEcon、QuantDinger、vn.py、WonderTrader 和 LEAN 先记录，等对应问题出现再深入。
+5. 一手数据源持续积累，正式实验必须保证来源和时间口径可追溯。
+
+[MIT Finance Theory I](https://ocw.mit.edu/courses/15-401-finance-theory-i-fall-2008/) 和 [QuantConnect Learning Center](https://www.quantconnect.com/learning/) 暂列观察项，不作为当前主线。
+</script>
+<script type="text/markdown" data-node="framework">
+# 量化研究框架
+
+量化研究的核心不是自动交易软件，而是把市场判断写成可被数据证伪的假设，再把验证通过的结论转成受风险约束的交易规则。
+
+本部分连接研究问题、数据、信号、仓位、回测、组合、执行和复盘。每一步都有明确输入与输出，后一步不能掩盖前一步的假设缺陷。
+
+一个策略至少要回答：研究对象是什么、信号何时可知、何时成交、持有什么仓位、承担哪些成本和风险、与什么基准比较，以及结果能否在未参与设计的数据上保持稳定。
+</script>
+<script type="text/markdown" data-node="hypothesis">
+# 研究问题与假设
+
+研究问题描述希望解释或利用的市场现象，研究假设则把这种描述变成可计算、可检验的陈述。
+
+例如“短期趋势可能延续”仍然过于宽泛；进一步定义观察窗口、价格口径、信号阈值、持有期、交易对象和评价指标后，才形成可回测假设。
+
+好的假设应在查看最终结果前确定主要规则，同时记录经济或行为动机、适用市场、可能失效的条件和反例。仅从历史曲线中不断试参数直到结果好看，不能构成可靠证据。
+</script>
+<script type="text/markdown" data-node="researchloop">
+# 从研究到交易的闭环
+
+量化流程可以拆成七个连续环节：获取并理解数据、提出假设、生成信号、映射仓位、回测与评价、组合和风险约束、执行与监控。
+
+回测完成并不等于研究结束。交易成本、容量、不同市场阶段和样本外表现可能推翻原结论；模拟盘与实际运行还会暴露数据延迟、订单失败和风控问题。
+
+复盘应回到原假设，判断失败来自数据、实现、市场机制变化还是随机波动，再决定修正、暂停或废弃策略。
+</script>
+<script type="text/markdown" data-node="market">
+# 市场与交易基础
+
+量化模型最终作用于真实市场。交易所规则、交易时段、标的属性、价格形成、订单类型和成交机制会决定一个信号是否能够变成可实现收益。
+
+本部分先建立标的、报价、订单、成交、仓位和盈亏的共同语言，再进入数据与策略。不同市场的涨跌停、最小交易单位、卖空、结算和税费规则不能混用。
+</script>
+<script type="text/markdown" data-node="instruments">
+# 市场与交易标的
+
+股票、ETF、债券、期货、期权和外汇具有不同的收益来源、交易规则和风险结构。开始研究前应明确标的代表的权利、交易单位、交易时间、结算方式、杠杆和是否允许卖空。
+
+同一个策略名称放在不同资产和市场上可能对应完全不同的风险。板块入门实验以股票和 ETF 日线为主，其他标的在需要时另设专题。
+</script>
+<script type="text/markdown" data-node="orders">
+# 价格、订单与成交
+
+行情中的开盘、最高、最低和收盘价是历史统计，不等于任何规模的订单都能以该价格成交。实际成交取决于订单类型、买卖盘、流动性、价差和市场冲击。
+
+市价单优先保证成交，限价单限制价格但可能无法成交。回测必须明确采用哪个时间点的已知信息、在哪个价格假设成交，并为不确定性保留滑点和成交限制。
+</script>
+<script type="text/markdown" data-node="positionpnl">
+# 仓位、资金与盈亏
+
+信号表示研究判断，仓位表示实际持有的风险敞口。仓位还受到可用资金、杠杆、交易单位、风险上限和组合约束影响。
+
+盈亏需要区分已实现与未实现部分，并明确现金、分红、费用和融资成本的处理。策略收益通常由前一时点已经建立的仓位乘以随后发生的标的收益得到，不能把当天收盘后才知道的信号用于赚取当天收益。
+</script>
+<script type="text/markdown" data-node="datareturns">
+# 数据与收益
+
+数据是量化研究的证据基础。价格序列必须先说明来源、字段、时间、复权和缺失处理，才能进一步计算收益、风险和策略结果。
+
+本部分从 OHLCV 和收益率进入，以随机游走与布朗运动建立价格变化的统计基准，再处理交易日对齐、公司行动、数据质量和常见偏差。价格图看起来合理，不代表数据已经适合回测。
+</script>
+<script type="text/markdown" data-node="ohlcv">
+# OHLCV 行情数据
+
+OHLCV 通常表示一个周期内的开盘价、最高价、最低价、收盘价和成交量。每一行对应哪个交易所时区、哪个时间区间，以及收盘价是否调整，必须在分析前确认。
+
+行情下载后应检查索引排序、重复日期、缺失值、异常跳变、字段类型和样本区间。多层列索引或不同数据接口的字段差异应在数据入口统一处理，而不是散落在策略代码中。
+</script>
+<script type="text/markdown" data-node="returns">
+# 收益率与净值
+
+简单收益率描述相邻价格的相对变化：
+
+$$r_t=\frac{P_t-P_{t-1}}{P_{t-1}}=\frac{P_t}{P_{t-1}}-1$$
+
+连续多期的简单收益不能直接相加，净值需要通过增长因子连乘：$V_t=V_0\prod_{i=1}^{t}(1+r_i)$。对数收益率具有可加性，但组合计算和实际资金变化仍需注意所用定义。
+
+价格上涨幅度、策略收益、累计收益和年化收益属于不同概念，文档与代码应明确区分。
+</script>
+<script type="text/markdown" data-node="alignment">
+# 复权、交易日历与数据对齐
+
+分红、送股、配股和拆并股会让名义价格出现与经营无关的断点：股价“腰斩”可能只是十送十。复权把这些断点连接成连续序列，但复权方式的选择、交易日历的差异和多源数据的对齐，都会直接改变收益率与信号，必须在研究开始前固定口径。
+
+## 公司行动与复权因子
+
+正确的组织方式是三张表分开保存：**原始价**（当时真实报价）、**公司行动事件表**（分红、送转、配股，各自带除权日）、**复权因子**（由事件表推导，把公司行动映射到价格调整比例）。复权价是推导结果，不是数据源头。
+
+前复权与后复权的区别只在锚定时点：
+
+| 口径 | 锚点 | 特点 |
+|---|---|---|
+| 前复权 qfq | 最新价格保持接近真实值 | 历史价格向过去调整；**新公司行动发生后整段历史会被重算** |
+| 后复权 hfq | 早期价格保持不变 | 向未来累乘；绝对价格不能解释为真实成交价 |
+
+在同一数据快照和一致的公司行动口径下，区间总收益由复权价比值得到：
+
+$$R = \frac{P^{adj}_T}{P^{adj}_0} - 1$$
+
+qfq 与 hfq 的绝对价格不同，但算出的区间收益应近似一致——两者不一致时优先怀疑事件表或因子口径有错。
+
+前复权的“历史会被重算”性质对可复现研究是个陷阱：每次重新下载最新 qfq 数据，等于悄悄换了一份历史。可复现回测需要保存**复权因子快照**（factor_as_of），或保存原始价加事件表自行复权。
+
+不同用途应选不同口径：图形观察用前复权（价格直觉正确）；收益与信号研究用点时一致的复权价；**成交回放必须回到原始可交易价格**——复权价不能用于委托价格、涨跌停和滑点判断，现金分红和持仓数量变化要单独处理。
+
+## 交易日历与缺失
+
+不同市场、不同标的的交易日历不同。多标的合并时，内连接、外连接和缺失填充各自隐含假设：删除所有缺失行会改变样本范围；向前填充会把停牌误作正常可交易。填充还应有最大有效期——财报和宏观指标不能无限期向前延伸。
+
+## 因子面板与时点对齐
+
+因子研究把数据组织成以（日期，代码）为主键的面板。对齐的核心不是表格能否 merge 成功，而是两个时间约束：
+
+1. **特征在信号时点已知**：因子值 $f_{i,t}$ 只能使用 $t$ 时点已公开的数据。财务数据按 available_at 与交易日做 backward as-of 匹配——只取当时最近的已公开版本，不能按报告期直接连接。
+2. **收益区间严格在信号之后**：因子 $f_{i,t}$ 应与未来收益 $r_{i,t \to t+h}$ 配对。若收盘后算信号、次日开盘成交，标签应写成 $y_{i,t} = P_{i,t+h}/P_{i,t+1} - 1$，从 $t+1$ 起算而不是 $t$。
+
+截面比较还要求同一日期使用同一股票池和同一处理规则：停牌、涨跌停、新股、退市和指数成分变更都必须带有效日期（universe as-of），否则会引入 [成分股回看偏差](node:databias)。
+
+## 对齐的验收
+
+对齐规则应当做成可测试的数据契约，显式声明 signal_time、available_at、execution_time、holding_period 和 universe_as_of。验收手段包括：
+
+- 行数与唯一键检查；
+- 滞后分布检查：每个因子值与其数据源公开时间的间隔应落在预期范围；
+- 抽样事件回放：挑几个财报公告日，人工核对回测在公告前后分别看到哪个版本；
+- 失败条件：任何因子日期晚于 signal_time，或收益起点早于 execution_time，测试即失败。
+
+## 适用边界
+
+- Pandas merge 成功只表示键匹配，不表示时点语义正确。
+- 数据商对配股、税费和复权基准的定义可能不同，qfq/hfq 的名称本身不保证口径一致。
+- 只比较策略净值而不检查复权因子，可能把公司行动错误当成 Alpha。
+- 时点对齐在回测层的延伸（未来函数的完整分类与检测）见 [信号时序与因果](node:timing)。
+
+## 课程来源
+
+- 第 64 课 [公司行动处理：前复权 vs 后复权](../../../../pam-video-captures/365-days-quant-finance/64_youtube-opsOjZPNS2A/index.html)
+- 第 65 课 [时点 vs 时段数据：因子对齐](../../../../pam-video-captures/365-days-quant-finance/65_youtube-fp7Up6W-_CA/index.html)
+</script>
+<script type="text/markdown" data-node="databias">
+# 数据质量与偏差
+
+量化模型只能从输入数据中提取结构，不能修复它看不见的错误：错价、错时点、被删掉的退市股票都会原样进入结论。因此干净数据的标准不是“没有空值”，而是三件事：**语义正确**（每个数字代表它声称代表的经济量）、**时点真实**（回测时只使用当时可以获得的版本）、**来源可追溯**（每次修复都能回到原值）。
+
+## 数据质量的五个维度
+
+工程上通常把数据质量拆成可检查的维度：
+
+- **完整性**（completeness）：应有的记录和字段是否齐全，可量化为缺失率 missing/expected；
+- **有效性**（validity）：取值是否落在字段允许的范围和类型内；
+- **一致性**（consistency）：同一事实在不同表、不同来源中是否吻合；
+- **唯一性**（uniqueness）：主键是否重复，可量化为重复率 duplicates/rows；
+- **及时性**（timeliness）：数据到达时间是否满足使用场景。
+
+检查依赖一份显式的模式约束（schema）：字段、类型、单位、时区、主键和允许范围。要注意的是，数据行通过 schema 检查只说明格式合法，不能证明金融含义正确——单位错一千倍的市值字段完全可以是“合法”的浮点数。
+
+## 分层保存与可追溯
+
+数据处理按 **Raw → Clean → Feature** 分层：原始层保持下载时的原貌；清洗层只做可解释的变换，每条修复规则保留原值和修复原因；特征层才进入因子和模型。清洗规则变化时，下游结果应当能够重算，形成完整的血缘关系。
+
+删除异常值是最容易破坏研究的操作：统计上的离群点可能是真实的涨跌停、除权跳空或危机行情。按 z-score 一刀切会把最有信息量的样本删掉，正确做法是隔离并标记，而不是静默修改。
+
+## 行情数据清洗
+
+日线行情的主键通常是（代码，交易日，复权口径）。清洗顺序是先统一交易所日历、时区和排序，再做检查：
+
+- **OHLC 合法性**：$L \le \min(O,C) \le \max(O,C) \le H$，且成交量、成交额非负。违反约束的记录应隔离，不能改成“看起来合理”的值。
+- **缺失 K 线**：必须结合交易日历、上市区间、停牌和退市判断。停牌日没有成交，把前一天收盘价填充成“可交易价格”会让回测在不可交易的日子成交。
+- **陈旧价格**（stale price）：用连续相同价格、零成交量、跨数据源差异共同识别；但真实的一字板也会长时间价格不变，识别规则不能单独作为删除依据。
+- **对价格插值**会制造历史上不存在的成交路径，通常不适用于回测。
+
+清洗的目标是产出带 `quality_flag`、`tradable_flag` 和复权版本标识的行情表：让下游能排除坏数据，同时保留停牌和极端行情的真实信息，而不是把曲线修得好看。
+
+## 财务数据清洗
+
+财务数据比行情多出一层难度：同一个数字有四个时间属性——
+
+| 字段 | 含义 |
+|---|---|
+| report_period | 报告期，数字描述的经济区间 |
+| published_at | 公告时间，数字何时公开 |
+| available_at | 策略可用时间，数据源何时能取到 |
+| revision_id | 重述版本，同一报告期的第几个版本 |
+
+在此之上还有口径问题：
+
+- A 股利润表和现金流量表通常是年初至报告期的**累计值**，单季度需要差分：$Q_t = \mathrm{YTD}_t - \mathrm{YTD}_{t-1}$，一季度 $Q_1 = \mathrm{YTD}_{Q1}$；
+- 滚动十二个月 $\mathrm{TTM}_t = \sum_{j=0}^{3} Q_{t-j}$，只有四个可比单季齐全时才有明确含义；
+- 同比 $\mathrm{YoY} = X_t / X_{t-4} - 1$ 在分母为负或接近零时失去解释力；
+- 币种、单位、正负号、合并报表与母公司口径都要在字段映射时统一；
+- **缺失不等于零**，零也不一定代表没有业务，必须保留原始状态；
+- 银行、保险与一般工商企业报表结构不同，不能共用同一套质量和估值字段。
+
+## 三类典型偏差
+
+数据错误之外，“选了什么数据”本身也会制造系统性偏差：
+
+1. **幸存者偏差**：只回看今天仍存在的股票，等于提前剔除了退市和被吞并的失败样本，策略收益被高估。
+2. **重述覆盖**：用后来修订的财务数据回测，等于让历史决策用上了未来的更正版本。Point-in-time 连接应选择交易时点之前最新可得的版本，按 available_at 做 as-of 匹配，见 [复权、交易日历与数据对齐](node:alignment)。
+3. **成分股回看**：用当前指数成分名单回测过去，泄露了“谁活到了今天”的信息。成分变更必须带有效日期。
+
+这三类偏差的共同解法是 point-in-time 原则：回测中的每个决策只使用当时已经公开且可获得的数据版本。它在回测层的对应约束见 [信号时序与因果](node:timing)。
+
+## 适用边界
+
+- 模型精度高不能反过来证明数据正确——数据泄漏往往让模型看起来更好。
+- 免费数据同样需要许可、来源和口径记录，“可以下载”不等于“可以不治理”。
+- 质量指标（缺失率、重复率）应按日期和标的持续监控，一次性检查只能保证当时的快照。
+
+## 课程来源
+
+- 第 61 课 [为什么干净数据这么重要](../../../../pam-video-captures/365-days-quant-finance/61_youtube-yeWi1f97JAo/index.html)
+- 第 62 课 [行情数据清洗](../../../../pam-video-captures/365-days-quant-finance/62_youtube-ER7iuCHoNHU/index.html)
+- 第 63 课 [财务数据清洗](../../../../pam-video-captures/365-days-quant-finance/63_youtube-WBzZiXRgxM8/index.html)
+</script>
+<script type="text/markdown" data-node="randomwalk">
+# 随机游走与布朗运动
+
+## 先给结论
+
+巴舍利耶的合理性不在于“真实股价严格服从正态随机游走”，而在于他给出了一个清晰、可计算、可证伪的**随机基准模型**：如果短期价格变化主要由不可预知的新信息驱动，那么下一步方向不应仅凭过去一步稳定预测，累计不确定性应随时间扩大。
+
+因此，更准确的表述是：
+
+> 布朗运动是研究价格变化的零假设和第一近似，不是对真实市场全部规律的最终描述。
+
+## 从离散随机游走到布朗运动
+
+设每一步价格变化为 $\varepsilon_t$，最简单的离散随机游走是：
+
+$$X_n=X_0+\sum_{t=1}^{n}\varepsilon_t$$
+
+若增量独立同分布，并满足：
+
+$$E[\varepsilon_t]=0,\qquad \operatorname{Var}(\varepsilon_t)=\sigma^2$$
+
+则：
+
+$$E[X_n-X_0]=0$$
+
+$$\operatorname{Var}(X_n-X_0)=n\sigma^2$$
+
+第二条非常重要：时间扩大为原来的 $n$ 倍，方差扩大 $n$ 倍，标准差只扩大 $\sqrt{n}$ 倍。这就是常见“平方根时间缩放”的来源。
+
+在连续时间极限下，可写成巴舍利耶式算术布朗运动：
+
+$$S_t=S_0+\mu t+\sigma W_t$$
+
+其中 $W_t$ 是标准布朗运动，满足：
+
+- $W_0=0$；
+- 不相交区间的增量相互独立；
+- $W_{t+h}-W_t\sim N(0,h)$；
+- 样本路径连续，但几乎处处不可微。
+
+当 $\mu=0$ 时，未来价格变化的条件均值为零。加入漂移后，模型表达的是“在可估计的平均漂移之外，短期变化仍由随机增量主导”。
+
+## 为什么这个模型有合理性
+
+### 1. 新信息在到来前不可知
+
+如果公开信息已经被交易者迅速反映到价格中，下一条真正的新信息就不能从旧价格中被确定性地推出。于是过去一次上涨本身不应保证下一次继续上涨。
+
+这不是说所有市场都完全有效，而是提供一个严格的对照：任何声称能预测价格的规则，都应证明自己优于“下一步不可预测”这一基准，并通过样本外验证和交易成本检验。
+
+### 2. 很多小冲击叠加会趋向稳定分布
+
+一个交易周期内可能同时出现订单、新闻、流动性变化和投资者判断等大量冲击。如果这些冲击足够分散、没有单一因素长期支配，中心极限定理会使聚合变化接近正态分布。这解释了为什么高斯增量是自然的第一模型。
+
+### 3. 模型给出明确、可检验的推论
+
+布朗运动不仅说“价格很随机”，还给出可以验证的量化预测：
+
+- 增量均值接近设定漂移；
+- 相邻增量线性相关接近零；
+- 上下方向在零漂移时接近各半；
+- $h$ 期累计变化方差约为 $h\sigma^2$；
+- 固定期限的累计变化服从正态分布。
+
+能够被数据或实验推翻，是它比模糊的“市场不可预测”更有价值的原因。
+
+## Python 实验：验证模型自身推论
+
+实验固定随机种子 82，生成 20,000 条路径，每条 252 步，每步增量服从 $N(0,1)$。这不是用模拟“证明真实市场”，而是检查代码生成的过程是否符合理论。
+
+核心结果：
+
+| 指标 | 模拟结果 | 理论值 |
+|---|---:|---:|
+| 单步增量均值 | -0.000258 | 0 |
+| 单步增量标准差 | 1.000393 | 1 |
+| 相邻增量相关系数 | -0.000387 | 0 |
+| 相邻两步同方向比例 | 49.9827% | 50% |
+| 252 步累计变化为正的比例 | 50.2250% | 50% |
+| 252 步累计变化标准差 | 15.8482 | $\sqrt{252}=15.8745$ |
+
+方差时间缩放：
+
+| 期限 $h$ | 模拟方差 | 理论方差 $h\sigma^2$ | 比值 |
+|---:|---:|---:|---:|
+| 1 | 0.9981 | 1 | 0.9981 |
+| 5 | 5.0027 | 5 | 1.0005 |
+| 20 | 19.9971 | 20 | 0.9999 |
+| 60 | 60.0792 | 60 | 1.0013 |
+| 252 | 251.1643 | 252 | 0.9967 |
+
+![巴舍利耶随机游走实验](../../实验/outputs/task2_bachelier_random_walk.png)
+
+实验支持的是：**独立高斯增量确实产生零相关、方向近似各半、方差随时间线性增长的过程。** 它没有检验真实股票是否满足这些假设，因为输入数据本来就是按模型生成的。
+
+## 为什么真实市场不等于标准布朗运动
+
+标准巴舍利耶模型至少有四个明显边界：
+
+1. **价格可能为负**：算术布朗运动没有零下界，长期模拟可能产生负价格。现代入门模型常改用几何布朗运动：
+
+   $$dS_t=\mu S_tdt+\sigma S_tdW_t$$
+
+   它让对数价格服从带漂移的布朗运动，从而保持 $S_t>0$。
+
+2. **正态分布低估极端变化**：真实收益通常具有尖峰、厚尾，极端涨跌比正态模型预期更常见。
+3. **波动率并非常数**：大波动往往成簇出现。即使原始收益的线性自相关很低，收益平方或绝对值仍可能存在持续性。
+4. **价格会跳跃且市场有微观结构**：公告、停牌、流动性枯竭、买卖价差和离散报价都会破坏连续路径假设。
+
+因此，“收益方向难预测”与“市场没有任何可研究结构”不是同一句话。量化策略可以研究条件波动、横截面差异、风险溢价、执行成本和组合结构，但必须证明这些结构不是样本噪声。
+
+## 对量化研究的实际意义
+
+- 把随机游走当作**零假设**：策略首先应战胜随机或买入持有基准。
+- 把低自相关当作提醒：单靠最近一次涨跌预测下一次涨跌通常证据不足。
+- 把 $\sqrt{t}$ 缩放当作有条件公式：只有在独立、同分布和方差稳定等假设近似成立时才适用。
+- 把模型残差当作研究对象：厚尾、波动聚集和跳跃意味着风险模型需要继续扩展。
+- 不把回测盈利直接解释成可预测性：还要检查数据偏差、样本外表现和交易成本。
+
+## 实验与资料
+
+- [实验脚本](../../实验/scripts/task2_theory_origins.py)
+- [实验报告](../../实验/reports/Task2-理论原点实验.md)
+- [Bachelier（1900）：Théorie de la spéculation](https://archive.numdam.org/articles/10.24033/asens.476/)
+- [Mandelbrot（1963）：The Variation of Certain Speculative Prices](https://users.math.yale.edu/mandelbrot/web_pdfs/033certainSpeculativePrices.pdf)
+- [Cont（2001）：Empirical Properties of Asset Returns](https://doi.org/10.1080/713665670)
+</script>
+<script type="text/markdown" data-node="strategy">
+# 策略与信号
+
+策略把研究假设转化为一组明确规则。规则至少包括输入数据、特征或指标、信号条件、仓位映射、调仓频率、退出方式和风险限制。
+
+信号不是收益本身。策略设计应区分“观察到什么”“据此希望持有什么”“何时能够成交”三个层次，避免把指标曲线、买卖标记和实际仓位混为一谈。
+</script>
+<script type="text/markdown" data-node="signalposition">
+# 信号、仓位与调仓
+
+信号可以是离散的买入、空仓、卖空判断，也可以是连续分数。仓位映射进一步把信号转换为资金比例、目标股数或风险预算。
+
+调仓发生在目标仓位与当前仓位不同的时候。研究中应保留信号、目标仓位、实际仓位、仓位变化和成交动作等独立列，使收益归因和成本计算能够被检查。
+</script>
+<script type="text/markdown" data-node="movingaverage">
+# 趋势与移动平均线
+
+移动平均线通过对一段历史价格求平均来平滑短期波动。短期均线高于长期均线可被解释为近期价格相对更强，并构造为趋势信号。
+
+双均线策略适合展示“指标 → 信号 → 仓位 → 收益”的第一条完整链路，但它不自动证明趋势可以持续。窗口选择、震荡期频繁交易、信号滞后、成本和不同样本区间都可能显著改变结果。
+</script>
+<script type="text/markdown" data-node="factorsignal">
+# 因子与截面信号
+
+因子通常为多个标的在同一时点计算可比较的特征，用于排序、分组或组合加权。它与单一标的沿时间生成的择时信号属于不同研究结构。
+
+因子研究需要明确股票池、计算时点、财务数据可得时间、标准化、中性化、分组方式、换手和持有期。后续多因子专题将在该基础上讨论因子有效性与组合构建。
+</script>
+<script type="text/markdown" data-node="backtest">
+# 回测与评估
+
+回测是在明确历史信息边界和成交假设的前提下，模拟策略过去可能如何运行。它用于排除明显无效或不可实现的想法，不能预测未来必然盈利。
+
+完整回测应串联数据、信号、仓位、交易、成本、净值、基准、绩效指标和样本外验证，并能够追溯任一时点为什么持有该仓位。
+</script>
+<script type="text/markdown" data-node="timing">
+# 信号时序与因果
+
+回测必须保证每个决策只使用当时已经知道的信息。**未来函数**（look-ahead bias，前视偏差）指任何让历史决策用上当时不可得信息的计算或数据选择——它远不止显式的 `shift(-1)`，也藏在标准化方式、股票池选择、财报版本和成交价假设里。回测很美、实盘变脸，未来函数是第一嫌疑人。
+
+## 最小时序模型
+
+若用第 $t$ 日收盘价计算信号，该信号最早在下一个可交易时点执行，通常不能赚取 $t$ 日当天的收益。最小的日线约定是：
+
+$$\mathrm{position}_t = \mathrm{signal}_{t-1}$$
+
+$$\mathrm{strategy\_return}_t = \mathrm{position}_t \times \mathrm{return}_t - \mathrm{cost}_t$$
+
+更真实的设计需要显式声明四个时刻：信号计算时刻、下单时刻、成交价格、数据发布时间，并统一市场时区。
+
+## 显式与隐式未来函数
+
+显式风险容易检查：
+
+- `shift(-k)`：直接取未来值；
+- `rolling(center=True)`：滚动窗口以当前点为中心，右半窗全是未来数据；
+- `bfill()`：用未来价格向后填补缺失。
+
+隐式风险更危险，因为每一步单独看都“合理”：
+
+- **全样本标准化**：用整段历史的均值和标准差缩放特征，早期样本用上了后期的统计量；
+- **最新指数成分**：用今天的成分名单回测过去（见 [数据质量与偏差](node:databias) 的成分股回看）；
+- **最新重述财报**：历史决策用上了后来修正的版本（应按 available_at 做 as-of 匹配，见 [复权、交易日历与数据对齐](node:alignment)）；
+- **同价成交假设**：假设能以产生信号的那个价格成交，忽略了信号计算和撮合之间的时间差。
+
+## 训练与验证中的泄漏
+
+机器学习进入回测后，数据泄漏（data leakage）的面更宽：训练阶段间接看到测试数据也算。时间序列必须按时间切分训练与测试；标准化器（scaler）、特征选择和模型都只能在训练折上拟合，再应用到验证折——在全样本上先 fit 再切分，等于让模型提前看过未来的分布。
+
+## 截断不变性测试
+
+识别未来依赖有一条强验收规则：**删除时点 $T$ 之后的全部数据重新计算，$T$ 及以前的特征与信号必须逐值不变。** 任何随截断点变化的历史值，都说明该计算依赖了未来信息。这条测试可以自动化，应纳入因子上线前的固定检查，与时序切分测试、成交延迟测试并列。
+
+## 适用边界
+
+- `shift(1)` 不是万能修复：实际延迟取决于数据发布时间、计算完成时间和市场撮合，可能不止一期。
+- 消除未来函数不等于回测可信：幸存者偏差、数据挖掘和不可成交问题独立存在。
+- 实时数据的修订与延迟要用 point-in-time 快照验证，不能凭当前下载结果推断历史可得性。
+
+## 课程来源
+
+- 第 66 课 [point-in-time 防未来函数](../../../../pam-video-captures/365-days-quant-finance/66_youtube-G48ijrn2kfI/index.html)
+</script>
+<script type="text/markdown" data-node="costbenchmark">
+# 交易成本与基准
+
+策略毛收益需要扣除佣金、税费、买卖价差、滑点、融资成本和市场冲击，才能接近可实现收益。成本通常与换手率、订单规模和流动性相关，而不是固定不变。
+
+基准用于回答策略是否真的提供了额外价值。常见基准包括同一标的买入持有、相应市场指数、现金或同风险水平的简单组合。比较时必须使用相同时间区间和收益口径。
+</script>
+<script type="text/markdown" data-node="metrics">
+# 绩效指标
+
+累计收益只描述终点，不能说明实现过程。策略评价通常同时观察年化收益、年化波动率、Sharpe、最大回撤、回撤持续时间、胜率、盈亏比、换手率和相对基准表现。
+
+单个指标无法概括策略。高胜率可能伴随少数巨额亏损，高 Sharpe 也可能来自不稳定估计或被忽略的尾部风险。指标定义、无风险利率和年化方法应在实验中固定并说明。
+</script>
+<script type="text/markdown" data-node="backtestbias">
+# 回测偏差与过拟合
+
+前视偏差、幸存者偏差、选择偏差、重复试验和参数搜索都会让历史结果过于乐观。对同一数据尝试足够多的策略，总能偶然找到一条漂亮曲线。
+
+研究应记录尝试次数和参数选择依据，保留简单基准，并检查结论是否依赖少数日期、单一标的或特定市场阶段。不能只展示表现最好的组合而隐藏其他实验。
+</script>
+<script type="text/markdown" data-node="validation">
+# 样本外与滚动验证
+
+样本内数据用于形成假设和选择参数，样本外数据用于评价未见时期的表现。二者反复混用后，所谓样本外也会逐渐成为训练信息。
+
+时间序列不能随意随机打乱。扩展窗口、滚动窗口和 walk-forward 验证遵循时间顺序，能够观察策略在不同市场阶段的稳定性，同时更接近真实的定期重训和调参过程。
+</script>
+<script type="text/markdown" data-node="riskportfolio">
+# 风险与组合
+
+收益必须与承担的风险一起解释。风险既包括日常波动，也包括深度回撤、尾部损失、流动性不足、模型失效和多个头寸同时暴露于同一因素。
+
+组合管理把单个策略或标的的预期收益与相关结构转化为整体仓位。概率优势与凯利准则解释“有优势后做多大”，预算、上限、分散化和再平衡则进一步控制估计误差与风险集中。
+</script>
+<script type="text/markdown" data-node="volatility">
+# 波动率
+
+波动率常用收益率标准差度量，描述收益围绕均值变化的幅度。日波动率在独立同分布等简化假设下可乘以 $\sqrt{252}$ 年化，但交易日数和分布假设应按市场与数据频率说明。
+
+历史波动率是对不可直接观测风险状态的估计，会随样本窗口和市场阶段变化。它不能区分上涨和下跌，也不能完整描述跳跃、偏度和尾部风险。
+</script>
+<script type="text/markdown" data-node="sharpebeta">
+# Sharpe 与 Beta
+
+Sharpe 比率用单位波动所获得的超额收益近似衡量风险调整后表现：
+
+$$\text{Sharpe}=\frac{R_p-R_f}{\sigma_p}$$
+
+Beta 衡量标的收益对市场收益变化的线性敏感度：
+
+$$\beta=\frac{\operatorname{Cov}(R_i,R_m)}{\operatorname{Var}(R_m)}$$
+
+两者回答不同问题：Sharpe 面向整体风险收益效率，Beta 面向市场系统性暴露。估计结果都会随样本和频率变化。
+</script>
+<script type="text/markdown" data-node="drawdownposition">
+# 最大回撤与仓位管理
+
+回撤表示当前净值相对历史峰值的下降，最大回撤是样本期内最深的一次下降。它更接近资金和心理承受能力，但高度依赖观察区间，不能单独代表未来最坏情况。
+
+仓位管理决定同一策略信号承担多少风险。降低仓位通常同时压低收益与回撤；固定比例、波动率目标、风险预算和止损规则具有不同假设，需要结合成本与组合相关性评价。
+</script>
+<script type="text/markdown" data-node="correlation">
+# 相关性与分散化
+
+相关系数描述两个收益序列的线性共同变化。将低相关资产放在同一组合中，可能在不同比例下减少整体波动。
+
+相关性不是固定常数，在市场压力时期可能快速上升。低历史相关也不代表不存在共同尾部风险；标的数量增加只有在风险来源真正不同且权重合理时才形成有效分散化。
+</script>
+<script type="text/markdown" data-node="portfolio">
+# 组合构建与再平衡
+
+组合构建把多个标的或策略的信号转成权重。等权组合是清晰基准，进一步方法可以依据波动率、协方差、风险预算、预期收益或约束条件分配资金。
+
+权重会随价格变化而漂移，再平衡用于恢复目标风险结构，同时产生换手和成本。评价组合时应明确调仓频率、权重上限、现金、卖空、杠杆和估计窗口。
+</script>
+<script type="text/markdown" data-node="kellyposition">
+# 概率优势、复利与凯利仓位
+
+## 先校正一句话
+
+“概率优势 + 合理仓位管理，就能长期稳定盈利”抓住了索普思想的方向，但“稳定盈利”容易造成误解。更准确的表述是：
+
+> 在概率、赔率和重复下注等假设稳定且估计正确时，正优势配合适当仓位可以产生正的长期期望对数增长；它不保证每一期盈利，也不保证没有深度回撤。
+
+仓位公式最初来自 Kelly 1956 年的论文；索普把这一思想用于二十一点和资本市场，使“先确认优势，再决定下注规模”成为量化实践的重要范式。
+
+## 二项下注模型
+
+设：
+
+- 当前财富为 $W$；
+- 每次投入财富比例 $f$，且 $0\le f<1$；
+- 获胜概率为 $p$，失败概率为 $q=1-p$；
+- 每投入 1 单位，赢时获得净利润 $b$，输时损失投入金额。
+
+下一期财富为：
+
+$$W'=\begin{cases}
+W(1+bf), & \text{win}\\
+W(1-f), & \text{loss}
+\end{cases}$$
+
+每次下注的财富算术期望增长率为：
+
+$$\frac{E[W'-W]}{W}=f(bp-q)$$
+
+因此，游戏存在正优势的条件是：
+
+$$bp-q>0$$
+
+如果是等额赔率 $b=1$，条件就是 $p>0.5$。
+
+## 为什么只看财富期望不够
+
+财富经过多次下注是乘法过程：
+
+$$W_n=W_0\prod_{t=1}^{n}(1+R_t)$$
+
+算术期望可能被少数极端幸运路径拉高，不能代表大多数参与者的典型结果。仓位过大时，偶尔暴富的路径可以让平均财富很高，同时多数路径却低于本金。
+
+对数把乘法转成加法：
+
+$$\log\frac{W_n}{W_0}=\sum_{t=1}^{n}\log(1+R_t)$$
+
+因此长期复利更自然的目标是最大化每次下注的期望对数增长：
+
+$$g(f)=p\log(1+bf)+q\log(1-f)$$
+
+对 $f$ 求导：
+
+$$g'(f)=\frac{pb}{1+bf}-\frac{q}{1-f}$$
+
+令 $g'(f)=0$，得到凯利比例：
+
+$$f^*=\frac{bp-q}{b}=p-\frac{q}{b}$$
+
+并且：
+
+$$g''(f)=-\frac{pb^2}{(1+bf)^2}-\frac{q}{(1-f)^2}<0$$
+
+所以 $f^*$ 是唯一最大值，而不是任意驻点。
+
+## 52% 胜率为什么对应 4% 仓位
+
+实验设置等额赔率 $b=1$、胜率 $p=0.52$，则：
+
+$$q=0.48,\qquad f^*=0.52-0.48=0.04$$
+
+也就是每次投入当前财富的 4%。对应的理论期望对数增长率为：
+
+$$g(0.04)=0.52\log(1.04)+0.48\log(0.96)\approx0.000800$$
+
+如果胜率实际只有 50%，同样下注 4%：
+
+$$g(0.04)=0.5\log(1.04)+0.5\log(0.96)\approx-0.000801$$
+
+这说明**仓位管理不能创造优势**。没有优势时，波动拖累会使任何非零固定比例下注的期望对数增长为负；仓位只能把已有优势转化为资金增长，并控制优势判断错误时的损失速度。
+
+## 为什么凯利逻辑成立
+
+### 1. 对数增长对应长期复利
+
+在独立同分布、参数稳定的假设下，大数定律使单位次数的实际对数增长趋近 $g(f)$：
+
+$$\frac{1}{n}\log\frac{W_n}{W_0}\longrightarrow g(f)$$
+
+若 $g(f)>0$，典型财富路径长期呈指数增长；若 $g(f)<0$，典型路径长期衰减。
+
+### 2. 固定比例会随财富自动调整风险
+
+盈利后下注金额增加，亏损后下注金额减少，避免用固定金额让风险相对财富失控。只要 $f<1$，一次失败不会把财富直接降为零。
+
+### 3. 它明确揭示“过度下注”
+
+正优势不意味着仓位越大越好。超过凯利比例后，期望对数增长下降；继续加仓会跨过 $g(f)=0$，让典型路径从增长转为衰减。
+
+## Python 实验：优势相同，只改变仓位
+
+实验固定胜率 52%、等额赔率、初始财富 1，重复下注 1,000 次，并模拟 50,000 个终值。不同策略始终面对同一个概率优势，只改变每次投入比例。
+
+| 策略 | 仓位 | 每次期望对数增长 | 理论期望财富 | 模拟中位财富 | 5% 分位财富 | 低于本金概率 |
+|---|---:|---:|---:|---:|---:|---:|
+| 不下注 | 0% | 0 | 1.000 | 1.000 | 1.000 | 0.00% |
+| 半凯利 | 2% | 0.000600 | 2.225 | 1.822 | 0.644 | 18.02% |
+| 全凯利 | 4% | 0.000800 | 4.947 | 2.226 | 0.278 | 27.64% |
+| 双倍凯利 | 8% | -0.000003 | 24.408 | 0.997 | 0.015 | 51.72% |
+| 过度下注 | 10% | -0.001012 | 54.164 | 0.364 | 0.002 | 63.99% |
+
+![索普与凯利仓位实验](../../实验/outputs/task2_thorp_kelly.png)
+
+结果揭示了四件事：
+
+1. **全凯利最大化长期增长率**：4% 的理论 $g(f)$ 在所有候选仓位中最高。
+2. **最大增长不等于最平稳**：全凯利的中位财富高于半凯利，但左尾更深，有限 1,000 次后低于本金的概率也更高。
+3. **双倍凯利接近增长边界**：8% 仓位的期望对数增长约为零，中位财富几乎回到初始值。
+4. **算术平均会掩盖典型亏损**：10% 仓位的理论期望财富高达 54.164，但中位财富只有 0.364，约 64% 的路径低于本金。少数极端幸运路径抬高了平均数。
+
+这正是索普思想的核心：**先确认优势，再以复利目标选择仓位；只确认“期望收益为正”却忽略下注比例，仍可能长期亏损。**
+
+## 为什么实务中常用半凯利或更低
+
+简单公式假设 $p$、$b$ 已知且长期不变，但金融市场中的优势通常来自历史估计：
+
+- 胜率和盈亏比存在估计误差；
+- 收益不是只有赢/输两个结果；
+- 交易机会并非独立，相关性会同时放大多个头寸；
+- 市场状态、成本、滑点和容量会变化；
+- 杠杆、保证金和最大回撤约束会提前终止策略。
+
+如果高估了 $p$ 或低估了损失幅度，计算出的凯利仓位会系统性过大。分数凯利把仓位设为 $c f^*$，其中 $0<c<1$。它牺牲部分理论增长率，换取更浅的回撤、对参数误差更强的容忍度和更高的执行可持续性。
+
+在多资产情形下，简单二项公式不再直接适用，目标可推广为：
+
+$$\max_{\boldsymbol{w}}E\left[\log\left(1+\boldsymbol{w}^{\mathsf{T}}\boldsymbol{R}\right)\right]$$
+
+同时加入杠杆、单资产上限、组合相关性、流动性和回撤约束。实际项目中，凯利更适合用作**仓位上限与敏感性分析工具**，而不是机械执行的唯一答案。
+
+## 对量化研究的实际意义
+
+- 没有经过样本外验证和成本检验的“优势”，不应进入仓位公式。
+- 正期望回答“值不值得做”，仓位管理回答“做多大”。
+- 平均终值不能代替中位数、分位数、亏损概率和[最大回撤](node:drawdownposition)。
+- 优势越不确定、相关性越高、尾部越厚，实际仓位越应低于理论凯利。
+- 凯利结论是条件命题，不是盈利承诺，更不是投资建议。
+
+## 实验与资料
+
+- [实验脚本](../../实验/scripts/task2_theory_origins.py)
+- [实验报告](../../实验/reports/Task2-理论原点实验.md)
+- [Kelly（1956）：A New Interpretation of Information Rate](https://doi.org/10.1002/j.1538-7305.1956.tb03809.x)
+- [Rotando 与 Thorp：The Kelly Criterion and the Stock Market](https://www.edwardothorp.com/wp-content/uploads/2016/11/TheKellyCriterionAndTheStockMarket.pdf)
+</script>
+<script type="text/markdown" data-node="execution">
+# 执行与系统
+
+研究回测给出理想化规则，执行系统负责在真实时间、数据和账户约束下运行这些规则。数据延迟、网络失败、订单拒绝和异常行情都可能使实际仓位偏离研究目标。
+
+本部分覆盖交易成本与流动性、模拟盘到实盘的过渡，以及运行监控和风控。它不以直接实盘为目标，而是说明研究结论进入现实前必须补齐的工程边界。
+</script>
+<script type="text/markdown" data-node="transaction">
+# 交易成本与流动性
+
+佣金和税费是显式成本，买卖价差、滑点、延迟和市场冲击是隐式成本。订单规模相对市场成交量越大，成交价格越可能偏离回测假设。
+
+策略容量表示在收益优势被成本消耗前能够承载的大致资金规模。高换手策略即使毛收益较好，也可能在真实执行中失去可行性。
+</script>
+<script type="text/markdown" data-node="paperlive">
+# 从模拟盘到实盘
+
+模拟盘用于检查数据更新、信号生成、订单逻辑、持仓同步和运行稳定性，但通常不能完整模拟排队、冲击和极端行情。
+
+从研究到真实资金应分阶段验证：离线复现、前向纸面记录、模拟账户、小规模受限运行，再根据预先定义的风控标准决定是否继续。任何阶段发现数据或订单异常，都应优先停止而不是自动追单。
+</script>
+<script type="text/markdown" data-node="monitoring">
+# 监控、日志与风控
+
+运行系统需要记录数据版本、信号、目标仓位、订单、成交、费用、实际持仓和异常。只有完整日志才能解释回测、模拟盘与实际结果为何不同。
+
+风控至少包括仓位和杠杆上限、单标的集中度、损失与回撤阈值、数据过期检测、订单失败处理和人工停机入口。监控指标应区分策略正常波动与系统故障。
+</script>
+<script type="text/markdown" data-node="advanced">
+# 进阶专题
+
+因子、时间序列、机器学习和深度学习都应接入同一量化研究闭环，而不是绕过数据质量、时间因果、成本和样本外评价。
+
+进阶模型增加表达能力，也增加参数、验证难度和过拟合风险。进入本部分前，应先能独立完成一个包含基准、成本、风险指标和样本外区间的简单策略实验。
+</script>
+<script type="text/markdown" data-node="multifactor">
+# 因子与多因子
+
+因子研究检验某个可观测特征是否与未来横截面收益存在稳定关系。单因子需要经过排序、分组、信息系数、换手、行业和规模暴露等检查。
+
+多因子模型组合多个信息来源，并处理相关性、权重、冗余与约束。有效性评价必须使用当时可得数据和历史股票池，避免把未来财务信息或成分股带回过去。
+</script>
+<script type="text/markdown" data-node="timeseries">
+# 时间序列研究
+
+金融时间序列具有顺序、非平稳、波动聚集和结构变化等特征。趋势、均值回归、季节性、波动率和状态切换是常见研究对象。
+
+时间序列建模应先建立朴素基准，严格按时间划分数据，并检查预测误差能否在成本后转化为交易价值。预测指标改善不必然带来更好的组合表现。
+</script>
+<script type="text/markdown" data-node="mlquant">
+# 机器学习量化
+
+机器学习可以用于收益分类或回归、横截面排序、风险估计、市场状态识别和文本特征提取。问题定义、标签时间区间和特征可得时间比模型复杂度更先决定结果是否可信。
+
+实验应使用时间顺序验证、Pipeline 和严格防泄漏处理，并与简单线性模型和规则策略比较。通用模型与评估基础由[机器学习知识地图](../../../机器学习/知识地图.html)承接。
+</script>
+<script type="text/markdown" data-node="dlquant">
+# 深度学习与 AI 量化
+
+RNN、LSTM、Transformer 和其他深度模型能够处理复杂序列或非结构化数据，但金融样本的低信噪比、分布漂移和标签重叠会放大过拟合风险。
+
+深度模型仍需明确预测目标、训练窗口、验证方式、交易成本和基准。网络结构基础由[深度学习知识地图](../../../深度学习/知识地图.html)承接，本节点重点关注它们进入量化研究后的数据与评价边界。
+</script>
+<script type="text/markdown" data-node="practice">
+# 实验实践
+
+实验把概念转成可检查的计算过程。每次实验从一个明确问题开始，固定数据与假设，保留代码和输出，再用观察与结论回答原问题。
+
+课程复现负责确认基础链路能够运行；扩展实验负责加入成本、反例、不同样本和样本外验证。正文解释概念，Notebook 展示计算，静态报告用于直接阅读。
+</script>
+<script type="text/markdown" data-node="env">
+# 实验环境
+
+量化实验不仅要“在当前电脑上跑通”，还要能说明使用了什么 Python、什么库、什么数据源，并在以后尽可能复现同一结果。本项目用 `environment.yml` 定义名为 `pkm-quant` 的独立环境，避免与系统 Python 或其他项目互相污染。
+
+## 工具链分层
+
+| 层次 | 当前工具 | 作用 |
+|---|---|---|
+| 环境管理 | Miniforge / Conda | 创建隔离环境，统一管理 Python 和需要编译的科学计算依赖。 |
+| 语言运行时 | Python 3.11 | 执行数据处理、研究、回测和可视化代码。 |
+| Python 包管理 | pip | 安装 PyPI 上更新更及时或 Conda 当前无法完整求解的包。 |
+| 交互研究 | JupyterLab | 把代码、图表、公式、观察和结论放在同一份 Notebook 中。 |
+| 内核连接 | ipykernel | 让 Jupyter Notebook 真正使用 `pkm-quant` 中的 Python。 |
+| 项目定义 | `environment.yml` | 声明依赖来源与固定版本，用于重建和同步环境。 |
+| 环境验收 | `实验/scripts/check_environment.py` | 检查核心库导入、版本和本地绘图能力，不依赖外部行情服务。 |
+
+Notebook 所显示的内核名称不等同于当前终端环境。遇到“终端能导入、Notebook 不能导入”时，应先在 Notebook 中检查：
+
+```python
+import sys
+print(sys.executable)
+```
+
+本项目应指向：
+
+```text
+/opt/homebrew/Caskroom/miniforge/base/envs/pkm-quant/bin/python
+```
+
+## 核心库与量化场景
+
+| 库 | 一句话功能 | 量化场景举例 |
+|---|---|---|
+| NumPy | 高性能数组和数值计算 | 批量计算收益率、矩阵运算、随机游走和蒙特卡洛模拟。 |
+| pandas | 表格与时间序列处理 | 读取行情、按日期对齐、处理缺失值、计算移动平均和策略净值。 |
+| SciPy | 科学计算算法 | 统计分布、优化、数值求解和后续的组合权重优化。 |
+| Matplotlib | 基础绘图库 | 绘制价格、成交量、收益曲线、回撤和指标对比图。 |
+| seaborn | 统计可视化 | 绘制收益分布、相关性热力图和分组比较图。 |
+| scikit-learn | 通用机器学习工具 | 数据预处理、训练/验证划分、回归分类、模型评价和流水线。 |
+| yfinance | Yahoo Finance 的非官方 Python 客户端 | 获取美股等市场的历史行情；可能受到 Yahoo 接口变化或 HTTP 429 限流影响。 |
+| AkShare | 聚合多个公开金融数据源的 Python 接口 | 获取 A 股、美股、港股、基金、期货、外汇和宏观数据；实际来源可能是新浪、东方财富等。 |
+| JupyterLab | 交互式研究工作台 | 运行课程 Notebook，保留代码、输出、图表和解释。 |
+| ipykernel | Jupyter 的 Python 内核 | 将 `pkm-quant` 注册为可选择的 Notebook 运行环境。 |
+
+Backtrader 等回测框架属于后续可选工具，当前基础环境暂不安装。入门阶段先用 pandas 明确实现“信号 → 仓位 → 收益 → 指标”的最小回测，有助于理解时间对齐、交易成本和未来数据泄漏；框架应在理解这些机制后再引入。
+
+## Conda、conda-forge 与 Miniforge
+
+这三个名称处于不同层次：
+
+| 名称 | 它是什么 | 本项目中的职责 |
+|---|---|---|
+| Conda | 环境管理器和包管理器 | 创建 `pkm-quant`、解析依赖、安装/更新包、切换环境。 |
+| conda-forge | 社区维护的 Conda 软件包渠道 | 提供适用于不同操作系统和 CPU 架构的预编译软件包及其依赖元数据。 |
+| Miniforge | 预配置 conda-forge 的轻量 Conda 发行方式 | 在本机提供 `conda` / `mamba` 命令，并默认只使用 conda-forge。 |
+| pip / PyPI | Python 官方生态的包安装工具与包索引 | 在 `pkm-quant` 内补充 Conda 当前无法完整提供或需要更新版本的 Python 包。 |
+
+conda-forge 不是另一个 Python，也不是安装命令。可以把它理解为 Conda 获取软件包的“仓库渠道”：社区维护者编写构建配方，经持续集成构建出 macOS、Linux、Windows 等平台的软件包，再发布到 conda-forge channel。Conda 会读取 channel 的包索引和依赖信息，而不是现场从源码编译每一个科学计算库。
+
+本机当前配置是：
+
+| 配置 | 当前值 | 含义 |
+|---|---|---|
+| Conda 发行方式 | Miniforge | 基础环境位于 `/opt/homebrew/Caskroom/miniforge/base`。 |
+| Conda 版本 | 26.3.2 | 执行环境和包管理。 |
+| 依赖求解器 | libmamba | 计算哪些包版本能够同时满足所有约束。 |
+| 平台 | `osx-arm64` | Apple Silicon 的 macOS 包。 |
+| Channel | `conda-forge` | 同时查询 `osx-arm64` 平台包和 `noarch` 跨平台包。 |
+| Channel priority | `flexible` | 当前只有一个 channel，不会发生跨渠道混装；增加其他 channel 时应改为 `strict`。 |
+
+不要把 conda-forge 与 Anaconda 的 `defaults` 渠道随意混合。不同渠道可能使用不同的编译工具链和依赖组合；如果以后必须增加渠道，应记录顺序并设置严格优先级：
+
+```bash
+conda config --set channel_priority strict
+conda config --show channels channel_priority
+```
+
+## 本项目的安装部署流程
+
+`environment.yml` 是安装入口，其中四类信息分别表示：
+
+| 字段 | 当前含义 |
+|---|---|
+| `name: pkm-quant` | 创建或同步的环境名称。 |
+| `channels: [conda-forge]` | Conda 去哪里查询软件包和依赖元数据。 |
+| `dependencies` 中的普通条目 | 先由 Conda 求解并安装，例如 Python、NumPy、pandas、JupyterLab。 |
+| `dependencies` 中的 `pip` 子列表 | Conda 阶段完成后，再调用该环境自己的 pip 安装，例如 yfinance 和 AkShare。 |
+
+执行 `conda env create -f environment.yml` 时，实际过程是：
+
+```text
+读取 environment.yml
+        ↓
+确定环境名、平台、channel 和版本约束
+        ↓
+从 conda-forge 读取 osx-arm64 / noarch 包索引
+        ↓
+libmamba 计算一组互相兼容的包版本
+        ↓
+下载、校验并提交 Conda 包事务
+        ↓
+调用 pkm-quant/bin/python -m pip 安装 pip 子列表
+        ↓
+环境创建完成
+        ↓
+注册 ipykernel → 本地验收 → 外部数据低频验收
+```
+
+几个关键点：
+
+- **依赖求解**不是简单地给每个库取最新版，而是寻找一组全部约束都能满足的版本；缺少某个依赖时可能回退到旧版。
+- **Conda 阶段先于 pip 阶段**。Conda 不会自动用 PyPI 的包去满足某个 Conda 包缺失的依赖，因此 yfinance 必须整体放到 pip 子列表。
+- **激活环境**只会调整当前终端的命令路径，不会自动修改已有 Notebook 的内核。
+- **注册内核**把环境暴露给 Jupyter，但不会重新安装依赖。
+- **`--prune` 同步**会清理不再由环境定义需要的 Conda 包，使用前应确保重要依赖已写入 `environment.yml`。
+- **验收与安装分开**：安装命令退出成功后仍要检查实际版本、导入、绘图和依赖冲突；行情请求属于第二层外部验收。
+
+可以用以下命令查看安装来源：
+
+```bash
+conda list -n pkm-quant --show-channel-urls
+```
+
+输出中的 `conda-forge` 表示由 Conda channel 管理，`pypi` 表示由该环境中的 pip 安装。两者可以在同一个环境中共存，但同一个包应尽量只交给其中一种工具管理。
+
+## 为什么同时使用 Conda 和 pip
+
+本项目优先由 Conda 安装 Python、NumPy、pandas、SciPy、Matplotlib、scikit-learn、JupyterLab 等基础包，因为它擅长处理 macOS ARM64 上的二进制依赖。pip 只负责当前需要从 PyPI 安装的包。
+
+如果在 Conda 依赖区只写未固定版本的 `yfinance`，当前 `osx-arm64` 求解器会选择 0.2.57。原因不是该版本被课程指定，而是 yfinance 从 0.2.58 开始依赖 `curl-cffi`，Conda 当前渠道缺少该依赖，于是回退到最后一个可解版本。项目因此在 pip 区显式安装 `curl_cffi`，并固定 `yfinance==1.5.1`。
+
+原则是：**先让 Conda 解决基础科学计算栈，再由同一环境中的 pip 补充少数包；不要交替随意安装同一个包。**
+
+## 创建与同步环境
+
+首次创建：
+
+```bash
+cd "/Users/mojiawen/Documents/学习资料归档/_暂存/personal_knowledge_manager/量化交易"
+conda env create -f environment.yml
+conda activate pkm-quant
+```
+
+同步已经存在的环境：
+
+```bash
+conda env update -n pkm-quant -f environment.yml --prune
+conda activate pkm-quant
+```
+
+注册 Jupyter 内核：
+
+```bash
+python -m ipykernel install \
+  --user \
+  --name pkm-quant \
+  --display-name "Python (pkm-quant)"
+```
+
+启动 JupyterLab 后，应在 Notebook 右上角选择 `Python (pkm-quant)`。
+
+## 环境验收
+
+```bash
+conda activate pkm-quant
+python 实验/scripts/check_environment.py
+python -m pip check
+jupyter kernelspec list
+```
+
+验收分为两个层次：
+
+1. **本地环境验收**：核心库能导入、版本符合预期、Matplotlib 能绘图、`pip check` 无依赖冲突。
+2. **外部数据验收**：对指定数据源做一次低频小请求，记录查询日期、接口、标的和返回结果。
+
+外部行情失败不应立即判定为环境失败。例如库能正常导入且 `pip check` 通过，但 Yahoo 返回 HTTP 429，说明失败发生在外部服务链路；此时不应连续重试。
+
+当前已验证基线（2026-07-14）：
+
+| 组件 | 版本或结果 |
+|---|---:|
+| Python | 3.11.15 |
+| NumPy | 2.4.6 |
+| pandas | 3.0.3 |
+| Matplotlib | 3.11.0 |
+| seaborn | 0.13.2 |
+| scikit-learn | 1.9.0 |
+| yfinance | 1.5.1 |
+| AkShare | 1.18.64 |
+| JupyterLab | 4.6.1 |
+| 本地绘图 | 通过 |
+| `pip check` | 无依赖冲突 |
+
+## 数据接口的边界
+
+| Python 接口 | 实际数据链路 | 当前用途 | 主要注意事项 |
+|---|---|---|---|
+| yfinance | Python → Yahoo Finance | 课程中的美股历史行情示例 | 非 Yahoo 官方 SDK；请求可能限流，接口行为会变化。 |
+| AkShare `stock_us_daily` | Python → AkShare → 新浪财经美股接口 | Yahoo 不可用时的美股日线备用入口 | 与 Yahoo 的复权、字段、更新时间可能不同。 |
+| AkShare `stock_zh_a_*` | Python → AkShare → 东方财富/新浪等 | A 股行情与基础数据 | 必须确认具体函数的数据源、频率、单位和复权方式。 |
+
+“两个接口都返回 AAPL”不代表数据完全等价。实验必须记录数据来源、获取日期、市场、标的、时间区间、字段含义和复权口径，不能在同一回测中无说明地混用来源。
+
+## 常见问题排查
+
+| 现象 | 优先检查 | 处理方式 |
+|---|---|---|
+| `ModuleNotFoundError` | Notebook 的 `sys.executable` 是否指向 `pkm-quant` | 切换到 `Python (pkm-quant)`，不要先在系统 Python 重复安装。 |
+| 终端与 Notebook 版本不同 | `python -V`、`which python`、内核路径 | 重新注册内核，并重启 Notebook 内核。 |
+| `YFRateLimitError` / HTTP 429 | yfinance 版本、是否短时间重复请求 | 停止重试，稍后低频验证；必要时换用已注明来源的备用数据。 |
+| `pip check` 报冲突 | 冲突包是否同时由 Conda 和 pip 管理 | 先修改 `environment.yml`，再统一同步；问题复杂时重建环境。 |
+| 图表能运行但中文乱码 | Matplotlib 字体配置 | 在项目级绘图配置中指定可用中文字体，不改全局环境。 |
+| 历史数据结果不一致 | 数据源、复权、时区和查询日期 | 固定数据快照并在实验报告中记录口径。 |
+
+## 可复现实验清单
+
+- 环境依赖写入 `environment.yml`，关键兼容版本明确固定。
+- Notebook 明确使用 `Python (pkm-quant)` 内核。
+- 实验报告记录 Python、主要库版本和运行日期。
+- 数据报告记录来源、接口、获取日期、市场、标的、区间、频率、时区和复权。
+- 数据清洗与接口兼容集中在 `实验/scripts/`，不要散落到每个 Notebook。
+- 原始数据与处理后数据分开保存；正式比较优先使用可追溯的数据快照。
+- 外部接口失败时保留错误类型，不把网络问题改写成策略或环境结论。
+
+## 参考资料
+
+- [conda-forge：简介与使用方式](https://conda-forge.org/docs/user/introduction/)
+- [Miniforge：预配置 conda-forge 的 Conda 发行方式](https://github.com/conda-forge/miniforge)
+- [Conda：管理环境](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+</script>
+<script type="text/markdown" data-node="experiments">
+# 实验路线
+
+第一阶段按同一条链路逐步增加现实约束：
+
+1. 用模拟验证随机游走、概率优势与仓位管理的理论推论；
+2. 获取并检查 OHLCV；
+3. 计算收益率与净值；
+4. 构造双均线信号和仓位；
+5. 建立含时间错位保护的最小回测；
+6. 加入基准和风险指标；
+7. 加入手续费、滑点和换手；
+8. 扩展到多标的相关性与组合；
+9. 划分样本内和样本外区间。
+
+后续因子或机器学习实验复用相同数据、回测和评价规范，不另建一套宽松标准。
+</script>
+<script type="text/markdown" data-node="coursemapping">
+# Quant-for-Beginners 课程映射
+
+| 课程内容 | 知识节点 | 实验承接 |
+|---|---|---|
+| 第 1 章：什么是量化金融 | 量化研究框架、随机游走与布朗运动、概率优势与凯利仓位 | 巴舍利耶随机游走与索普仓位模拟、真实行情获取 |
+| 第 2 章：第一个量化实验 | OHLCV、收益率与净值 | 数据检查、收益率计算与可视化 |
+| 第 3 章：移动平均线策略 | 趋势与移动平均线、信号与仓位 | MA5/MA20 信号和调仓记录 |
+| 第 4 章：策略回测 | 信号时序、基准、绩效指标 | 最小回测与买入持有比较 |
+| 第 5 章：理解波动率 | 波动率 | 日波动和年化波动比较 |
+| 第 6 章：Sharpe 与 Beta | Sharpe 与 Beta | 风险收益散点与市场敏感度 |
+| 第 7 章：最大回撤与仓位 | 最大回撤与仓位管理 | 水下曲线与不同仓位对比 |
+| 第 8 章：多标的与相关性 | 相关性、组合构建 | 相关矩阵、等权组合和再平衡扩展 |
+
+课程当前用于建立直觉。完成基础复现后，应补交易成本、数据偏差、样本外验证和运行约束，使结果从教学示例走向规范研究。
+</script>
+<script type="text/markdown" data-node="course365mapping">
+# 365 天量化课程映射
+
+[365 天量化课程](../../../../pam-video-captures/365-days-quant-finance/knowledge-map.html)按教学顺序线性展开，本知识库按研究流程组织。本表维护两者的映射：课程是证据来源，知识节点是归宿。学习按主题簇推进，每学完一簇就把结论蒸馏进对应节点，不等整个阶段结束。
+
+## 阶段总览
+
+| 阶段 | 课次 | 主题 | 承接位置 | 状态 |
+|---|---:|---|---|---|
+| P1 | 1–30 | 量化基础 | `实验/p1-quant-foundations/`，30 课讲解 + 25 个 Notebook + 6 个综合实验 | 已完成整理 |
+| P2 | 31–60 | Python 量化工具栈 | `实验/p2-python-toolchain/`，30 个 Notebook + 6 个综合实验 | 已完成整理 |
+| P3 | 61–90 | 数据与因子工程 | 本知识库各节点（见下表） | 学习中 |
+| P4–P11 | 91–365 | 策略、回测、机器学习、执行等 | 逐阶段开播后映射 | 未开始 |
+
+## P3 主题簇映射
+
+| 主题簇 | 课次 | 沉淀节点 | 状态 |
+|---|---:|---|---|
+| 数据质量与口径 | 61–63 | [数据质量与偏差](node:databias) | 已蒸馏 |
+| 数据质量与口径 | 64–65 | [复权、交易日历与数据对齐](node:alignment) | 已蒸馏 |
+| 数据质量与口径 | 66 | [信号时序与因果](node:timing) | 已蒸馏 |
+| 因子图谱 | 67–76 | 因子工程章（学完后扩容 TREE） | 待学习 |
+| 因子处理与检验 | 77–82 | 因子工程章（学完后扩容 TREE） | 待学习；82 课源异常 |
+| 组合与多因子模型 | 83–89 | [因子与多因子](node:multifactor)、[组合构建与再平衡](node:portfolio) | 待学习 |
+
+## 维护规则
+
+- 逐课状态（素材、学习、蒸馏三列）记录在 `项目管理/03-课程学习台账.md`，本节点只保留簇到节点的映射结论。
+- 每个被蒸馏的节点在文末标注“课程来源”，可反向跳回课程图文页。
+- Datawhale quant-for-beginners 的映射见 [课程映射](node:coursemapping)，两条课程线共用同一套知识节点，不各建一套结构。
+</script>
+<script>
+const TREE=[{"id": "map", "label": "🧭 知识地图"}, {"id": "refs", "label": "📚 资料清单", "children": [{"id": "learningmainline", "label": "当前学习主线"}, {"id": "mathrefs", "label": "数学基础与量化"}, {"id": "freefinance", "label": "免费金融与量化阅读"}, {"id": "quant365", "label": "365 天量化课程"}, {"id": "opensourcetools", "label": "开源系统与 GitHub 工具"}, {"id": "infosystems", "label": "数据与财经信息源"}]}, {"id": "framework", "label": "🧩 量化研究框架", "children": [{"id": "hypothesis", "label": "研究问题与假设"}, {"id": "researchloop", "label": "从研究到交易的闭环"}]}, {"id": "market", "label": "🏛️ 市场与交易基础", "children": [{"id": "instruments", "label": "市场与交易标的"}, {"id": "orders", "label": "价格、订单与成交"}, {"id": "positionpnl", "label": "仓位、资金与盈亏"}]}, {"id": "datareturns", "label": "📊 数据与收益", "children": [{"id": "ohlcv", "label": "OHLCV 行情数据"}, {"id": "returns", "label": "收益率与净值"}, {"id": "randomwalk", "label": "随机游走与布朗运动"}, {"id": "alignment", "label": "复权、交易日历与数据对齐"}, {"id": "databias", "label": "数据质量与偏差"}]}, {"id": "strategy", "label": "🎯 策略与信号", "children": [{"id": "signalposition", "label": "信号、仓位与调仓"}, {"id": "movingaverage", "label": "趋势与移动平均线"}, {"id": "factorsignal", "label": "因子与截面信号"}]}, {"id": "backtest", "label": "🧪 回测与评估", "children": [{"id": "timing", "label": "信号时序与因果"}, {"id": "costbenchmark", "label": "交易成本与基准"}, {"id": "metrics", "label": "绩效指标"}, {"id": "backtestbias", "label": "回测偏差与过拟合"}, {"id": "validation", "label": "样本外与滚动验证"}]}, {"id": "riskportfolio", "label": "🛡️ 风险与组合", "children": [{"id": "volatility", "label": "波动率"}, {"id": "sharpebeta", "label": "Sharpe 与 Beta"}, {"id": "drawdownposition", "label": "最大回撤与仓位管理"}, {"id": "kellyposition", "label": "概率优势与凯利仓位"}, {"id": "correlation", "label": "相关性与分散化"}, {"id": "portfolio", "label": "组合构建与再平衡"}]}, {"id": "execution", "label": "⚙️ 执行与系统", "children": [{"id": "transaction", "label": "交易成本与流动性"}, {"id": "paperlive", "label": "从模拟盘到实盘"}, {"id": "monitoring", "label": "监控、日志与风控"}]}, {"id": "advanced", "label": "🚀 进阶专题", "children": [{"id": "multifactor", "label": "因子与多因子"}, {"id": "timeseries", "label": "时间序列研究"}, {"id": "mlquant", "label": "机器学习量化"}, {"id": "dlquant", "label": "深度学习与 AI 量化"}]}, {"id": "practice", "label": "🔬 实验实践", "children": [{"id": "env", "label": "实验环境"}, {"id": "experiments", "label": "实验路线"}, {"id": "coursemapping", "label": "课程映射"}, {"id": "course365mapping", "label": "365 课程映射"}]}];
+const EDGES=[["refs", "learningmainline"], ["refs", "quant365"], ["refs", "mathrefs"], ["refs", "freefinance"], ["refs", "opensourcetools"], ["refs", "infosystems"], ["alignment", "databias"], ["alignment", "timing"], ["databias", "alignment"], ["databias", "timing"], ["timing", "databias"], ["timing", "alignment"], ["kellyposition", "drawdownposition"], ["course365mapping", "databias"], ["course365mapping", "alignment"], ["course365mapping", "timing"], ["course365mapping", "multifactor"], ["course365mapping", "portfolio"], ["course365mapping", "coursemapping"]];
+const META={"map": {"full": true}, "learningmainline": {"full": true}, "freefinance": {"full": true}, "mathrefs": {"full": true}, "quant365": {"full": true}, "opensourcetools": {"full": true}, "infosystems": {"full": true}, "refs": {"full": true}, "framework": {"full": false}, "hypothesis": {"full": false}, "researchloop": {"full": false}, "market": {"full": false}, "instruments": {"full": false}, "orders": {"full": false}, "positionpnl": {"full": false}, "datareturns": {"full": false}, "ohlcv": {"full": false}, "returns": {"full": false}, "alignment": {"full": true}, "databias": {"full": true}, "randomwalk": {"full": true}, "strategy": {"full": false}, "signalposition": {"full": false}, "movingaverage": {"full": false}, "factorsignal": {"full": false}, "backtest": {"full": false}, "timing": {"full": true}, "costbenchmark": {"full": false}, "metrics": {"full": false}, "backtestbias": {"full": false}, "validation": {"full": false}, "riskportfolio": {"full": false}, "volatility": {"full": false}, "sharpebeta": {"full": false}, "drawdownposition": {"full": false}, "correlation": {"full": false}, "portfolio": {"full": false}, "kellyposition": {"full": true}, "execution": {"full": false}, "transaction": {"full": false}, "paperlive": {"full": false}, "monitoring": {"full": false}, "advanced": {"full": false}, "multifactor": {"full": false}, "timeseries": {"full": false}, "mlquant": {"full": false}, "dlquant": {"full": false}, "practice": {"full": false}, "env": {"full": true}, "experiments": {"full": true}, "coursemapping": {"full": true}, "course365mapping": {"full": true}};
+const CONTENT={},LABEL={},PARENT={},HREF={};
+document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
+(function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;if(n.href)HREF[n.id]=n.href;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");
+let done=JSON.parse(localStorage.getItem("quantkb_done")||"{}");
+let currentRoute={id:"map",anchor:""};
+if("scrollRestoration" in history){history.scrollRestoration="manual";}
+function attr(s){return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function routeUrl(id,anchor){
+  let h="#node="+encodeURIComponent(id);
+  if(anchor) h+="&anchor="+encodeURIComponent(anchor);
+  return h;
+}
+function routeFromHash(){
+  if(!location.hash) return null;
+  const raw=location.hash.slice(1);
+  const q=new URLSearchParams(raw);
+  if(q.has("node")) return {id:q.get("node")||"map",anchor:q.get("anchor")||"",scroll:0};
+  const old=decodeURIComponent(raw);
+  if(CONTENT[old]||LABEL[old]) return {id:old,anchor:"",scroll:0};
+  return null;
+}
+function getScrollY(){
+  const rd=document.getElementById("reader");
+  return Math.max(rd?rd.scrollTop:0,window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0);
+}
+function setScrollY(y){
+  const rd=document.getElementById("reader");
+  if(rd) rd.scrollTop=y||0;
+  window.scrollTo(0,y||0);
+}
+function currentState(){return {id:currentRoute.id,anchor:currentRoute.anchor||"",scroll:getScrollY()};}
+function saveCurrentState(){try{history.replaceState(currentState(),"",location.href);}catch(e){}}
+let scrollTimer=null;
+function rememberScroll(){clearTimeout(scrollTimer);scrollTimer=setTimeout(saveCurrentState,80);}
+function inline(t){return t
+  .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,function(m,alt,src){return '<img src="'+src.replace(/^(?:\.\.\/)+/,'')+'" alt="'+alt+'">'})
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="'+attr(routeUrl(nid,an))+'" class="xref" data-node="'+attr(nid)+'" data-anchor="'+attr(an)+'">'+txt+'</a>';}var external=/^(https?:|mailto:|#)/.test(url);var clean=url.replace(/^(?:\.\.\/)+/,'');var sibling=/^(?:\.\.\/)+(?:机器学习|深度学习)\//.test(url);var pam=/^(?:\.\.\/)+pam-video-captures\//.test(url);var out=external?url:(sibling?'../'+clean:(pam?'../../'+clean:clean));return '<a href="'+out+'" target="_blank" rel="noopener">'+txt+'</a>';});}
+function md(src){
+  src=src.replace(/\r/g,'');
+  var M=[];
+  src=src.replace(/\$\$([\s\S]+?)\$\$/g,function(_,x){M.push('$$'+x+'$$');return '@@M'+(M.length-1)+'@@';}).replace(/\$([^\$\n]+?)\$/g,function(_,x){M.push('$'+x+'$');return '@@M'+(M.length-1)+'@@';});
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const out=[];let list=false,olist=false,quote=false,code=false,para=[],codebuf=[];
+  const fp=()=>{if(para.length){out.push('<p>'+inline(esc(para.join(' ')))+'</p>');para=[]}};
+  const cl=()=>{if(list){out.push('</ul>');list=false}if(olist){out.push('</ol>');olist=false}};const cq=()=>{if(quote){out.push('</blockquote>');quote=false}};
+  const fc=()=>{if(code){out.push('<pre><code>'+esc(codebuf.join('\n'))+'</code></pre>');code=false;codebuf=[]}};
+  const cells=s=>s.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>c.trim());
+  const L=src.split('\n');
+  for(let i=0;i<L.length;i++){
+    const t=L[i].trim();let m;
+    if(/^```/.test(t)){if(code){fc();}else{fp();cl();cq();code=true;codebuf=[];}continue;}
+    if(code){codebuf.push(L[i]);continue;}
+    if(/^\|.*\|$/.test(t)&&i+1<L.length&&/^\|[\s:|-]+\|$/.test(L[i+1].trim())){
+      fp();cl();cq();
+      var hd=cells(t),bd=[],j=i+2;
+      while(j<L.length&&/^\|.*\|$/.test(L[j].trim())){bd.push(cells(L[j].trim()));j++;}
+      var tb='<div class="tw"><table><thead><tr>';
+      hd.forEach(c=>{tb+='<th>'+inline(esc(c))+'</th>';});tb+='</tr></thead><tbody>';
+      bd.forEach(r=>{tb+='<tr>';r.forEach(c=>{tb+='<td>'+inline(esc(c))+'</td>';});tb+='</tr>';});
+      out.push(tb+'</tbody></table></div>');i=j-1;continue;
+    }
+    if(t===''){fp();cl();cq();continue;}
+    if(m=t.match(/^(#{1,4})\s+(.*)/)){fp();cl();cq();out.push('<h'+m[1].length+'>'+inline(esc(m[2]))+'</h'+m[1].length+'>');continue;}
+    if(t==='---'){fp();cl();cq();out.push('<hr>');continue;}
+    if(m=t.match(/^[-*]\s+(.*)/)){fp();cq();if(olist){out.push('</ol>');olist=false}if(!list){out.push('<ul>');list=true}out.push('<li>'+inline(esc(m[1]))+'</li>');continue;}
+    if(m=t.match(/^\d+\.\s+(.*)/)){fp();cq();if(list){out.push('</ul>');list=false}if(!olist){out.push('<ol>');olist=true}out.push('<li>'+inline(esc(m[1]))+'</li>');continue;}
+    if(m=t.match(/^>\s?(.*)/)){fp();cl();if(!quote){out.push('<blockquote>');quote=true}out.push(inline(esc(m[1]))+'<br>');continue;}
+    para.push(t);
+  }
+  fc();
+  fp();cl();cq();
+  var html=out.join('\n');
+  html=html.replace(/@@M(\d+)@@/g,function(_,i){return M[+i];});
+  return html;
+}
+function typeset(cb){
+  if(window.MathJax&&MathJax.typesetPromise){
+    MathJax.typesetPromise([document.getElementById("reader")]).catch(function(){}).then(function(){if(cb)cb();});
+  }else if(cb){cb();}
+}
+function tnode(n,lvl){
+  const kids=n.children&&n.children.length;
+  const href=n.href?' data-href="'+attr(n.href)+'"':'';
+  let h='<div class="tnode lvl'+lvl+'" data-id="'+n.id+'"'+href+'><span class="cv">'+(kids?'▸':(n.href?'↗':'·'))+'</span><span class="lbl">'+n.label+'</span><span class="chk">'+(!n.href&&done[n.id]?'✓':'')+'</span></div>';
+  if(kids){h+='<div class="kids" data-kids="'+n.id+'" style="display:none">'+n.children.map(c=>tnode(c,lvl+1)).join('')+'</div>';}
+  return h;
+}
+function buildTree(){document.getElementById("tree").innerHTML=TREE.map(n=>tnode(n,0)).join('');}
+function revealNode(id){
+  let p=PARENT[id];
+  while(p){
+    const box=document.querySelector('[data-kids="'+p+'"]');
+    const t=document.querySelector('.tnode[data-id="'+p+'"]');
+    if(box) box.style.display="";
+    if(t){const cv=t.querySelector(".cv");if(cv)cv.classList.add("open");}
+    p=PARENT[p];
+  }
+}
+function bindXrefs(){
+  document.querySelectorAll("#reader a.xref").forEach(a=>{
+    a.onclick=function(e){
+      if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;
+      e.preventDefault();
+      navigateNode(a.dataset.node,a.dataset.anchor||"");
+    };
+  });
+}
+function pillW(s){var w=0;for(var i=0;i<s.length;i++){w+=s.charCodeAt(i)>255?13:7.2;}return Math.round(w)+26;}
+function overviewHtml(){
+  var order=["market","datareturns","framework","strategy","backtest","riskportfolio","execution","advanced","practice"];
+  var W=1056,x0=176,xmax=1046,ph=30,y=16,pos={},layers=[];
+  order.forEach(function(gid){
+    var g=null;TREE.forEach(function(n){if(n.id===gid)g=n;});
+    if(!g)return;
+    var rowY=y,x=x0;
+    layers.push({id:gid,y:rowY,label:g.label});
+    (g.children||[]).forEach(function(c){
+      var w=pillW((LABEL[c.id]||c.id)+(done[c.id]?" ✓":""));
+      if(x+w>xmax){x=x0;rowY+=40;}
+      pos[c.id]={x:x,y:rowY,w:w};x+=w+10;
+    });
+    y=rowY+ph+38;
+  });
+  var H=y-14;
+  var s='<svg class="net" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><marker id="na" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="var(--sub)" stroke-width="1.5"/></marker></defs>';
+  var first=layers[0],ex=null;layers.forEach(function(l){if(l.id==="execution")ex=l;});
+  if(first&&ex){s+='<line class="flowarr" x1="10" y1="'+(first.y+15)+'" x2="10" y2="'+(ex.y+11)+'" marker-end="url(#na)"/>';}
+  var drawn={};
+  EDGES.forEach(function(e){
+    var k=e[0]<e[1]?e[0]+"|"+e[1]:e[1]+"|"+e[0];
+    if(drawn[k])return;drawn[k]=1;
+    var a=pos[e[0]],b=pos[e[1]];if(!a||!b)return;
+    var d;
+    if(a.y===b.y){
+      var ax=a.x+a.w/2,bx=b.x+b.w/2,yy=a.y+ph;
+      d='M'+ax+' '+yy+' C'+ax+' '+(yy+22)+' '+bx+' '+(yy+22)+' '+bx+' '+yy;
+    }else{
+      var top=a.y<b.y?a:b,bot=a.y<b.y?b:a;
+      var tx=top.x+top.w/2,bx2=bot.x+bot.w/2,dy=(bot.y-top.y-ph)*0.35;
+      d='M'+tx+' '+(top.y+ph)+' C'+tx+' '+(top.y+ph+dy)+' '+bx2+' '+(bot.y-dy)+' '+bx2+' '+bot.y;
+    }
+    s+='<path class="edge" data-a="'+attr(e[0])+'" data-b="'+attr(e[1])+'" d="'+d+'"/>';
+  });
+  layers.forEach(function(l){
+    s+='<text class="lyr" x="24" y="'+(l.y+19)+'" data-id="'+attr(l.id)+'">'+l.label+'</text>';
+  });
+  Object.keys(pos).forEach(function(id){
+    var p=pos[id],full=META[id]&&META[id].full;
+    s+='<g class="pill '+(full?'full':'stub')+'" data-id="'+attr(id)+'"><rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+ph+'" rx="8"/><text x="'+(p.x+13)+'" y="'+(p.y+19)+'">'+(LABEL[id]||id)+(done[id]?'<tspan class="dk"> ✓</tspan>':'')+'</text></g>';
+  });
+  s+='</svg>';
+  return '<section class="netwrap"><h2>知识网络</h2><p class="hint">每一层是研究闭环的一个阶段，左侧主线自上而下，末端复盘回到起点。实心节点已成文，虚线节点还是提纲；曲线是节点互引。悬停看关联，点击进入正文。</p><div class="netscroll">'+s+'</div><div class="netlegend"><span style="color:var(--accent)">▣ 已成文</span><span>▢ 提纲待蒸馏</span><span style="color:var(--ok)">✓ 已掌握</span><span style="color:var(--accent)">⌒ 交叉引用</span></div></section>';
+}
+function bindNet(){
+  var svg=document.querySelector('#reader svg.net');if(!svg)return;
+  function clear(){svg.classList.remove('hl');svg.querySelectorAll('.on').forEach(function(e){e.classList.remove('on');});}
+  svg.querySelectorAll('.pill').forEach(function(p){
+    var id=p.dataset.id;
+    p.addEventListener('click',function(){navigateNode(id);});
+    p.addEventListener('mouseenter',function(){
+      clear();svg.classList.add('hl');p.classList.add('on');
+      svg.querySelectorAll('.edge').forEach(function(ed){
+        if(ed.dataset.a===id||ed.dataset.b===id){
+          ed.classList.add('on');
+          var other=ed.dataset.a===id?ed.dataset.b:ed.dataset.a;
+          var op=svg.querySelector('.pill[data-id="'+other+'"]');if(op)op.classList.add('on');
+        }
+      });
+    });
+    p.addEventListener('mouseleave',clear);
+  });
+  svg.querySelectorAll('.lyr').forEach(function(t){
+    t.addEventListener('click',function(){navigateNode(t.dataset.id);});
+  });
+}
+function relatedHtml(id){
+  if(id==="map")return '';
+  var outs=[],ins=[];
+  EDGES.forEach(function(e){
+    if(e[0]===id&&outs.indexOf(e[1])<0)outs.push(e[1]);
+    if(e[1]===id&&ins.indexOf(e[0])<0)ins.push(e[0]);
+  });
+  if(!outs.length&&!ins.length)return '';
+  function chips(a){return a.map(function(n){return '<a class="xref" href="'+attr(routeUrl(n))+'" data-node="'+attr(n)+'">'+(LABEL[n]||n)+'</a>';}).join('');}
+  var h='<hr><section class="rel"><h3>知识网络</h3>';
+  if(outs.length)h+='<div class="relrow"><span class="relk">本文引用</span><span class="relchips">'+chips(outs)+'</span></div>';
+  if(ins.length)h+='<div class="relrow"><span class="relk">被引用</span><span class="relchips">'+chips(ins)+'</span></div>';
+  return h+'</section>';
+}
+function frameworkOverviewHtml(){
+  const steps=[
+    ["1. 理解市场","标的、订单、仓位","明确真实交易约束"],
+    ["2. 准备数据","行情、收益、时点","保证证据可用"],
+    ["3. 提出假设","现象、机制、规则","形成可证伪问题"],
+    ["4. 回测评价","因果、成本、基准","检验是否稳健"],
+    ["5. 风险执行","组合、风控、监控","进入下一轮复盘"],
+  ];
+  return '<section class="featuremap"><div class="featureflow">'+steps.map(function(s){return '<div class="featurestep"><strong>'+s[0]+'</strong><span>'+s[1]+'</span><span>'+s[2]+'</span></div>';}).join('')+'</div></section>';
+}
+function scrollToAnchor(anchor,smooth){
+  const rd=document.getElementById("reader");
+  const hs=rd.querySelectorAll("h1,h2,h3,h4");
+  for(let i=0;i<hs.length;i++){
+    if(hs[i].textContent.indexOf(anchor)>=0){hs[i].scrollIntoView({behavior:smooth?"smooth":"auto",block:"start"});return true;}
+  }
+  return false;
+}
+function finishScroll(anchor,opts){
+  const y=opts&&typeof opts.scroll==="number"?opts.scroll:null;
+  const restore=!!(opts&&opts.restore);
+  const run=function(){
+    if(anchor){if(!scrollToAnchor(anchor,!restore))setScrollY(0);}
+    else if(y!==null){setScrollY(y);}
+    else{setScrollY(0);}
+  };
+  run();setTimeout(run,80);setTimeout(run,250);
+}
+function renderNode(id,anchor,opts){
+  let body=CONTENT[id];
+  if(!body) body="# "+(LABEL[id]||id)+"\n\n> 🚧 本知识点待编写。";
+  currentRoute={id:id,anchor:anchor||""};
+  const isDone=!!done[id];
+  const rd=document.getElementById("reader");
+  rd.classList.toggle("wide",["map","refs","framework","datareturns","backtest","riskportfolio","coursemapping"].indexOf(id)>=0);
+  rd.innerHTML='<div class="rdrhead"><button class="markbtn '+(isDone?'done':'')+'" onclick="toggleDone(\''+id+'\',this)">'+(isDone?'✓ 已掌握':'标记已掌握')+'</button></div>'+(id==="map"?overviewHtml():"")+(id==="framework"?frameworkOverviewHtml():"")+md(body)+relatedHtml(id);
+  bindXrefs();
+  if(id==="map")bindNet();
+  typeset(function(){finishScroll(anchor,opts||{});});
+  revealNode(id);
+  document.querySelectorAll('.tnode').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+}
+function navigateNode(id,anchor){
+  saveCurrentState();
+  const st={id:id,anchor:anchor||"",scroll:0};
+  history.pushState(st,"",routeUrl(id,anchor));
+  renderNode(id,anchor);
+}
+function openNode(id,anchor){
+  navigateNode(id,anchor);
+}
+function toggleDone(id,btn){
+  const st=currentState();
+  done[id]=!done[id]; if(!done[id])delete done[id];
+  localStorage.setItem("quantkb_done",JSON.stringify(done));
+  buildTree();bind();updateProg();
+  history.replaceState(st,"",location.href);
+  renderNode(id,st.anchor,{scroll:st.scroll,restore:true});
+}
+function updateProg(){
+  const groups=['map','refs','framework','market','datareturns','strategy','backtest','riskportfolio','execution','advanced','practice'];
+  const ids=Object.keys(LABEL).filter(i=>groups.indexOf(i)<0);
+  const d=ids.filter(i=>done[i]).length;
+  document.getElementById("prog").textContent='已掌握 '+d+'/'+ids.length;
+}
+function bind(){
+  document.querySelectorAll('.tnode').forEach(el=>{
+    el.onclick=function(e){e.stopPropagation();const id=el.dataset.id;
+      if(el.dataset.href){location.href=el.dataset.href;return;}
+      const kidsBox=document.querySelector('[data-kids="'+id+'"]');
+      if(kidsBox){const showing=kidsBox.style.display!=='none';kidsBox.style.display=showing?'none':'';el.querySelector('.cv').classList.toggle('open',!showing);}
+      navigateNode(id);
+    };
+  });
+}
+window.addEventListener("popstate",function(e){
+  const st=e.state||routeFromHash()||{id:"map",anchor:"",scroll:0};
+  renderNode(st.id,st.anchor||"",{scroll:st.scroll||0,restore:true});
+});
+window.addEventListener("scroll",rememberScroll,{passive:true});
+document.getElementById("reader").addEventListener("scroll",rememberScroll,{passive:true});
+buildTree();bind();updateProg();
+const initial=routeFromHash()||{id:"map",anchor:"",scroll:0};
+history.replaceState({id:initial.id,anchor:initial.anchor||"",scroll:0},"",location.href);
+renderNode(initial.id,initial.anchor||"",{scroll:initial.scroll||0,restore:true});
+</script>
+</body>
+</html>

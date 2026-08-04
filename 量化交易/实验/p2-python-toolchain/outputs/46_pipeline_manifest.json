@@ -1,0 +1,51 @@
+{
+  "pipeline": "lesson-46-offline",
+  "config": {
+    "symbols": [
+      "BANK_A",
+      "EV_A",
+      "MISSING_A"
+    ],
+    "start": "2024-01-01",
+    "end": "2025-12-31",
+    "price_field": "adj_close",
+    "pipeline_version": 1
+  },
+  "config_sha256": "916c4c4a9728d11d92afabed5914cd72a985f5053083cc99d3f575c14e09cf31",
+  "input_sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+  "status": [
+    {
+      "symbol": "BANK_A",
+      "status": "ok",
+      "rows": 756.0,
+      "start": "2023-01-03",
+      "end": "2025-11-25",
+      "interval_return": 0.2814755412991179,
+      "max_drawdown": -0.21028433330140517,
+      "chart": "46_BANK_A_nav.png",
+      "error": ""
+    },
+    {
+      "symbol": "EV_A",
+      "status": "ok",
+      "rows": 756.0,
+      "start": "2023-01-03",
+      "end": "2025-11-25",
+      "interval_return": 0.46828993921799866,
+      "max_drawdown": -0.3005140277425987,
+      "chart": "46_EV_A_nav.png",
+      "error": ""
+    },
+    {
+      "symbol": "MISSING_A",
+      "status": "failed",
+      "rows": "",
+      "start": "",
+      "end": "",
+      "interval_return": "",
+      "max_drawdown": "",
+      "chart": "",
+      "error": "MISSING_A: empty snapshot"
+    }
+  ]
+}

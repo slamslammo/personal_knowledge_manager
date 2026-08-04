@@ -1,0 +1,17 @@
+{
+  "commit_sha": "1d16631a680e905b9ce72d1b651189d2341ac65f",
+  "config": {
+    "lesson": 57,
+    "symbol": "DEMO_A",
+    "cost_bps": 10
+  },
+  "config_sha256": "0c5ce18195f70ea30e3f5289e515229768dfbf99543140c8b78886b0c2f70f2f",
+  "data_file": "daily_prices.csv",
+  "data_sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+  "packages": {
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.9.0"
+  }
+}

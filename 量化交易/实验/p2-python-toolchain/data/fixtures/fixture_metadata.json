@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "purpose": "deterministic synthetic fixtures for P2 lessons 31-36",
+  "seed": 365,
+  "market_structure": {
+    "daily": "six fictional assets with market, sector and idiosyncratic factors",
+    "intraday": "fictional A-share-like 5-minute bars, Asia/Shanghai, 48 bars per day"
+  },
+  "files": {
+    "daily_prices.csv": {
+      "bytes": 330213,
+      "sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9"
+    },
+    "intraday_5m.csv": {
+      "bytes": 41478,
+      "sha256": "c549838040968098af711d80bf7d85c258215b4a07af8c32b56a3ed005f67e5c"
+    }
+  },
+  "boundary": "Synthetic educational data; not real security history."
+}

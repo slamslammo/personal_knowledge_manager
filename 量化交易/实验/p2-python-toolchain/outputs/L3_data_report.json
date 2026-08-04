@@ -1,0 +1,30 @@
+{
+  "lab": "L3",
+  "input_sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+  "database": "L3_market_store.sqlite",
+  "report": "L3_data_report.csv",
+  "chart": "L3_data_report.png",
+  "statuses": [
+    {
+      "source": "global",
+      "symbol": "TECH_A",
+      "status": "ok",
+      "rows": 756,
+      "error": ""
+    },
+    {
+      "source": "a_share",
+      "symbol": "BANK_A",
+      "status": "ok",
+      "rows": 756,
+      "error": ""
+    },
+    {
+      "source": "a_share",
+      "symbol": "MISSING_A",
+      "status": "failed",
+      "rows": 0,
+      "error": "MISSING_A: empty"
+    }
+  ]
+}

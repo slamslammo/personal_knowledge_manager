@@ -1,0 +1,26 @@
+{
+  "python": "3.11.15",
+  "executable": "/opt/homebrew/Caskroom/miniforge/base/envs/pkm-quant/bin/python",
+  "platform": "macOS-26.5.1-arm64-arm-64bit",
+  "random_seed": 365,
+  "packages": {
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.0",
+    "seaborn": "0.13.2",
+    "scikit-learn": "1.9.0",
+    "statsmodels": "0.14.6",
+    "jupyterlab": "4.6.1",
+    "ipykernel": "7.3.0",
+    "yfinance": "1.5.1",
+    "akshare": "1.18.64"
+  },
+  "code": {
+    "tools/build_first_batch.py": "d5679c99e5357ef6ccf6f911d87c0cb7b8cca53cf556d89b7f2503769d6e699e"
+  },
+  "data": {
+    "daily_prices.csv": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+    "intraday_5m.csv": "c549838040968098af711d80bf7d85c258215b4a07af8c32b56a3ed005f67e5c"
+  }
+}

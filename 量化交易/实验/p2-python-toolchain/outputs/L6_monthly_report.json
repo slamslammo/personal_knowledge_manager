@@ -1,0 +1,10 @@
+{
+  "lab": "L6",
+  "period": "2025-11",
+  "status": "ready-local",
+  "data_sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+  "report": "L6_monthly_report.html",
+  "report_sha256": "ae84f844293311c77ca892d97b2945392a1fa6eec633b2ac1a3474fe8a609960",
+  "chart": "L6_monthly_report.png",
+  "chart_sha256": "3c75d5605c02053cb165dec4dce38d7f11a2e5b201d46bbcc90ab27d6f7d0f99"
+}

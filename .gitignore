@@ -2,3 +2,14 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# 本地阅读用电子书，不进入公开仓库
+资料/*.pdf
+
+# 测试与缓存
+.pytest_cache/
+CACHEDIR.TAG
+
+# 量化实验的 nbconvert 静态报告与超大交互产物，可由 notebook 重新导出
+量化交易/实验/*/reports/
+量化交易/实验/p2-python-toolchain/outputs/41_interactive_candlestick.html

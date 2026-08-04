@@ -1,0 +1,194 @@
+{
+  "validated_at": "2026-07-30T00:20:33.712876+00:00",
+  "environment": "pkm-quant",
+  "status": "pass",
+  "notebook_count": 31,
+  "results": [
+    {
+      "notebook": "notebooks/04_资产类别与可比净值.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/05_收益率口径与累计净值.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/06_复利贴现NPV与IRR.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/07_波动方差与下行风险.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/08_协方差相关性与分散化.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/09_OLS回归Beta与Alpha.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/10_正态分布基准与偏离.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/11_厚尾极端风险与模型误差.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/12_中心极限定理与抽样误差.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/13_假设检验效应大小与功效.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/14_R2解释力与样本外预测.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/15_平稳性差分与伪回归.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/16_自相关白噪声与预测边界.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/17_蒙特卡洛情景与概率误差.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/18_几何布朗运动与路径假设.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/19_风险中性概率与二叉树定价.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/20_BlackScholes价格与假设敏感性.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/21_Greeks局部敏感度与对冲.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "notebooks/22_订单簿价差深度与不平衡.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/23_滑点冲击与成本后收益.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/24_价格时间优先与撮合模拟.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/26_数据源适配与契约.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/27_公司行动与复权口径.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/28_行情频率重采样与信息边界.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "notebooks/29_策略研究报告闭环.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    },
+    {
+      "notebook": "labs/L1_研究假设卡.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "labs/L2_收益风险账本.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "labs/L3_信号证据审计.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "labs/L4_随机场景与期权风险.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "labs/L5_执行可行性与成本.ipynb",
+      "status": "pass",
+      "code_cells": 2,
+      "executed_code_cells": 2
+    },
+    {
+      "notebook": "labs/L6_数据契约与策略报告.ipynb",
+      "status": "pass",
+      "code_cells": 3,
+      "executed_code_cells": 3
+    }
+  ]
+}

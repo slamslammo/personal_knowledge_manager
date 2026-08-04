@@ -1,0 +1,52 @@
+{
+  "lab": "L5",
+  "async_max_in_flight": 3,
+  "task_status": [
+    {
+      "symbol": "A",
+      "status": "ok",
+      "elapsed_ms": 12.07041699990441,
+      "error": ""
+    },
+    {
+      "symbol": "B",
+      "status": "ok",
+      "elapsed_ms": 12.0690830001422,
+      "error": ""
+    },
+    {
+      "symbol": "C",
+      "status": "ok",
+      "elapsed_ms": 12.068832999830192,
+      "error": ""
+    },
+    {
+      "symbol": "D",
+      "status": "ok",
+      "elapsed_ms": 10.707125000180895,
+      "error": ""
+    },
+    {
+      "symbol": "FAIL",
+      "status": "failed",
+      "elapsed_ms": "",
+      "error": "simulated"
+    },
+    {
+      "symbol": "E",
+      "status": "ok",
+      "elapsed_ms": 10.770374999992782,
+      "error": ""
+    }
+  ],
+  "numba_matches_reference": true,
+  "cost_monotonicity": true,
+  "data_sha256": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",
+  "versions": {
+    "numpy": "2.4.6",
+    "numba": "0.66.0",
+    "pytest": "9.1.1"
+  },
+  "git_manifest": "57_experiment_manifest.json",
+  "dockerfile": "58_Dockerfile.example"
+}
