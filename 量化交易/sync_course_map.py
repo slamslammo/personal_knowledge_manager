@@ -38,12 +38,19 @@ for m in re.finditer(
     rng = f"{int(d.group(1))}–{int(d.group(2))}" if d else ""
     phases.append((code, name, rng))
 nav = "".join(
-    f'<a href="#{c}">{c} {n}' + (f" · {r}" if r else "") + "</a>" for c, n, r in phases)
-html, n_nav = re.subn(r'<nav class="hero-links">.*?</nav>',
-                      '<nav class="hero-links">%s</nav>' % nav, html, flags=re.S)
+    f'<a href="#{c}" style="align-self:flex-start">{c} {n}' + (f" · {r}" if r else "") + "</a>"
+    for c, n, r in phases)
+html, n_nav = re.subn(
+    r'<nav class="hero-links">.*?</nav>',
+    '<nav class="hero-links" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">%s</nav>' % nav,
+    html, flags=re.S)
 assert n_nav == 1 and len(phases) >= 11, f"hero 导航替换异常: nav={n_nav}, phases={len(phases)}"
 
-# 2) 去掉统计卡片区(<div class="stats">...到进度热力图之前)
+# 2) 精简导语:去掉 P1/P2 组织方式的说明
+html = html.replace("P1 以策略报告和能力矩阵反向组织量化基础，P2 以可运行 Notebook 组织 Python 工具链；逐课材料和模块综合实验均回到同一课程入口。",
+                    "逐课材料和模块综合实验均回到同一课程入口。")
+
+# 3) 去掉统计卡片区(<div class="stats">...到进度热力图之前)
 i = html.find('<div class="stats">')
 j = html.find('<div class="progre', i)
 assert 0 < i < j, "stats 区块定位失败"
