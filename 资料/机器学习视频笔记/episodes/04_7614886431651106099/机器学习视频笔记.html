@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 4 集: 线性回归</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 4 集: 线性回归</h1>
+<p class="meta">来源: 抖音视频《线性回归: 机器学习的第一个模型》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7614886431651106099" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep04">返回系列总览</a></p>
+
+<h2>1. 本集定位: 从一个可手算模型理解机器学习</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="线性回归" src="selected_frames/01-title-linear-regression.jpg"/><figcaption>线性回归</figcaption></figure>
+<p class="">线性回归是机器学习里最适合作为“第一模型”的内容,因为它完整包含了机器学习训练的基本结构:</p>
+<p class="">数据 → 模型 → 损失 → 优化 → 预测。</p>
+<h2>2. 房价例子: 从数据表开始</h2>
+<p class="meta">约 00:30</p>
+<figure><img alt="房价数据" src="selected_frames/02-housing-data.jpg"/><figcaption>房价数据</figcaption></figure>
+<p class="">视频用面积和房价做例子。给定若干样本:</p>
+<ul>
+<li>输入特征: 面积。</li>
+<li>目标标签: 房价。</li>
+<li>任务: 根据面积预测未知房子的价格。</li>
+</ul>
+<p class="">这个例子不一定要追求真实业务含义,重点是用简单数据承载“从数据找规律”的过程。</p>
+<h2>3. 找趋势线: 用一条线描述数据规律</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="拟合趋势线" src="selected_frames/03-fit-trend-line.jpg"/><figcaption>拟合趋势线</figcaption></figure>
+<p class="">把面积和房价画到坐标系后,可以看到它们大致呈正相关。线性回归做的事情,就是找一条尽量贴近数据点的线。</p>
+<p class="">直观理解:</p>
+<ul>
+<li>点离线越近,模型预测越准。</li>
+<li>点离线越远,模型误差越大。</li>
+<li>训练就是让这条线越来越合理。</li>
+</ul>
+<h2>4. 什么是线性回归</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="什么是线性回归" src="selected_frames/04-what-is-linear-regression.jpg"/><figcaption>什么是线性回归</figcaption></figure>
+<p class="">线性回归用线性函数拟合输入和输出之间的关系。这里的“线性”不只是在二维图里画直线,更一般地说,它表示输出是输入特征的加权组合。</p>
+<p class="">一维时像直线,多维时对应平面或超平面。</p>
+<h2>5. 模型公式: 参数决定预测结果</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="模型公式" src="selected_frames/05-model-formula.jpg"/><figcaption>模型公式</figcaption></figure>
+<p class="">最简单的一元线性回归:</p>
+<pre><code>y_hat = w x + b</code></pre>
+<p class="">其中:</p>
+<ul>
+<li><code>x</code>: 输入特征,例如面积。</li>
+<li><code>y_hat</code>: 预测结果。</li>
+<li><code>w</code>: 权重/斜率,控制面积变化对房价的影响。</li>
+<li><code>b</code>: 偏置/截距,控制整体基准值。</li>
+</ul>
+<p class="">机器学习要学的,就是合适的 <code>w</code> 和 <code>b</code>。</p>
+<h2>6. 损失函数: 衡量模型准不准</h2>
+<p class="meta">约 05:30</p>
+<figure><img alt="损失函数 MSE" src="selected_frames/06-loss-mse.jpg"/><figcaption>损失函数 MSE</figcaption></figure>
+<p class="">模型有了预测值,还需要衡量预测值和真实值之间差多少。线性回归常用均方误差 MSE:</p>
+<pre><code>MSE = 平均((真实值 - 预测值)^2)</code></pre>
+<p class="">为什么平方?</p>
+<ul>
+<li>把正负误差都变成正数。</li>
+<li>放大较大的错误。</li>
+<li>数学上便于求导和优化。</li>
+</ul>
+<p class="">这部分应当连接到数学基础里的“误差、平方、导数、梯度”。</p>
+<h2>7. 梯度下降: 寻找更好的参数</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="梯度下降" src="selected_frames/07-gradient-descent.jpg"/><figcaption>梯度下降</figcaption></figure>
+<p class="">损失函数告诉我们“当前参数好不好”,但还需要一个方法告诉我们“往哪里改”。梯度下降就是用梯度方向更新参数,让损失逐步降低。</p>
+<p class="">这个点自然接到第 5 集: 线性回归先给出训练问题,梯度下降再解释参数怎么更新。</p>
+<h2>8. 模型训练的核心循环</h2>
+<p class="meta">约 10:00</p>
+<figure><img alt="训练循环" src="selected_frames/08-training-loop.jpg"/><figcaption>训练循环</figcaption></figure>
+<p class="">训练过程可以整理成固定循环:</p>
+<p>1. 输入数据。</p>
+<p>2. 用当前参数计算预测。</p>
+<p>3. 根据预测和真实值计算损失。</p>
+<p>4. 根据梯度更新参数。</p>
+<p>5. 重复多轮,直到损失较低或收敛。</p>
+<p class="">这条流程不仅适用于线性回归,也适用于后面的逻辑回归、神经网络。</p>
+<h2>9. 从一个特征到多个特征</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="多元线性回归" src="selected_frames/09-multiple-linear-regression.jpg"/><figcaption>多元线性回归</figcaption></figure>
+<p class="">现实问题通常不只一个特征。房价可能受面积、楼层、房龄、地段等多个因素影响。</p>
+<p class="">多元线性回归可以写成:</p>
+<pre><code>y_hat = w1 x1 + w2 x2 + ... + wn xn + b</code></pre>
+<p class="">这为后续矩阵形式做铺垫。</p>
+<h2>10. 向量化表达: 一批特征写成矩阵运算</h2>
+<p class="meta">约 14:30</p>
+<figure><img alt="向量化表达" src="selected_frames/10-vectorized-form.jpg"/><figcaption>向量化表达</figcaption></figure>
+<p class="">向量化写法:</p>
+<pre><code>y_hat = w^T x + b</code></pre>
+<p class="">它的意义不是炫公式,而是把多特征加权求和写成统一形式。后续批量样本训练、矩阵求导、神经网络层计算,都会沿用这种写法。</p>
+<h2>11. 多项式回归: 当直线不够用</h2>
+<p class="meta">约 15:30</p>
+<figure><img alt="多项式回归" src="selected_frames/11-polynomial-regression.jpg"/><figcaption>多项式回归</figcaption></figure>
+<p class="">如果数据关系不是直线,可以加入 <code>x^2</code>、<code>x^3</code> 等特征,让模型拟合曲线。</p>
+<p class="">这部分非常适合连接“特征工程”: 多项式回归本质上仍然是线性模型,只是人为构造了非线性特征。</p>
+<h2>12. 承接逻辑回归与深度学习</h2>
+<p class="meta">约 17:30</p>
+<figure><img alt="逻辑回归承接" src="selected_frames/12-logistic-regression-bridge.jpg"/><figcaption>逻辑回归承接</figcaption></figure>
+<p class="">视频最后把线性回归连接到逻辑回归和深度学习:</p>
+<ul>
+<li>逻辑回归: 在线性输出后接 sigmoid,用于二分类。</li>
+<li>深度学习: 多层神经网络仍然大量使用“线性变换 + 非线性激活”的组合。</li>
+</ul>
+<p class="">因此,线性回归不是一个孤立模型,而是理解后续模型结构的底层积木。</p>
+<h2>13. 本集总结</h2>
+<p class="meta">约 20:00</p>
+<figure><img alt="总结" src="selected_frames/13-summary.jpg"/><figcaption>总结</figcaption></figure>
+<p class="">本集适合沉淀为机器学习主干的第一篇正式模型文章。</p>
+<h2>入库建议</h2>
+<p class="">建议拆成主节点:</p>
+<p class=""><code>线性回归: 从数据拟合到模型训练</code></p>
+<p class="">正文重点保留:</p>
+<ul>
+<li>用一个小数据集讲清楚输入、标签、预测。</li>
+<li>模型公式 <code>y_hat = wx + b</code>。</li>
+<li>MSE 为什么衡量误差。</li>
+<li>梯度下降只是先引出,细节放到第 5 集。</li>
+<li>多特征向量化要和数学基础的线性代数、矩阵求导联动。</li>
+</ul></main></body></html>

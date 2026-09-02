@@ -17,13 +17,13 @@ RNN 把整段历史压在一个隐藏状态里逐步传递:远处信息易丢失
 $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V.$$
 除以 $\sqrt{d_k}$ 是防止点积过大把 softmax 推向饱和。两个零件都是旧识:打分核心 $QK^\top$ 就是 [线性代数 · 点积](node:linalg#点积) 的相似度,归一化用的 [softmax](node:softmax) 来自分类那一节——注意力是前面知识的直接组合。
 
-![注意力:Q 与各 K 点积打分 → softmax → 对 V 加权求和](../../assets/attn-qkv.png)
+![注意力:Q 与各 K 点积打分 → softmax → 对 V 加权求和](../../assets/transformer/attn-qkv.png)
 
 ### 3. 自注意力与多头
 
 **自注意力(self-attention)**:Q、K、V 都来自同一序列,于是序列内部两两互相关注,一步捕捉任意距离的依赖。
 
-![自注意力权重:每个词关注序列里哪些词](../../assets/attn-heatmap.png)
+![自注意力权重:每个词关注序列里哪些词](../../assets/transformer/attn-heatmap.png)
 
 **多头注意力**:并行做多组注意力(多个"头"),每头在不同子空间关注不同关系,再把结果拼接——类似 CNN 用多个卷积核提取不同特征。
 
@@ -39,7 +39,7 @@ $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\s
 
 Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Add & Norm → 前馈网络 FFN → Add & Norm**;其中 Add 是**残差连接**(缓解深层训练,与 [卷积神经网络](node:cnn) 里 ResNet 同一思路),Norm 是层归一化。
 
-![Transformer 编码器块:自注意力 + FFN + 残差 + 层归一化](../../assets/transformer-block.png)
+![Transformer 编码器块:自注意力 + FFN + 残差 + 层归一化](../../assets/transformer/transformer-block.png)
 
 编码器、解码器都由这种块堆成;GPT 这类生成模型用的是**带掩码的解码器**堆叠(每个位置只能看到左侧已生成的词)。
 

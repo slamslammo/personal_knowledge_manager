@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 10 集: 决策树</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 10 集: 决策树</h1>
+<p class="meta">来源: 抖音视频《决策树: 会 if...else 就能懂的机器学习算法》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7626399604887637290" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep10">返回系列总览</a></p>
+
+<h2>1. 本集定位: 最像人类提问的模型</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 最像人类提问的模型" src="selected_frames/01-tennis-example.jpg"/><figcaption>本集定位: 最像人类提问的模型</figcaption></figure>
+<p class="">决策树用一连串“如果...那么...”的问题进行判断。它直观、可解释,非常适合从线性模型过渡到非线性模型。</p>
+<h2>2. 像人一样层层提问</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="像人一样层层提问" src="selected_frames/02-human-like-questions.jpg"/><figcaption>像人一样层层提问</figcaption></figure>
+<p class="">视频用周末打网球例子说明: 人会先问天气,再问湿度或风。决策树把这种层层判断变成模型结构。</p>
+<h2>3. 什么是决策树</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="什么是决策树" src="selected_frames/03-what-is-decision-tree.jpg"/><figcaption>什么是决策树</figcaption></figure>
+<p class="">内部节点是问题,分支是答案,叶子节点是最终预测。分类树输出类别,回归树可以输出数值。</p>
+<h2>4. 构建决策树: 让结果越来越纯</h2>
+<p class="meta">约 03:30</p>
+<figure><img alt="构建决策树: 让结果越来越纯" src="selected_frames/04-build-tree-purity.jpg"/><figcaption>构建决策树: 让结果越来越纯</figcaption></figure>
+<p class="">训练决策树的关键是选择哪个特征先分裂。好分裂会让子节点类别更单一,也就是纯度更高。</p>
+<h2>5. 熵与信息增益</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="熵与信息增益" src="selected_frames/05-entropy-info-gain.jpg"/><figcaption>熵与信息增益</figcaption></figure>
+<p class="">熵衡量混乱程度,信息增益衡量一次分裂减少了多少混乱。信息增益越大,特征越适合当前分裂。</p>
+<h2>6. 基尼不纯度</h2>
+<p class="meta">约 06:00</p>
+<figure><img alt="基尼不纯度" src="selected_frames/06-gini.jpg"/><figcaption>基尼不纯度</figcaption></figure>
+<p class="">Gini 用更简单的计算衡量节点混乱程度。sklearn 决策树默认常见指标之一就是 Gini。</p>
+<h2>7. 决策树的生长过程</h2>
+<p class="meta">约 08:00</p>
+<figure><img alt="决策树的生长过程" src="selected_frames/07-tree-growth.jpg"/><figcaption>决策树的生长过程</figcaption></figure>
+<p class="">训练过程可以理解为递归分裂: 找最佳特征、分裂数据、继续对子节点重复,直到满足停止条件。</p>
+<h2>8. 鸢尾花数据集</h2>
+<p class="meta">约 08:30</p>
+<figure><img alt="鸢尾花数据集" src="selected_frames/08-iris-data.jpg"/><figcaption>鸢尾花数据集</figcaption></figure>
+<p class="">鸢尾花是分类任务经典数据集。它适合展示决策树如何通过花瓣长度、宽度等特征区分品种。</p>
+<h2>9. 训练与可视化</h2>
+<p class="meta">约 09:30</p>
+<figure><img alt="训练与可视化" src="selected_frames/09-train-visualize.jpg"/><figcaption>训练与可视化</figcaption></figure>
+<p class="">决策树的优势之一是可以画出来。树结构让模型推理路径可见,这也是它在解释性场景中的价值。</p>
+<h2>10. 节点信息解读</h2>
+<p class="meta">约 10:00</p>
+<figure><img alt="节点信息解读" src="selected_frames/10-node-info.jpg"/><figcaption>节点信息解读</figcaption></figure>
+<p class="">节点里的 <code>samples</code> 表示样本数,<code>value</code> 表示类别分布,<code>gini</code> 表示混乱程度,<code>class</code> 是当前默认预测类别。</p>
+<h2>11. 花瓣尺寸决定了类别</h2>
+<p class="meta">约 13:30</p>
+<figure><img alt="花瓣尺寸决定了类别" src="selected_frames/11-petal-rule.jpg"/><figcaption>花瓣尺寸决定了类别</figcaption></figure>
+<p class="">这类规则可解释性很强: 例如花瓣长度小于某阈值就归为某类。它把模型预测变成可读的判断链。</p>
+<h2>12. 剪枝: 防止过拟合</h2>
+<p class="meta">约 14:00</p>
+<figure><img alt="剪枝: 防止过拟合" src="selected_frames/12-pruning.jpg"/><figcaption>剪枝: 防止过拟合</figcaption></figure>
+<p class="">不加限制的树容易把噪声也分出来。剪枝通过限制深度、叶子节点样本数或后剪枝减少过拟合。</p>
+<h2>13. 总结与展望: 走向森林</h2>
+<p class="meta">约 15:00</p>
+<figure><img alt="总结与展望: 走向森林" src="selected_frames/13-to-forest.jpg"/><figcaption>总结与展望: 走向森林</figcaption></figure>
+<p class="">单棵树直观但不稳定。下一步自然引出随机森林: 用很多棵树投票,降低单棵树的偶然性。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>决策树: 用规则分裂数据</code>。</li>
+<li>正文重点解释树结构、纯度、信息增益/Gini、剪枝、可解释性。</li>
+<li>可以作为连接随机森林、GBDT、XGBoost 的入口节点。</li>
+</ul></main></body></html>

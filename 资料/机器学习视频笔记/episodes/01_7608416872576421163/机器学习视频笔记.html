@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 1 集: 智能从何而来</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 1 集: 智能从何而来</h1>
+<p class="meta">来源: 抖音视频《什么是智能,机器是怎么学会思考的》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7608416872576421163" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep01">返回系列总览</a></p>
+
+<h2>1. 先问一个更底层的问题: 什么是智能</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="智能从何而来" src="selected_frames/01-title-intelligence-origin.jpg"/><figcaption>智能从何而来</figcaption></figure>
+<p class="">这一集不是直接讲某个模型,而是先把机器学习放在人工智能的历史和问题意识里: 我们到底想让机器获得什么能力? 如果只是会完成单一任务,还不能等同于通用智能。</p>
+<p class="">对后续知识梳理有用的一点是: 这集把“机器学习”定位为实现人工智能的一条路径,而不是一个孤立算法集合。</p>
+<h2>2. 智能 = 学习能力 + 迁移能力</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="什么是智能" src="selected_frames/02-what-is-intelligence.jpg"/><figcaption>什么是智能</figcaption></figure>
+<p class="">视频用“被热水杯烫过的小孩”来解释智能: 人不需要试遍所有会烫的东西,而是能从有限经验中抽取规律,再迁移到新场景。</p>
+<p class="">整理成机器学习语言就是:</p>
+<ul>
+<li>学习能力: 从经验/数据中总结规律。</li>
+<li>迁移能力: 面对没见过的新样本,还能用规律做判断。</li>
+<li>泛化能力: 机器学习里更常用的说法,对应“举一反三”。</li>
+</ul>
+<p class="">这可以作为机器学习导论里的核心句: 模型训练不是为了背训练集,而是为了在未见数据上泛化。</p>
+<h2>3. 苹果例子: 人不是靠穷举规则识别事物</h2>
+<p class="meta">约 03:30</p>
+<figure><img alt="苹果与泛化" src="selected_frames/03-apple-generalization.jpg"/><figcaption>苹果与泛化</figcaption></figure>
+<p class="">人能识别不同形状、颜色、抽象程度的苹果,但很难给出一套完整的“苹果规则”。这正好引出传统规则编程的局限: 现实对象变化太多,规则无法穷举。</p>
+<p class="">机器学习的思路是反过来: 不先写死规则,而是给模型足够多的样本,让它从样本中学习“苹果”背后的统计规律。</p>
+<h2>4. AI 发展的两条路线: 符号规则 vs 数据学习</h2>
+<p class="meta">约 05:30</p>
+<figure><img alt="符号主义与学习驱动" src="selected_frames/04-symbolic-vs-learning.jpg"/><figcaption>符号主义与学习驱动</figcaption></figure>
+<p class="">视频把早期 AI 的“专家系统/符号主义”和后来的“机器学习/连接主义”做了对比:</p>
+<ul>
+<li>符号主义: 人把规则写出来,机器按规则推理。</li>
+<li>学习驱动: 人提供数据和任务,机器从数据里学习规律。</li>
+</ul>
+<p class="">这里适合连接到机器学习主干的第一层问题: 为什么机器学习不是“写规则”,而是“从数据中拟合函数”。</p>
+<h2>5. 为什么近十几年 AI 才大爆发: 数据 + 算力</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="数据与算力" src="selected_frames/05-data-and-compute.jpg"/><figcaption>数据与算力</figcaption></figure>
+<p class="">视频给出两个前提:</p>
+<ul>
+<li>海量数据: 互联网沉淀了文本、图片、视频和行为记录。</li>
+<li>超强算力: GPU/TPU 让大规模矩阵运算和参数优化可行。</li>
+</ul>
+<p class="">这对后续深度学习也很重要。深度学习不是只靠“算法突然聪明”,而是数据规模、模型规模、计算能力共同推动。</p>
+<h2>6. 模型的本质: 一个从输入到输出的函数</h2>
+<p class="meta">约 09:00</p>
+<figure><img alt="模型是函数" src="selected_frames/06-model-as-function.jpg"/><figcaption>模型是函数</figcaption></figure>
+<p class="">视频用数学函数类比模型:</p>
+<ul>
+<li>给模型一张图片 <code>x</code>,输出类别 <code>y</code>。</li>
+<li>给模型一段语音 <code>x</code>,输出文字 <code>y</code>。</li>
+<li>给语言模型一段上文 <code>x</code>,输出下一个 token 或后续文本 <code>y</code>。</li>
+</ul>
+<p class="">机器学习训练的核心,就是在大量候选函数/参数空间中,找到一个最能解释数据规律的函数。</p>
+<p class="">这一点应当进入机器学习板块的主线定义: 模型不是神秘黑盒,而是一个可学习的映射函数。</p>
+<h2>7. 人工智能发展的三层: 机器学习、深度学习、大语言模型</h2>
+<p class="meta">约 11:00</p>
+<figure><img alt="AI 三阶段" src="selected_frames/07-ai-ml-dl-llm-stages.jpg"/><figcaption>AI 三阶段</figcaption></figure>
+<p class="">视频把现代 AI 的学习路线拆成三个层次:</p>
+<ul>
+<li>机器学习: 从数据中学习规律,但常依赖人工特征。</li>
+<li>深度学习: 用神经网络自动学习层级特征。</li>
+<li>大语言模型: 基于 Transformer 和下一个 token 预测,做生成式任务。</li>
+</ul>
+<p class="">这和我们后续知识库结构可以对应起来: 机器学习作为深度学习的前置板块,深度学习再连接到 Transformer/LLM。</p>
+<h2>8. 为什么语言模型有机会产生复杂能力</h2>
+<p class="meta">约 13:00</p>
+<figure><img alt="语言模型" src="selected_frames/08-why-language-model.jpg"/><figcaption>语言模型</figcaption></figure>
+<p class="">视频的解释是: 语言压缩了人类对世界的大量认知。模型为了预测下一个 token,被迫学习语法、常识、因果、代码、故事结构等隐藏规律。</p>
+<p class="">这不是严格证明,但作为直觉很有帮助。后续整理 Transformer 时,可以用它解释“为什么 next token prediction 看似简单,却能逼出复杂表示”。</p>
+<h2>9. 另一条 AGI 路线: 空间智能</h2>
+<p class="meta">约 15:00</p>
+<figure><img alt="空间智能" src="selected_frames/09-spatial-intelligence.jpg"/><figcaption>空间智能</figcaption></figure>
+<p class="">视频也补充了另一种观点: 语言是世界的镜子,但不是世界本身。真正理解物理世界,可能还需要空间智能,即对位置、速度、重力、物体交互的理解。</p>
+<p class="">这部分不适合在机器学习入门里展开太深,但可以作为“AI 发展路线补充”: 语言模型很强,但视觉、机器人、世界模型仍是重要方向。</p>
+<h2>10. 本集对机器学习主干的作用</h2>
+<p class="meta">约 16:30</p>
+<figure><img alt="总结路线" src="selected_frames/10-closing-roadmap.jpg"/><figcaption>总结路线</figcaption></figure>
+<p class="">本集最适合作为机器学习板块的“导论前言”,核心不是算法,而是建立三件事:</p>
+<ul>
+<li>机器学习为什么出现: 规则写不完,需要从数据中学习。</li>
+<li>机器学习到底学什么: 学一个能泛化的函数/模型。</li>
+<li>后续路线怎么走: 机器学习 → 深度学习 → NLP/LLM。</li>
+</ul>
+<h2>入库建议</h2>
+<p class="">建议拆成一个主节点:</p>
+<p class=""><code>机器学习导论: 从智能、泛化到模型</code></p>
+<p class="">正文不必完整复述 AI 发展史,重点保留:</p>
+<ul>
+<li>智能 = 学习能力 + 迁移能力。</li>
+<li>泛化是机器学习的核心目标。</li>
+<li>模型是从输入到输出的可学习函数。</li>
+<li>机器学习、深度学习、大语言模型的层级关系。</li>
+</ul></main></body></html>

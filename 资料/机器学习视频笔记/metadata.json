@@ -1,0 +1,128 @@
+{
+  "title": "机器学习视频笔记",
+  "source": "抖音系列视频《机器学习》",
+  "author": "谦行AIing",
+  "note": "本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。",
+  "episodes": [
+    {
+      "episode": 1,
+      "id": "7608416872576421163",
+      "folder": "01_7608416872576421163",
+      "title": "第 1 集: 智能从何而来",
+      "share_url": "https://www.iesdouyin.com/share/video/7608416872576421163",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7608416872576421163&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 2,
+      "id": "7609502381008604466",
+      "folder": "02_7609502381008604466",
+      "title": "第 2 集: 机器学习究竟是什么",
+      "share_url": "https://www.iesdouyin.com/share/video/7609502381008604466",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7609502381008604466&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 3,
+      "id": "7610057733722705190",
+      "folder": "03_7610057733722705190",
+      "title": "第 3 集: 机器学习类型",
+      "share_url": "https://www.iesdouyin.com/share/video/7610057733722705190",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7610057733722705190&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 4,
+      "id": "7614886431651106099",
+      "folder": "04_7614886431651106099",
+      "title": "第 4 集: 线性回归",
+      "share_url": "https://www.iesdouyin.com/share/video/7614886431651106099",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7614886431651106099&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 5,
+      "id": "7617464281105321235",
+      "folder": "05_7617464281105321235",
+      "title": "第 5 集: 梯度下降",
+      "share_url": "https://www.iesdouyin.com/share/video/7617464281105321235",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7617464281105321235&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 6,
+      "id": "7620080436567477554",
+      "folder": "06_7620080436567477554",
+      "title": "第 6 集: 数据预处理",
+      "share_url": "https://www.iesdouyin.com/share/video/7620080436567477554",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7620080436567477554&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 7,
+      "id": "7622271432231292202",
+      "folder": "07_7622271432231292202",
+      "title": "第 7 集: 模型评估",
+      "share_url": "https://www.iesdouyin.com/share/video/7622271432231292202",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7622271432231292202&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 8,
+      "id": "7623801838541835572",
+      "folder": "08_7623801838541835572",
+      "title": "第 8 集: 欠拟合与过拟合",
+      "share_url": "https://www.iesdouyin.com/share/video/7623801838541835572",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7623801838541835572&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 9,
+      "id": "7625130953991621926",
+      "folder": "09_7625130953991621926",
+      "title": "第 9 集: 逻辑回归",
+      "share_url": "https://www.iesdouyin.com/share/video/7625130953991621926",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7625130953991621926&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 10,
+      "id": "7626399604887637290",
+      "folder": "10_7626399604887637290",
+      "title": "第 10 集: 决策树",
+      "share_url": "https://www.iesdouyin.com/share/video/7626399604887637290",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7626399604887637290&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 11,
+      "id": "7627346565849484607",
+      "folder": "11_7627346565849484607",
+      "title": "第 11 集: 随机森林",
+      "share_url": "https://www.iesdouyin.com/share/video/7627346565849484607",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7627346565849484607&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 12,
+      "id": "7629008018503519551",
+      "folder": "12_7629008018503519551",
+      "title": "第 12 集: 集成学习与梯度提升树",
+      "share_url": "https://www.iesdouyin.com/share/video/7629008018503519551",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7629008018503519551&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 13,
+      "id": "7630260821880212762",
+      "folder": "13_7630260821880212762",
+      "title": "第 13 集: K-Means 聚类",
+      "share_url": "https://www.iesdouyin.com/share/video/7630260821880212762",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7630260821880212762&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 14,
+      "id": "7632568555526999305",
+      "folder": "14_7632568555526999305",
+      "title": "第 14 集: PCA 主成分分析",
+      "share_url": "https://www.iesdouyin.com/share/video/7632568555526999305",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7632568555526999305&showSubTab=compilation&vid=7608416872576421163"
+    },
+    {
+      "episode": 15,
+      "id": "7632917555203542298",
+      "folder": "15_7632917555203542298",
+      "title": "第 15 集: 机器学习总结与深度学习展望",
+      "share_url": "https://www.iesdouyin.com/share/video/7632917555203542298",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAhUwkgnH3DYdodBMWUup-mW9uokwvr3o9qKdFnpSjoRLWm52GYJDZLu1XLENktaWI?from_tab_name=main&modal_id=7632917555203542298&showSubTab=compilation&vid=7608416872576421163"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 2 集: 机器学习究竟是什么</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 2 集: 机器学习究竟是什么</h1>
+<p class="meta">来源: 抖音视频《机器学习是什么: 通过数据学习规律,对未来预测》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7609502381008604466" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep02">返回系列总览</a></p>
+
+<h2>1. 本集定位: 机器学习的第一课</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="机器学习是什么" src="selected_frames/01-title-what-is-ml.jpg"/><figcaption>机器学习是什么</figcaption></figure>
+<p class="">这一集从“AI 是什么”过渡到“机器学习是什么”。核心定义可以整理为:</p>
+<p class="">机器学习是让计算机不依赖显式规则编程,而是从数据中自动学习规律,再用这些规律对未来样本进行预测或决策。</p>
+<h2>2. 传统编程的困境: 复杂任务很难写完规则</h2>
+<p class="meta">约 02:00</p>
+<figure><img alt="传统编程困境" src="selected_frames/02-traditional-programming-limit.jpg"/><figcaption>传统编程困境</figcaption></figure>
+<p class="">传统编程适合规则明确的任务。问题是,像“识别图片里有没有苹果”这种任务,规则很难穷举:</p>
+<ul>
+<li>苹果可以是红色、绿色、被咬过、抽象图标。</li>
+<li>光照、角度、遮挡都会改变图像表现。</li>
+<li>人能认出来,但很难把完整判断规则写成代码。</li>
+</ul>
+<p class="">这正是机器学习出现的动机: 当规则难以显式写出时,改为让机器从大量样本中学习。</p>
+<h2>3. 从人类认知到机器学习</h2>
+<p class="meta">约 03:00</p>
+<figure><img alt="人类学习与机器学习" src="selected_frames/03-human-vs-machine-learning.jpg"/><figcaption>人类学习与机器学习</figcaption></figure>
+<p class="">人看到大量苹果样本后,会在脑中形成“苹果”的概念。机器学习模仿的是这个过程:</p>
+<ul>
+<li>输入大量样本。</li>
+<li>给出标签或反馈。</li>
+<li>让模型自己捕捉可用于判断的模式。</li>
+<li>面对新样本时,用学到的模式做预测。</li>
+</ul>
+<p class="">这里可以作为机器学习入门的直观例子: 机器学习不是直接把答案存起来,而是寻找能解释大量样本的规律。</p>
+<h2>4. 深度学习是机器学习的一种</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="深度学习与机器学习" src="selected_frames/04-deep-learning-as-ml.jpg"/><figcaption>深度学习与机器学习</figcaption></figure>
+<p class="">视频指出,深度学习是机器学习的一个分支。普通机器学习常常需要人工设计特征,深度学习则更强调让神经网络自动学习层级特征。</p>
+<p class="">这对知识库结构有直接意义: 机器学习不是深度学习的反面,而是更大的母集合。线性回归、逻辑回归、决策树等传统模型,可以帮助理解“模型、损失、优化、泛化”等共同问题。</p>
+<h2>5. AI、ML、DL 的包含关系</h2>
+<p class="meta">约 06:30</p>
+<figure><img alt="AI ML DL 关系" src="selected_frames/05-ai-ml-dl-relation.jpg"/><figcaption>AI ML DL 关系</figcaption></figure>
+<p class="">可以整理成三层:</p>
+<ul>
+<li>AI: 目标层,让机器表现出感知、推理、学习、决策能力。</li>
+<li>ML: 实现路径之一,让机器从数据中学习规律。</li>
+<li>DL: ML 的一个分支,用深层神经网络学习复杂表示。</li>
+</ul>
+<p class="">这张图适合放进机器学习板块首页,帮助读者理解“为什么先复习机器学习,再进入深度学习”。</p>
+<h2>6. 什么是模型</h2>
+<p class="meta">约 08:30</p>
+<figure><img alt="什么是模型" src="selected_frames/06-what-is-model.jpg"/><figcaption>什么是模型</figcaption></figure>
+<p class="">视频用“垃圾邮件分类”解释模型: 模型是一套把输入映射到输出的规则/函数,但这套规则不是人工完整写死的,而是从数据中学出来的。</p>
+<p class="">机器学习里常见的说法是:</p>
+<ul>
+<li>数据提供经验。</li>
+<li>算法提供学习方法。</li>
+<li>模型是学习后的结果。</li>
+<li>参数决定模型如何具体判断。</li>
+</ul>
+<h2>7. 算法和模型不要混淆</h2>
+<p class="meta">约 10:00</p>
+<figure><img alt="算法与模型" src="selected_frames/07-algorithm-vs-model.jpg"/><figcaption>算法与模型</figcaption></figure>
+<p class="">视频用一句话区分:</p>
+<ul>
+<li>算法: 训练模型的方法。</li>
+<li>模型: 训练完成后用于预测的东西。</li>
+</ul>
+<p class="">比如逻辑回归可以理解为一种模型形式,梯度下降是优化参数的算法。这个区别后面非常关键,否则容易把“模型结构”和“训练方法”混在一起。</p>
+<h2>8. 垃圾邮件例子: 从单特征到多特征</h2>
+<p class="meta">约 11:00</p>
+<figure><img alt="垃圾邮件分类" src="selected_frames/08-spam-classifier-example.jpg"/><figcaption>垃圾邮件分类</figcaption></figure>
+<p class="">视频先用“某个词出现”作为简单特征,再逐步扩展到多个特征组合。模型并不只是看一个关键词,而是给不同特征分配不同权重。</p>
+<p class="">这可以引出后续线性模型:</p>
+<pre><code>得分 = w1 * 特征1 + w2 * 特征2 + ... + b</code></pre>
+<p class="">模型训练的目标,就是找到一组更合适的权重。</p>
+<h2>9. 机器学习的本质: 寻找最优权重</h2>
+<p class="meta">约 14:00</p>
+<figure><img alt="寻找最优权重" src="selected_frames/09-find-optimal-weights.jpg"/><figcaption>寻找最优权重</figcaption></figure>
+<p class="">如果模型是一组带权重的规则,训练就是不断调整权重,让模型预测更接近真实标签。</p>
+<p class="">这节可以和第 4、5 集接上:</p>
+<ul>
+<li>第 4 集讲线性回归如何定义模型和损失。</li>
+<li>第 5 集讲梯度下降如何调整参数。</li>
+</ul>
+<h2>10. 学习路线: 数学基础 + 编程实践</h2>
+<p class="meta">约 16:30</p>
+<figure><img alt="学习路线" src="selected_frames/10-learning-roadmap.jpg"/><figcaption>学习路线</figcaption></figure>
+<p class="">视频最后强调机器学习需要两类基础:</p>
+<ul>
+<li>数学基础: 线性代数、概率统计、微积分等。</li>
+<li>编程实践: Python、NumPy、Pandas、Matplotlib、scikit-learn 等。</li>
+</ul>
+<p class="">这和我们后续规划一致: 原理讲解阶段使用小数据和手算例子,实践阶段用 sklearn 复现经典流程。</p>
+<h2>入库建议</h2>
+<p class="">建议拆成主节点:</p>
+<p class=""><code>机器学习是什么: 数据、模型、算法与参数</code></p>
+<p class="">正文重点保留:</p>
+<ul>
+<li>机器学习与传统编程的区别。</li>
+<li>AI、ML、DL 的包含关系。</li>
+<li>模型、算法、参数、特征、预测的概念边界。</li>
+<li>用“垃圾邮件分类”作为第一个简单分类例子。</li>
+</ul></main></body></html>

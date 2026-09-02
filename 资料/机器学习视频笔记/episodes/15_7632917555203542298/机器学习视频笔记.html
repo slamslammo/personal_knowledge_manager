@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 15 集: 机器学习总结与深度学习展望</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 15 集: 机器学习总结与深度学习展望</h1>
+<p class="meta">来源: 抖音视频《机器学习课程总结与深度学习展望》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7632917555203542298" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep15">返回系列总览</a></p>
+
+<h2>1. 机器学习全貌: 一张地图</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="机器学习全貌: 一张地图" src="selected_frames/01-ml-map.jpg"/><figcaption>机器学习全貌: 一张地图</figcaption></figure>
+<p class="">最后一集适合当作机器学习板块的总览索引。它把监督学习、无监督学习、模型训练、评估和工业工具串起来。</p>
+<h2>2. 机器学习究竟在学什么</h2>
+<p class="meta">约 02:00</p>
+<figure><img alt="机器学习究竟在学什么" src="selected_frames/02-what-ml-learns.jpg"/><figcaption>机器学习究竟在学什么</figcaption></figure>
+<p class="">机器学习不是背公式,而是从数据中学习输入到输出的映射关系,并在新数据上泛化。</p>
+<h2>3. 数据、特征、标签、模型</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="数据、特征、标签、模型" src="selected_frames/03-data-feature-label-model.jpg"/><figcaption>数据、特征、标签、模型</figcaption></figure>
+<p class="">这四个词是机器学习最基础的语言: 数据提供样本,特征描述样本,标签提供目标,模型学习映射。</p>
+<h2>4. 监督学习: 有答案的学习</h2>
+<p class="meta">约 04:00</p>
+<figure><img alt="监督学习: 有答案的学习" src="selected_frames/04-supervised-learning.jpg"/><figcaption>监督学习: 有答案的学习</figcaption></figure>
+<p class="">监督学习通过标签学习预测函数,典型任务包括回归和分类。线性回归与逻辑回归分别代表两个入口。</p>
+<h2>5. 典型监督学习算法</h2>
+<p class="meta">约 05:00</p>
+<figure><img alt="典型监督学习算法" src="selected_frames/05-supervised-algorithms.jpg"/><figcaption>典型监督学习算法</figcaption></figure>
+<p class="">线性模型、逻辑回归、SVM、决策树、随机森林、GBDT 家族都可以放在监督学习主干下。</p>
+<h2>6. 从线性回归到可用模型</h2>
+<p class="meta">约 06:00</p>
+<figure><img alt="从线性回归到可用模型" src="selected_frames/06-from-linear-to-models.jpg"/><figcaption>从线性回归到可用模型</figcaption></figure>
+<p class="">线性回归把数据、模型、损失、优化和评估串起来,是理解其他模型训练流程的基准。</p>
+<h2>7. 损失函数与梯度下降</h2>
+<p class="meta">约 07:00</p>
+<figure><img alt="损失函数与梯度下降" src="selected_frames/07-loss-gradient.jpg"/><figcaption>损失函数与梯度下降</figcaption></figure>
+<p class="">损失函数衡量模型好坏,梯度下降告诉参数如何更新。这是机器学习和深度学习共用的训练核心。</p>
+<h2>8. 模型评估: 不只看训练集</h2>
+<p class="meta">约 08:00</p>
+<figure><img alt="模型评估: 不只看训练集" src="selected_frames/08-evaluation.jpg"/><figcaption>模型评估: 不只看训练集</figcaption></figure>
+<p class="">评估要关注泛化能力,所以要划分训练集/测试集,使用交叉验证,并选择合适指标。</p>
+<h2>9. 欠拟合、过拟合与解决方法</h2>
+<p class="meta">约 09:00</p>
+<figure><img alt="欠拟合、过拟合与解决方法" src="selected_frames/09-fitting-diagnosis.jpg"/><figcaption>欠拟合、过拟合与解决方法</figcaption></figure>
+<p class="">欠拟合和过拟合是模型诊断的主轴。复杂度、正则化、数据量、特征工程都会影响它们。</p>
+<h2>10. 集成学习: 让模型组成团队</h2>
+<p class="meta">约 10:30</p>
+<figure><img alt="集成学习: 让模型组成团队" src="selected_frames/10-ensemble.jpg"/><figcaption>集成学习: 让模型组成团队</figcaption></figure>
+<p class="">Bagging 和 Boosting 是两条重要路线: 前者并行投票降方差,后者逐步纠错提升拟合。</p>
+<h2>11. GBDT 家族</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="GBDT 家族" src="selected_frames/11-gbdt-family.jpg"/><figcaption>GBDT 家族</figcaption></figure>
+<p class="">XGBoost、LightGBM、CatBoost 是表格数据建模中非常重要的工具链,适合实践阶段重点掌握。</p>
+<h2>12. 无监督学习: 从无标签数据中发现结构</h2>
+<p class="meta">约 12:00</p>
+<figure><img alt="无监督学习: 从无标签数据中发现结构" src="selected_frames/12-unsupervised.jpg"/><figcaption>无监督学习: 从无标签数据中发现结构</figcaption></figure>
+<p class="">无监督学习没有标准答案,核心是发现结构。K-Means 负责聚类,PCA 负责降维。</p>
+<h2>13. PCA 降维</h2>
+<p class="meta">约 12:30</p>
+<figure><img alt="PCA 降维" src="selected_frames/13-pca-recap.jpg"/><figcaption>PCA 降维</figcaption></figure>
+<p class="">PCA 用主成分保留主要信息、压缩维度,也常用于可视化和预处理。</p>
+<h2>14. 工业界自动化工具地图</h2>
+<p class="meta">约 13:30</p>
+<figure><img alt="工业界自动化工具地图" src="selected_frames/14-automl-map.jpg"/><figcaption>工业界自动化工具地图</figcaption></figure>
+<p class="">自动化机器学习工具把特征处理、模型选择、调参和评估流程部分自动化,但理解原理仍然重要。</p>
+<h3>补充：从本地工具到大数据工具</h3>
+<p class="">本地生产级工具和大数据级工具不是两套完全不同的机器学习思想。核心流程仍然是数据、特征、模型、损失函数、优化训练和泛化评估;变化主要在数据规模和计算方式。</p>
+<ul>
+<li>本地学习与中小规模建模常用 pandas、numpy、sklearn、PyCaret、AutoGluon、Optuna、MLflow 等工具,重点是快速探索、建立 baseline、组织 Pipeline、调参和记录实验。</li>
+<li>大数据场景通常先用 Spark 处理离线批数据,用 Flink 处理实时数据流,再把清洗后的数据转成可训练特征。</li>
+<li>传统机器学习在大数据下可使用 Spark MLlib、分布式 XGBoost、分布式 LightGBM 等库训练模型;模型思想不变,实现变成多机分布式计算。</li>
+<li>深度学习或更大规模训练常见 PyTorch Distributed、Ray Train、DeepSpeed 等方案;它们负责把训练过程扩展到多 GPU 或多机器。</li>
+<li>MLflow、W&amp;B 这类实验管理工具仍然适用,因为它们主要记录数据版本、参数、指标、模型产物和上线版本,不直接承担全量数据计算。</li>
+</ul>
+<p class="">因此,可以先用 sklearn 理清模型思想和训练闭环,再把同一套方法迁移到 Spark、Flink、Ray 等分布式体系中。</p>
+<h2>15. 可视化与分析工具</h2>
+<p class="meta">约 16:00</p>
+<figure><img alt="可视化与分析工具" src="selected_frames/15-tools-demo.jpg"/><figcaption>可视化与分析工具</figcaption></figure>
+<p class="">工具能提升效率,但不是替代理解。对学习路线来说,先理解模型和评估,再引入工具更稳。</p>
+<h2>16. 从机器学习走向深度学习</h2>
+<p class="meta">约 19:30</p>
+<figure><img alt="从机器学习走向深度学习" src="selected_frames/16-bridge-to-deep-learning.jpg"/><figcaption>从机器学习走向深度学习</figcaption></figure>
+<p class="">深度学习延续机器学习的训练框架,但把“模型函数”扩展为多层可学习表示。</p>
+<h2>17. 下一站: 深度学习</h2>
+<p class="meta">约 21:30</p>
+<figure><img alt="下一站: 深度学习" src="selected_frames/17-next-deep-learning.jpg"/><figcaption>下一站: 深度学习</figcaption></figure>
+<p class="">这集可以作为机器学习板块的收束节点,同时连接深度学习板块: 神经网络、CNN、RNN、Transformer。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>机器学习总览: 从数据到泛化模型</code>。</li>
+<li>它适合做机器学习知识地图首页,不要写成细节正文。</li>
+<li>后续可把每个分支节点链接到西瓜书、南瓜书、sklearn 实验和本系列视频整理。</li>
+</ul></main></body></html>

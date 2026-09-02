@@ -154,7 +154,7 @@ $$P(A\mid B)=\frac{P(A\cap B)}{P(B)}$$
 $$P(\theta\mid \mathcal D)=\frac{P(\mathcal D\mid \theta)\,P(\theta)}{P(\mathcal D)}\ \ \propto\ \ P(\mathcal D\mid\theta)\,P(\theta)$$
 其中 $P(\theta\mid\mathcal D)$ 是**后验**、$P(\mathcal D\mid\theta)$ 是**似然**、$P(\theta)$ 是**先验**、分母 $P(\mathcal D)$ 是归一化常数(证据)。
 
-![贝叶斯更新:后验 ∝ 先验 × 似然](../../assets/prob-bayes.png)
+![贝叶斯更新:后验 ∝ 先验 × 似然](../../assets/math-probability/prob-bayes.png)
 
 **先验**是看到数据前的信念,**似然**是数据对各参数取值的支持度,二者相乘(再归一化)得到**后验**。当先验取均匀分布时,最大化后验就退化为最大化似然(下一节)。贝叶斯视角也解释了正则化:**L2 正则 ≈ 给参数加一个高斯先验**。
 
@@ -162,7 +162,7 @@ $$P(\theta\mid \mathcal D)=\frac{P(\mathcal D\mid \theta)\,P(\theta)}{P(\mathcal
 
 📖 **权威详解**:[伯努利分布](https://zh.wikipedia.org/wiki/伯努利分布) ｜ [范畴分布](https://zh.wikipedia.org/wiki/范畴分布) ｜ [正态分布](https://zh.wikipedia.org/wiki/正态分布)
 
-![三种常见分布:伯努利 / 类别 / 高斯](../../assets/prob-distributions.png)
+![三种常见分布:伯努利 / 类别 / 高斯](../../assets/math-probability/prob-distributions.png)
 
 - **伯努利分布** $\mathrm{Bernoulli}(p)$:单次二值事件,$P(X=1)=p$。对应**二分类**标签,模型用 sigmoid 输出 $p$。PMF:$P(X=k)=p^{k}(1-p)^{1-k},\ k\in\{0,1\}$。
 - **类别分布** $\mathrm{Categorical}(\boldsymbol p)$:$K$ 选一,$P(X=k)=p_k,\ \sum_k p_k=1$。对应**多分类**标签,模型用 **softmax** 输出 $\boldsymbol p$。
@@ -177,7 +177,7 @@ $$p(x)=\frac{1}{\sqrt{2\pi}\,\sigma}\exp\!\Big(-\frac{(x-\mu)^2}{2\sigma^2}\Big)
 $$\theta^{*}=\arg\max_{\theta}\prod_{i=1}^{N} p(x_i;\theta)=\arg\max_{\theta}\sum_{i=1}^{N}\log p(x_i;\theta)$$
 取负号,就得到训练里最小化的**负对数似然(NLL)**,即损失函数 $\mathcal L(\theta)=-\sum_i\log p(x_i;\theta)$。
 
-![MLE:滑动均值 μ,数据似然在真实均值处达到最大](../../assets/prob-mle.gif)
+![MLE:滑动均值 μ,数据似然在真实均值处达到最大](../../assets/math-probability/prob-mle.gif)
 
 如上图,固定 $\sigma$、滑动高斯均值 $\mu$:当曲线最贴合数据时,对数似然(下方)登顶——**最大似然估计就是"挑一个让数据最不意外的参数"**。
 
@@ -194,7 +194,7 @@ $$H(p)=-\sum_x p(x)\log p(x)$$
 用分布 $q$ 去编码真实分布 $p$ 的平均代价,是**交叉熵**;二者之差是 **KL 散度**(衡量 $q$ 偏离 $p$ 多少,恒非负,$p=q$ 时为 0):
 $$H(p,q)=-\sum_x p(x)\log q(x),\qquad D_{\mathrm{KL}}(p\,\|\,q)=\sum_x p(x)\log\frac{p(x)}{q(x)}=H(p,q)-H(p)$$
 
-![交叉熵损失 = −log p(真实类);H(p,q) 比较真实分布与预测分布](../../assets/prob-crossentropy.png)
+![交叉熵损失 = −log p(真实类);H(p,q) 比较真实分布与预测分布](../../assets/math-probability/prob-crossentropy.png)
 
 分类任务里,真实分布 $p$ 是 one-hot,故 $H(p,q)=-\log q_{y}$——**交叉熵损失 = 给真实类别的预测概率取负对数**:预测越笃定且正确,损失越接近 0;越自信地错,损失越趋于无穷(左图)。由于 $H(p)$ 是常数,**最小化交叉熵 $\Longleftrightarrow$ 最小化 $D_{\mathrm{KL}}(p\,\|\,q)$ $\Longleftrightarrow$ 第 5 节的极大似然**——三种说法,同一件事。
 
@@ -221,7 +221,7 @@ $$H(p,q)=-\sum_x p(x)\log q(x),\qquad D_{\mathrm{KL}}(p\,\|\,q)=\sum_x p(x)\log\
 
 📖 **权威详解**:[线性映射 · Wikipedia](https://zh.wikipedia.org/wiki/线性映射)
 
-![矩阵 = 基向量落点](../../assets/01-transform-basis.png)
+![矩阵 = 基向量落点](../../assets/math-linear-algebra/01-transform-basis.png)
 
 向量 $\mathbf v=(x,y)$ 的含义是"$x$ 个 î 加 $y$ 个 ĵ"。变换后这个"配方"不变,只是 î、ĵ 换了落点,于是矩阵乘向量 $=$ **用 $\mathbf v$ 的坐标对矩阵的列做加权求和**:
 $$A=\begin{bmatrix}a&b\\c&d\end{bmatrix},\qquad A\begin{bmatrix}x\\y\end{bmatrix}=x\begin{bmatrix}a\\c\end{bmatrix}+y\begin{bmatrix}b\\d\end{bmatrix}$$
@@ -231,7 +231,7 @@ $$A=\begin{bmatrix}a&b\\c&d\end{bmatrix},\qquad A\begin{bmatrix}x\\y\end{bmatrix
 
 📖 **权威详解**:[矩阵乘法 · Wikipedia](https://zh.wikipedia.org/wiki/矩阵乘法)
 
-![矩阵乘法 = 复合](../../assets/02-composition.png)
+![矩阵乘法 = 复合](../../assets/math-linear-algebra/02-composition.png)
 
 $AB$ 不是"数字对应相乘",而是"**先做 $B$ 这个变换,再做 $A$ 这个变换**":$(AB)\mathbf v=A(B\mathbf v)$。所以矩阵乘法**从右往左读**,满足结合律但一般 $AB\neq BA$(先穿袜子再穿鞋 ≠ 先穿鞋再穿袜子)。
 
@@ -241,7 +241,7 @@ $AB$ 不是"数字对应相乘",而是"**先做 $B$ 这个变换,再做 $A$ 这�
 
 📖 **权威详解**:[行列式 · Wikipedia](https://zh.wikipedia.org/wiki/行列式)
 
-![行列式 = 面积缩放倍数](../../assets/03-determinant.png)
+![行列式 = 面积缩放倍数](../../assets/math-linear-algebra/03-determinant.png)
 
 行列式的**绝对值** $|\det A|$ $=$ 变换把单位面积放大成了几倍,**符号**编码定向:$\det=2$ 面积翻倍、定向不变;$\det=-2$ 面积翻倍但空间被翻面;$\det=0$ 把平面压成一条线甚至一点(维度坍塌)。二阶公式:
 $$\det\begin{bmatrix}a&b\\c&d\end{bmatrix}=ad-bc$$
@@ -251,7 +251,7 @@ $$\det\begin{bmatrix}a&b\\c&d\end{bmatrix}=ad-bc$$
 
 📖 **权威详解**:[逆矩阵 · Wikipedia](https://zh.wikipedia.org/wiki/逆矩阵)
 
-![逆矩阵 = 撤销变换](../../assets/04-inverse.png)
+![逆矩阵 = 撤销变换](../../assets/math-linear-algebra/04-inverse.png)
 
 $A^{-1}$ 是"撤销键":$A$ 把空间怎么搬过去,$A^{-1}$ 原样搬回来,$A^{-1}A=I$。但若 $A$ 把面积压成 0($\det A=0$),信息已丢,不存在撤销键——故 $A^{-1}$ 存在 $\iff \det A\neq 0$。解线性方程组即 $A\mathbf x=\mathbf b\Rightarrow\mathbf x=A^{-1}\mathbf b$。
 
@@ -261,7 +261,7 @@ $A^{-1}$ 是"撤销键":$A$ 把空间怎么搬过去,$A^{-1}$ 原样搬回来,$A
 
 📖 **权威详解**:[点积 · Wikipedia](https://zh.wikipedia.org/wiki/点积)
 
-![点积 = 投影 × 长度 = 同向程度](../../assets/05-dotproduct.png)
+![点积 = 投影 × 长度 = 同向程度](../../assets/math-linear-algebra/05-dotproduct.png)
 
 点积 $\mathbf v\cdot\mathbf w$ 衡量"两个向量有多同向":同向为正、垂直为 0、反向为负。它有两种写法——
 $$\mathbf v\cdot\mathbf w=\sum_i v_iw_i=\lVert\mathbf v\rVert\,\lVert\mathbf w\rVert\cos\theta,\qquad \operatorname{proj}_{\mathbf v}\mathbf w=\frac{\mathbf v\cdot\mathbf w}{\mathbf v\cdot\mathbf v}\,\mathbf v$$
@@ -275,7 +275,7 @@ $$\mathbf v\cdot\mathbf w=\sum_i v_iw_i=\lVert\mathbf v\rVert\,\lVert\mathbf w\r
 
 **第 1 步 · 线性函数 $f$ 由 $f(\hat\imath)$、$f(\hat\jmath)$ 完全确定。**
 
-![第1步:向量按基分解,f 由 f(î)、f(ĵ) 决定](../../assets/dual-step1.png)
+![第1步:向量按基分解,f 由 f(î)、f(ĵ) 决定](../../assets/math-linear-algebra/dual-step1.png)
 
 - $f(x,y)=f(x\hat\imath+y\hat\jmath)$ 〔按基分解 $(x,y)=x\hat\imath+y\hat\jmath$ 代入〕
 - $\qquad\ =f(x\hat\imath)+f(y\hat\jmath)$ 〔可加性〕
@@ -285,19 +285,19 @@ $$\mathbf v\cdot\mathbf w=\sum_i v_iw_i=\lVert\mathbf v\rVert\,\lVert\mathbf w\r
 
 **第 2 步 · 这两个数 $(a,b)$ 构成向量 $\mathbf v$,且 $f(\mathbf w)=\mathbf v\cdot\mathbf w$。**
 
-![第2步:系数 (4,3) 排成向量 v,f(w)=v·w](../../assets/dual-step2.png)
+![第2步:系数 (4,3) 排成向量 v,f(w)=v·w](../../assets/math-linear-algebra/dual-step2.png)
 
 点积的代数定义 $(a,b)\cdot(x,y)=ax+by$ 与第 1 步的 $f(x,y)=ax+by$ **逐项相同**,故 $f(\mathbf w)=\mathbf v\cdot\mathbf w$,其中 $\mathbf v=(a,b)=(f(\hat\imath),f(\hat\jmath))=(4,3)$。反向也成立:每个向量都给出一个线性函数,且两个方向用的是同一组系数,互为逆映射,构成**双射**——这就是"**对偶**"的精确含义:线性函数与向量一一对应。
 
 **第 3 步 · "投影到直线 $L$"这个线性函数,对应的向量正是单位向量 $\hat{\mathbf u}$。**
 
-![第3步:î、ĵ 投到 L 的影长 = û 的坐标](../../assets/dual-step3.png)
+![第3步:î、ĵ 投到 L 的影长 = û 的坐标](../../assets/math-linear-algebra/dual-step3.png)
 
 设 $L$ 过原点、单位方向 $\hat{\mathbf u}=(\cos\alpha,\sin\alpha)$,令 $g(\mathbf w)=\mathbf w$ 在 $L$ 上的投影坐标。**投影是线性的**(因 $L$ 过原点,正交投影满足可加性与齐次性),故套第 1 步:$g(\mathbf w)=ax+by$,$a=g(\hat\imath),\ b=g(\hat\jmath)$。用"单位向量的影长 $=\cos$(夹角)":$g(\hat\imath)=\cos\alpha=\hat u_x$、$g(\hat\jmath)=\sin\alpha=\hat u_y$,于是 $(a,b)=\hat{\mathbf u}$,即 $g(\mathbf w)=\hat{\mathbf u}\cdot\mathbf w$——**"投影到 $L$" 就是 "和单位向量 $\hat{\mathbf u}$ 做点积"**。
 
 **第 4 步 · 一般 $\mathbf v$,推出几何式 = 代数式。**
 
-![第4步:代入 v=(4,3)、w=(0,5),两式都=15](../../assets/dual-step4.png)
+![第4步:代入 v=(4,3)、w=(0,5),两式都=15](../../assets/math-linear-algebra/dual-step4.png)
 
 从代数定义出发,把 $\mathbf v$ 写成 $\mathbf v=\lVert\mathbf v\rVert\,\hat{\mathbf u}$,用点积的双线性:
 $$\mathbf v\cdot\mathbf w=\lVert\mathbf v\rVert\,(\hat{\mathbf u}\cdot\mathbf w)=\lVert\mathbf v\rVert\,\lVert\mathbf w\rVert\cos\theta$$
@@ -309,7 +309,7 @@ $$\mathbf v\cdot\mathbf w=\lVert\mathbf v\rVert\,(\hat{\mathbf u}\cdot\mathbf w)
 
 📖 **权威详解**:[基(线性代数) · Wikipedia](https://zh.wikipedia.org/wiki/基_%28線性代數%29)
 
-![基变换 = 换坐标系描述同一向量](../../assets/06-change-of-basis.png)
+![基变换 = 换坐标系描述同一向量](../../assets/math-linear-algebra/06-change-of-basis.png)
 
 向量本身是客观存在的箭头,但"坐标 $(2,1)$"只相对于**某一组基**才有意义。换一组基,同一个箭头的坐标数字就变了——坐标是语言,向量是被描述的事物。若新基的列向量(用标准坐标写)组成矩阵 $B$,则 $[\mathbf v]_B=B^{-1}\mathbf v$;同一变换在新基下表示为 $B^{-1}AB$(右起读:$B$ 换回标准坐标 → $A$ 施加变换 → $B^{-1}$ 换回新基),称 $A$ 与 $B^{-1}AB$ 为**相似矩阵**。
 
@@ -319,7 +319,7 @@ $$\mathbf v\cdot\mathbf w=\lVert\mathbf v\rVert\,(\hat{\mathbf u}\cdot\mathbf w)
 
 📖 **权威详解**:[特征值和特征向量 · Wikipedia](https://zh.wikipedia.org/wiki/特征值和特征向量)
 
-![特征向量 = 方向不动的轴,特征值 = 拉伸倍数](../../assets/07-eigen.png)
+![特征向量 = 方向不动的轴,特征值 = 拉伸倍数](../../assets/math-linear-algebra/07-eigen.png)
 
 大多数向量经变换会被甩偏(方向改变),但有些特殊方向上的向量,变换后**仍停在自己那条直线上**,只是被拉长/压缩 $\lambda$ 倍——这些方向是**特征向量**,$\lambda$ 是对应**特征值**,它们是变换"最本质的骨架":
 $$A\mathbf e=\lambda\mathbf e\ (\mathbf e\neq\mathbf 0),\qquad \det(A-\lambda I)=0$$
@@ -360,7 +360,7 @@ $$A\mathbf e=\lambda\mathbf e\ (\mathbf e\neq\mathbf 0),\qquad \det(A-\lambda I)
 $$f'(x)=\lim_{h\to 0}\frac{f(x+h)-f(x)}{h}.$$
 其几何意义是函数曲线在该点**切线的斜率**,刻画"输入发生微小变化时,输出变化的快慢与方向"——符号给出方向,绝对值给出敏感程度。
 
-![导数 = 该点切线的斜率](../../assets/calc-derivative.png)
+![导数 = 该点切线的斜率](../../assets/math-calculus/calc-derivative.png)
 
 常用求导法则包括:
 $$\frac{d}{dx}x^n=nx^{n-1},\qquad
@@ -387,7 +387,7 @@ $$\nabla_{\mathbf x}f(\mathbf x)=
 这正是**梯度下降**的依据——沿负梯度方向、以步长 $\eta$(学习率)迭代更新参数,损失随之下降:
 $$\mathbf x\leftarrow\mathbf x-\eta\,\nabla f(\mathbf x).$$
 
-![梯度下降:在损失曲面上沿 −∇L 逐步逼近最小值](../../assets/calc-gradient-descent.gif)
+![梯度下降:在损失曲面上沿 −∇L 逐步逼近最小值](../../assets/math-calculus/calc-gradient-descent.gif)
 
 完整数字计算例子见 [例子:Xw、均方误差与梯度下降](node:mathexample)。正文这里先保留一般公式,避免把具体样本数据误当作微积分本身。
 
@@ -403,7 +403,7 @@ $$\frac{\partial y}{\partial x_i}
 
 神经网络是多层复合函数。**前向**逐层算出各中间量的数值;**反向**则把"损失对深层变量的导数"沿这条链**逐段回乘**——这构成了 [反向传播与计算图](node:backprop) 的数学基础。
 
-![链式法则:前向算值(蓝),反向沿链回乘局部导数(红)](../../assets/calc-chain-rule.png)
+![链式法则:前向算值(蓝),反向沿链回乘局部导数(红)](../../assets/math-calculus/calc-chain-rule.png)
 
 如上图,$y$ 对 $x$ 的导数等于后一段局部导数 $\frac{dy}{du}$ 乘前一段 $\frac{du}{dx}$。把每个节点的"局部导数"按依赖关系乘起来,就得到端到端的梯度。
 
@@ -422,7 +422,7 @@ J_{ij}=\frac{\partial y_i}{\partial x_j}.$$
 - 标量对矩阵 $W$ 求导,结果与 $W$ 同形:
 $$\big(\nabla_W f\big)_{ij}=\frac{\partial f}{\partial W_{ij}}.$$
 
-![求导结果的形状:梯度是向量,雅可比是矩阵](../../assets/matcalc-jacobian.png)
+![求导结果的形状:梯度是向量,雅可比是矩阵](../../assets/math-calculus/matcalc-jacobian.png)
 
 两种布局只差一个转置,但混用会让公式对不上。阅读论文或框架文档时,先确认作者采用哪种约定。
 
@@ -690,7 +690,7 @@ $$\nabla_{\mathbf w}L
 
 监督学习的训练可拆成四个部件,循环往复:
 
-![机器学习的学习流程:模型 → 损失 → 优化的闭环,训练后看泛化](../../assets/ml-pipeline.png)
+![机器学习的学习流程:模型 → 损失 → 优化的闭环,训练后看泛化](../../assets/ml-overview/ml-pipeline.png)
 
 1. **模型(假设空间)**:一族带参数 $\theta$ 的函数 $f_\theta$,规定"可能的规律长什么样"(如线性回归限定为直线)。训练就是在这族函数里挑参数。
 2. **损失函数**:衡量当前预测 $\hat y=f_\theta(x)$ 与真实 $y$ 差多少(下一节)。
@@ -719,7 +719,7 @@ $\eta$ 是学习率。反复迭代,损失逐步降到(局部)最小——这正�
 
 关键认识:**机器学习要的不是在训练集上考满分,而是在没见过的新数据上表现好——这叫泛化**。一味降低训练损失会掉进陷阱:
 
-![欠拟合 / 恰好 / 过拟合,以及训练-测试误差随复杂度的 U 形权衡](../../assets/ml-overfitting.png)
+![欠拟合 / 恰好 / 过拟合,以及训练-测试误差随复杂度的 U 形权衡](../../assets/ml-overview/ml-overfitting.png)
 
 - **欠拟合**:模型太简单,训练与测试都差(没学到规律);
 - **过拟合**:模型太复杂,把训练数据连噪声一起背下来,训练误差极低但测试误差飙升;
@@ -754,7 +754,7 @@ $$\hat{y}=\mathbf w^\top\mathbf x+b,\qquad\qquad \hat{\mathbf y}=\mathbf X\mathb
 $$l^{(i)}(\mathbf w,b)=\tfrac12\big(\hat y^{(i)}-y^{(i)}\big)^2,\qquad L(\mathbf w,b)=\frac1n\sum_{i=1}^{n}\tfrac12\big(\mathbf w^\top\mathbf x^{(i)}+b-y^{(i)}\big)^2$$
 采用平方的原因:① 处处可导(便于求梯度);② 误差越大惩罚越重;③ 等价于高斯噪声假设下的极大似然(见第 5 节)。
 
-![线性回归:拟合直线与各样本的残差(红竖线),残差平方求和即损失](../../assets/linreg-fit.png)
+![线性回归:拟合直线与各样本的残差(红竖线),残差平方求和即损失](../../assets/ml-linear-regression/linreg-fit.png)
 
 ## 3. 解析解:线性回归的特例
 将 $b$ 并入 $\mathbf w$(在 $\mathbf X$ 上附加一列全 $1$),最小化均方误差存在**闭式解**:
@@ -767,7 +767,7 @@ $$\mathbf w\leftarrow\mathbf w-\frac{\eta}{|\mathcal B|}\sum_{i\in\mathcal B}\ma
 $$b\leftarrow b-\frac{\eta}{|\mathcal B|}\sum_{i\in\mathcal B}\big(\mathbf w^\top\mathbf x^{(i)}+b-y^{(i)}\big)$$
 括号内 $(\hat y-y)$ 为**残差**,更新量正比于"残差 × 输入"。学习率 $\eta$ 与批量大小 $|\mathcal B|$ 为超参数:$\eta$ 过大发散、过小收敛慢。
 
-![SGD 逐步调整 w、b,拟合直线越来越贴合数据,MSE 同步下降](../../assets/linreg-sgd.gif)
+![SGD 逐步调整 w、b,拟合直线越来越贴合数据,MSE 同步下降](../../assets/ml-linear-regression/linreg-sgd.gif)
 
 ## 5. 平方损失的由来:高斯噪声下的极大似然
 设 $y=\mathbf w^\top\mathbf x+b+\epsilon,\ \ \epsilon\sim\mathcal N(0,\sigma^2)$,则
@@ -777,7 +777,7 @@ $$P(y\mid\mathbf x)=\frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\Big(-\frac{1}{2\sigma^2}
 ## 6. 线性回归即最简单的神经网络
 把它画成**网络图**就一目了然:$d$ 个输入特征,每个配一个权重 $w_i$,加权求和后再加偏置 $b$,汇入**一个输出神经元**得到 $\hat y$——中间**没有激活函数**。这正是"神经元"的原型。
 
-![线性回归的网络图:d 个输入加权求和 + 偏置 → 1 个输出神经元(无激活)](../../assets/linreg-neuron.png)
+![线性回归的网络图:d 个输入加权求和 + 偏置 → 1 个输出神经元(无激活)](../../assets/ml-linear-regression/linreg-neuron.png)
 
 它是通往深度网络的接口:后续的神经网络可视为"**大量此类单元 + 非线性激活 + 多层堆叠**"。换言之,把这张图复制很多份、层层相连、每个神经元后面加一个非线性激活,就得到了多层感知机(下一章)。
 
@@ -820,7 +820,7 @@ $$\ln\frac{p}{1-p}=z=\mathbf w\cdot\mathbf x+b.$$
 $$p=\frac{1}{1+e^{-z}}=\sigma(z).$$
 逻辑回归的模型就此成形:$P(y{=}1\mid\mathbf x)=\sigma(\mathbf w\cdot\mathbf x+b)$,$P(y{=}0\mid\mathbf x)=1-\sigma(\cdot)$。**sigmoid 不是随手挑的 S 形函数,而是"把概率改造到与打分同范围"这一要求的必然结果。**
 
-![Sigmoid 把打分压成 (0,1) 概率;一维逻辑回归按 0.5 阈值分两类](../../assets/softmax-sigmoid.png)
+![Sigmoid 把打分压成 (0,1) 概率;一维逻辑回归按 0.5 阈值分两类](../../assets/ml-softmax/softmax-sigmoid.png)
 
 这个结果还有几重旁证:$\sigma$ **光滑、单调、$\sigma(0)=0.5$**,天然配梯度下降与 0.5 阈值;若两类各服从等协方差的高斯分布,则后验 $P(y{=}1\mid\mathbf x)$ 精确地就是某线性函数的 sigmoid;在广义线性模型里,它也是伯努利分布的标准联系函数。
 
@@ -846,7 +846,7 @@ $$\mathcal L=-\big[\,y\ln p+(1-y)\ln(1-p)\,\big].$$
 合起来就是 **softmax**:
 $$\operatorname{softmax}(\mathbf z)_k=\frac{e^{z_k}}{\sum_{j=1}^{K}e^{z_j}}.$$
 
-![softmax 把任意实数 logits 变成非负、和为 1 的概率分布](../../assets/softmax-transform.png)
+![softmax 把任意实数 logits 变成非负、和为 1 的概率分布](../../assets/ml-softmax/softmax-transform.png)
 
 它与 sigmoid 一脉相承:$K=2$ 时
 $$\operatorname{softmax}(z_1,z_2)_1=\frac{e^{z_1}}{e^{z_1}+e^{z_2}}=\frac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1-z_2),$$
@@ -856,7 +856,7 @@ softmax 只依赖分数之**差**,恰好退化成一个 sigmoid。所以逻辑�
 
 损失同样从交叉熵推广:真实类是 one-hot,损失为 $-\ln q_{y}$($q_y$ 为真实类别的预测概率),它对 logit 的梯度仍是 $q-\text{one-hot}$,形式干净、数值稳定,故实现上 softmax 与交叉熵常合并成一个算子。
 
-![多分类:K 个线性打分把空间切成 K 块,每点归到分数最高的类](../../assets/softmax-boundary.png)
+![多分类:K 个线性打分把空间切成 K 块,每点归到分数最高的类](../../assets/ml-softmax/softmax-boundary.png)
 
 $K$ 个线性打分把空间切成 $K$ 块,两类得分相等处 $\mathbf w_i\cdot\mathbf x=\mathbf w_j\cdot\mathbf x$ 是一条**线性边界**。所以逻辑回归、softmax 都是**线性分类器**,决策边界是直的。更完整的空间解释见 [线性分类的几何视角](node:geometry);要拟合弯曲边界,必须引入非线性——这正是通往 [多层感知机](node:mlp) 的动因。
 
@@ -877,7 +877,7 @@ $K$ 个线性打分把空间切成 $K$ 块,两类得分相等处 $\mathbf w_i\cd
 
 > 背景:深度学习是机器学习的一个**子集**,特指用**多层神经网络**(多层非线性变换的堆叠)来学习数据的表示。它与 [机器学习基础](node:ml) 共享同一套框架(损失 / 优化 / 泛化),此处因内容体量与重要性单独成块。
 
-从 [多层感知机](node:mlp) 起,模型获得隐藏层与非线性,表达力发生质变;[训练:线性模型 → 深度网络](node:training) 说明训练闭环为何不变、梯度来源为何变复杂;[反向传播](node:backprop) 提供了高效计算多层网络梯度的算法。随后是面向不同数据结构的代表架构——[CNN](node:cnn)(图像)、[RNN](node:rnn)(序列)、[注意力 / Transformer](node:attn)(现代主流)。实验主线的终点,是从零实现一个 mini-GPT。
+从 [多层感知机](node:mlp) 起,模型获得隐藏层与非线性,表达力发生质变;[训练:线性模型 → 深度网络](node:training) 说明训练闭环为何不变、梯度来源为何变复杂;[反向传播](node:backprop) 提供了高效计算多层网络梯度的算法。随后进入面向不同数据结构的代表架构:先通过 [从 MLP 到 CNN](node:mlp2cnn) 理解图像为什么需要局部连接与参数共享,再学习 [CNN](node:cnn)(图像)、[RNN](node:rnn)(序列)、[注意力 / Transformer](node:attn)(现代主流)。实验主线的终点,是从零实现一个 mini-GPT。
 </script>
 <script type="text/markdown" data-node="mlp">
 # 感知机 → 多层感知机(MLP)
@@ -894,7 +894,7 @@ $K$ 个线性打分把空间切成 $K$ 块,两类得分相等处 $\mathbf w_i\cd
 $$\mathbf h=\sigma(W_1\mathbf x+\mathbf b_1),\qquad \mathbf o=W_2\mathbf h+\mathbf b_2$$
 有了非线性,网络才能改变表示空间、形成弯曲的决策边界。
 
-![线性分类器画不出环形边界,MLP 可以](../../assets/mlp-boundary.png)
+![线性分类器画不出环形边界,MLP 可以](../../assets/mlp-overview/mlp-boundary.png)
 
 > 线性分类器为何等价于"超平面 / 投影到分数轴",见子篇 [线性分类的几何视角](node:geometry);这条"线性套线性仍是线性、必须靠非线性换空间"的逐步演示,见子篇 [MLP 引入非线性的作用](node:nonlinear)。
 
@@ -904,7 +904,7 @@ $$\mathbf h=\sigma(W_1\mathbf x+\mathbf b_1),\qquad \mathbf o=W_2\mathbf h+\math
 
 MLP = 输入层 + 一个或多个**隐藏层** + 输出层,层与层**全连接**。每个隐藏单元先做仿射变换(加权和 + 偏置)再过激活函数;它正是 [线性回归 = 单神经元](node:linreg) 那张图的大规模堆叠。
 
-![MLP:输入 → 隐藏层(仿射+激活)→ 输出](../../assets/mlp-arch.png)
+![MLP:输入 → 隐藏层(仿射+激活)→ 输出](../../assets/mlp-overview/mlp-arch.png)
 
 层数(深度)与每层宽度是关键超参数;隐藏层让网络逐层把数据变换到更易分离的表示。
 
@@ -923,7 +923,7 @@ MLP = 输入层 + 一个或多个**隐藏层** + 输出层,层与层**全连接*
 | 主要毛病 | 死亡 ReLU(负区永不更新) | **梯度消失最重 + 非零中心** | 梯度消失(两端饱和) |
 | 放哪儿 | **隐藏层默认** | **输出层**(二分类概率) | 隐藏层(优于 sigmoid) |
 
-![三种激活函数及其导数:sigmoid/tanh 两端饱和→梯度消失,ReLU 不饱和](../../assets/mlp-activation.png)
+![三种激活函数及其导数:sigmoid/tanh 两端饱和→梯度消失,ReLU 不饱和](../../assets/mlp-overview/mlp-activation.png)
 
 **为什么隐藏层默认 ReLU**:反向传播把各层导数连乘回去。sigmoid 导数最大才 $0.25$、tanh 最大 $1$,两端还都趋 0——网络一深,这些 $<1$ 的数连乘使梯度**指数级衰减(梯度消失)**,深层学不动;ReLU 在激活路径上导数恒为 $1$,连乘不衰减,梯度能一路传到底(2012 年 AlexNet 之后深网络能堆深的关键之一)。
 
@@ -939,7 +939,7 @@ MLP = 输入层 + 一个或多个**隐藏层** + 输出层,层与层**全连接*
 
 📌 **训练承接**:[训练:线性模型 → 深度网络](node:training) · [反向传播与计算图](node:backprop)
 
-MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 或交叉熵算损失,再根据梯度更新所有 $W,\mathbf b$。真正的新问题不是"怎么更新",而是**多层复合函数里,每个参数的梯度怎么高效算出来**。完整训练主线见子篇 [训练:线性模型 → 深度网络](node:training);下一节 [反向传播](node:backprop) 专门解释梯度如何沿计算图回传。
+MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 或交叉熵算损失,再根据梯度更新所有 $W,\mathbf b$。真正的新问题不是"怎么更新",而是**多层复合函数里,每个参数的梯度怎么高效算出来**。完整训练主线见子篇 [训练:线性模型 → 深度网络](node:training);若要理解 batch、epoch、update 和一次参数更新,见子篇 [MLP 训练:batch、epoch 与参数更新](node:mlptrain);下一节 [反向传播](node:backprop) 专门解释梯度如何沿计算图回传。
 
 ## 6. 网络如何学出这条弯曲边界
 
@@ -953,7 +953,7 @@ MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 
 - 沿梯度方向更新一小步,边界随参数发生微小变化,错分的点减少一些;
 - 重复成百上千次。每一步都只是局部改进,并不显式规划"要成圆";但当损失被逐步降低,边界自然会贴合数据的环形结构。
 
-![一个真实小 MLP 的训练过程:决策边界从随机乱形逐步收紧成环(准确率 53% → 100%)](../../assets/mlp-learn-boundary.gif)
+![一个真实小 MLP 的训练过程:决策边界从随机乱形逐步收紧成环(准确率 53% → 100%)](../../assets/mlp-overview/mlp-learn-boundary.gif)
 
 这与**线性回归 SGD 动画**是同一个机制,只是函数更灵活、参数更多:线性回归中是直线逐步贴合样本点,这里是非线性边界逐步贴合环形结构。
 
@@ -966,7 +966,7 @@ MLP 的训练闭环和前面的线性模型一致:前向传播算预测,用 MSE 
 - MLP = 输入 + 隐藏层(仿射+激活)+ 输出,全连接;是单神经元的堆叠;
 - ReLU 因不饱和、缓解梯度消失成为默认激活;sigmoid / tanh 两端饱和;
 - 通用近似定理:单隐藏层 MLP 可逼近任意连续函数;但实践偏好更深;
-- 训练闭环仍是"前向计算 → 损失 → 梯度 → 更新";从线性模型到 MLP 的训练差异见 [训练:线性模型 → 深度网络](node:training);
+- 训练闭环仍是"前向计算 → 损失 → 梯度 → 更新";从线性模型到 MLP 的训练差异见 [训练:线性模型 → 深度网络](node:training),MLP 的 batch / epoch / 参数更新见 [MLP 训练:batch、epoch 与参数更新](node:mlptrain);
 - **弯曲边界是怎么来的**:隐藏层做非线性表示变换,使数据线性可分;梯度下降再逐步逼近低损失解。边界形状是最小化损失的结果,不是模型显式预设的几何对象。完整几何承接见 [线性分类的几何视角](node:geometry)。
 
 ---
@@ -989,7 +989,7 @@ $$\mathbf w\cdot\mathbf x=\lVert\mathbf w\rVert\,\lVert\mathbf x\rVert\cos\theta
 
 这等价于"把 $\mathbf x$ 投影到 $\mathbf w$ 的方向,读出投影长度,再乘上 $\lVert\mathbf w\rVert$"。偏置 $b$ 则负责平移分界位置。于是 $z=\mathbf w\cdot\mathbf x+b$ 可以看成一个从 $\mathbb R^n$ 到 $\mathbb R$ 的线性打分函数:它把整个输入空间压到一根分数轴上。
 
-![打分 = 投影到法向 w,正比于到边界的带符号距离](../../assets/logreg-projection-2d.png)
+![打分 = 投影到法向 w,正比于到边界的带符号距离](../../assets/linear-classification-geometry/logreg-projection-2d.png)
 
 $\mathbf w$ 还有一个重要几何身份:它是决策边界的**法向量**。点到边界的带符号距离与 $z/\lVert\mathbf w\rVert$ 成正比,所以 $z$ 的正负不仅给出类别,也给出点在边界哪一侧。
 
@@ -1004,7 +1004,7 @@ $$\mathbf w\cdot\mathbf x+b=0.$$
 - $z<0$:落在超平面另一侧;
 - $z=0$:恰好在边界上。
 
-![超平面视角:法向量 w 定向,一面墙把 3D 空间切成两半](../../assets/logreg-hyperplane-3d.png)
+![超平面视角:法向量 w 定向,一面墙把 3D 空间切成两半](../../assets/linear-classification-geometry/logreg-hyperplane-3d.png)
 
 在这个视角下,数据点没有被移动;分类器只是找到一面由 $\mathbf w$ 和 $b$ 决定的"墙",再看点落在哪一侧。
 
@@ -1016,11 +1016,11 @@ $$\mathbf w\cdot\mathbf x+b=0.$$
 - $z>0$:在阈值右侧;
 - $z=0$:正好落在阈值上。
 
-![线性映射 z=w·x+b:把空间塌缩到分数轴,阈值一点分两类](../../assets/logreg-collapse-3d.gif)
+![线性映射 z=w·x+b:把空间塌缩到分数轴,阈值一点分两类](../../assets/linear-classification-geometry/logreg-collapse-3d.gif)
 
-这与超平面视角完全等价。那面超平面,正是"投影后恰好落在阈值点 $z=0$ 上"的全部原始点的集合。换句话说:
+这与超平面视角完全等价。那面超平面,正是"投影后恰好落在阈值点 $z=0$ 上"的全部原始点的集合——也就是打分函数 $z(\mathbf x)=\mathbf w\cdot\mathbf x+b$ 在阈值 $0$ 处的原像:
 
-$$\text{超平面}=\{\,\mathbf x:\mathbf w\cdot\mathbf x+b=0\,\}=\text{阈值点 }0\text{ 的原像}.$$
+$$\{\,\mathbf x:\mathbf w\cdot\mathbf x+b=0\,\}=z^{-1}(0).$$
 
 这也是 [线性代数](node:linalg#点积与对偶性) 中"向量 $\mathbf w$ 对应一个线性函数"的具体应用:同一个 $\mathbf w$,既能表示空间中的法向量,也能表示把输入投影成一个数的打分函数。
 
@@ -1082,7 +1082,7 @@ $$\mathbf h=\sigma(W_1\mathbf x+\mathbf b_1).$$
 
 面对"内圈一类、外圈一类"的环形数据,任何直线都必然大量错分:
 
-![线性分类器无法分开环形数据](../../assets/nonlinear-data-linear.png)
+![线性分类器无法分开环形数据](../../assets/mlp-nonlinearity/nonlinear-data-linear.png)
 
 这是模型形式的天花板,而非参数没调好。出路不是寻找更强的直线,而是**换一个能用直线切开的空间**。
 
@@ -1092,7 +1092,7 @@ $$\mathbf h=\sigma(W_1\mathbf x+\mathbf b_1).$$
 $$r^2=x_1^2+x_2^2$$
 内圈点 $r^2$ 小、外圈点 $r^2$ 大。把每个点映射到这一个数上,两类即在一维数轴上被一个阈值 $\tau$ 完全分开;阈值 $r^2=\tau$ 映射回原坐标,正是一个圆。这相当于一个仅含**一个隐藏单元**的网络,只是该单元并非通用激活,而是直接计算 $r^2$ 的**特制单元**:
 
-![一个特制单元 r²:降维到 1D、阈值分开、回到 2D 是圆](../../assets/nonlinear-step1-r2.png)
+![一个特制单元 r²:降维到 1D、阈值分开、回到 2D 是圆](../../assets/mlp-nonlinearity/nonlinear-step1-r2.png)
 
 两点值得强调:
 
@@ -1111,7 +1111,7 @@ $$r^2=x_1^2+x_2^2$$
 
 训练好后,三个隐藏单元就是三个**确定的函数**;代入原始坐标,每个点 $(x_1,x_2)$ 被算成三个数 $(h_1,h_2,h_3)$,输出层再对它们做一次线性打分 $z$:
 
-![MLP 结构 + 三个隐藏单元的真实表达式 + 逐点算出 (h₁,h₂,h₃)](../../assets/nonlinear-h-a.png)
+![MLP 结构 + 三个隐藏单元的真实表达式 + 逐点算出 (h₁,h₂,h₃)](../../assets/mlp-nonlinearity/nonlinear-h-a.png)
 
 这一步是纯计算:把一个点的 $x_1,x_2$ 代进三个 $\tanh$ 得到它的三维新坐标,再代进 $z$ 看正负。上图右下角验算了两个点——中心的内点 $z<0$ 判内、最外的外点 $z>0$ 判外。全部 50 点的新坐标见 `nonlinear_data_hidden.csv`。
 
@@ -1119,7 +1119,7 @@ $$r^2=x_1^2+x_2^2$$
 
 把 50 个点画到它们**真实的** $(h_1,h_2,h_3)$ 坐标上——注意这是和原始 $(x_1,x_2)$ **完全不同的空间**。原本绕成一圈、在 2D 里直线切不开的数据,到这里被输出层那张平面清晰地分成两半:
 
-![真实隐藏坐标 (h₁,h₂,h₃):旋转 3D;转到侧面 edge-on 时平面缩成一条线,蓝 / 红清楚分居两侧](../../assets/nonlinear-h-b.gif)
+![真实隐藏坐标 (h₁,h₂,h₃):旋转 3D;转到侧面 edge-on 时平面缩成一条线,蓝 / 红清楚分居两侧](../../assets/mlp-nonlinearity/nonlinear-h-b.gif)
 
 这就是"升维"的实质:**换一个空间,让原本线性不可分的数据变得线性可分**;输出层 $z=0$ 就是那张分隔平面。把动图转到平面的**侧面(edge-on)**,它会缩成一条线——此时蓝点全在一侧、红点全在另一侧,"一张平面分开两类"看得最清楚。(tanh 会把已分开的点压向 $\pm1$,故点会向立方体边缘聚集;这是强非线性压缩的现象,不影响可分。)
 
@@ -1127,7 +1127,7 @@ $$r^2=x_1^2+x_2^2$$
 
 回到原始平面:对每个点,代入 $h=\tanh(W\mathbf x+\mathbf b)$ 看它在三维里落到切面哪一侧——"翻面"的那条线,就是原 $(x_1,x_2)$ 平面上的决策边界:
 
-![回到原 2D:边界 = 平面的原像;同两点在 3D 分居切面两侧](../../assets/nonlinear-h-c.png)
+![回到原 2D:边界 = 平面的原像;同两点在 3D 分居切面两侧](../../assets/mlp-nonlinearity/nonlinear-h-c.png)
 
 **这一步可以写成一条方程。** 三维里的切面是 $w^{\mathrm o}_1h_1+w^{\mathrm o}_2h_2+w^{\mathrm o}_3h_3+b^{\mathrm o}=0$;把每个 $h_i=\tanh(\mathbf w_i\cdot\mathbf x+b_i)$ 代进去,就得到一个**只含 $x_1,x_2$ 的方程**,它的解集就是原平面上那条曲线。所以 2D 边界正是这张平面在非线性映射 $\mathbf x\mapsto\mathbf h$ 下的**原像**:平面在 $\mathbf h$ 空间是直的,但 $\mathbf x\mapsto\mathbf h$ 这一步是弯的(tanh),把同一张平面拉回 $\mathbf x$ 空间就成了闭合曲线。实际作图就是:把整片输入平面网格逐点算出 $\mathbf h$、代入上式看符号,**符号翻转处**连起来即这条边界(上图左)。
 
@@ -1137,7 +1137,7 @@ $$r^2=x_1^2+x_2^2$$
 
 增加隐藏单元(升到更高维),边界便有更多"边"去逼近圆:
 
-![3 / 5 / 8 个单元:三角形 → 五边形 → 八边形 ≈ 圆](../../assets/nonlinear-step3-width.png)
+![3 / 5 / 8 个单元:三角形 → 五边形 → 八边形 ≈ 圆](../../assets/mlp-nonlinearity/nonlinear-step3-width.png)
 
 3 个单元形成近似三角形边界(94%)、5 个单元形成近似五边形边界(96%)、8 个单元进一步接近圆形边界(98%)。每个隐藏单元贡献一条"软边",边越多,围合的边界越接近真实的圆。[通用近似定理](node:mlp#通用近似)给出理论保证:单隐藏层、足够多的单元即可逼近任意边界——这正是"通用单元 + 足够宽度 + 训练"得以替代"人工设计的完美特征"的依据。
 
@@ -1273,9 +1273,9 @@ $$\frac{\partial L}{\partial W_1}
 
 在原理主线里,MLP 训练讲到这里即可:读者需要掌握"训练闭环不变、求梯度变复杂、反向传播因此登场"。更工程化的细节,例如 epoch、batch、训练集 / 验证集、优化器选择、学习率曲线、过拟合曲线,更适合放到后续实验主线中讲。
 
-后续实验会用代码把这个循环展开成可运行版本:初始化参数;按 epoch 反复遍历数据;每次取一个 batch 做前向传播、计算损失、反向传播求所有参数梯度、执行优化器 step 更新参数、清空梯度;每轮结束后在验证集上观察泛化。
+子篇 [MLP 训练:batch、epoch 与参数更新](node:mlptrain) 会先在原理层面展开这个循环:初始化参数;按 epoch 反复遍历数据;每次取一个 batch 做前向传播、计算损失、反向传播求所有参数梯度、执行优化器 step 更新参数。后续实验主线再把它写成可运行代码,并补充清空梯度、验证集评估、学习率曲线与过拟合观察。
 
-因此 MLP 正文只需要说明训练闭环与动机;本篇负责把线性模型到深度网络的训练差异讲清;下一篇 [反向传播与计算图](node:backprop) 再专门展开"梯度如何一层层回传"。
+因此 MLP 正文只需要说明训练闭环与动机;本篇负责把线性模型到深度网络的训练差异讲清;[MLP 训练](node:mlptrain) 负责解释 batch、epoch 与 update;下一篇 [反向传播与计算图](node:backprop) 再专门展开"梯度如何一层层回传"。
 
 ## 常见误解
 
@@ -1295,6 +1295,231 @@ $$\frac{\partial L}{\partial W_1}
 ### 参考链接
 - 本库内链:[机器学习概述](node:mlwhat) · [线性回归](node:linreg) · [逻辑回归 / softmax 回归](node:softmax) · [反向传播与计算图](node:backprop)
 - d2l:[3.1 线性回归](https://zh.d2l.ai/chapter_linear-networks/linear-regression.html) · [3.4 softmax 回归](https://zh.d2l.ai/chapter_linear-networks/softmax-regression.html) · [4.7 前向传播、反向传播和计算图](https://zh.d2l.ai/chapter_multilayer-perceptrons/backprop.html)
+</script>
+<script type="text/markdown" data-node="mlptrain">
+# MLP 训练:batch、epoch 与参数更新
+
+> 本篇承接 [感知机 → 多层感知机](node:mlp) 与 [训练:线性模型 → 深度网络](node:training),专门解释 MLP 训练时"参数怎么一轮轮更新"。视频里的 `compute gradient → update` 是一般训练框架;在 MLP 里,`compute gradient` 这一步通常由 [反向传播](node:backprop) / 自动微分完成。
+
+## 1. 这张训练流程图代表什么
+
+监督学习训练的目标可以写成:
+
+$$
+\theta^\*=\arg\min_\theta L(\theta)
+$$
+
+这里 $\theta$ 代表模型的全部可训练参数,$L(\theta)$ 是损失。训练不是一次算出 $\theta^\*$,而是从一个初始参数 $\theta^0$ 出发,不断重复:
+
+1. 取一批数据;
+2. 用当前参数做前向传播;
+3. 算这一批数据上的损失;
+4. 计算损失对参数的梯度;
+5. 沿负梯度方向更新参数。
+
+所以截图里的流程确实代表 MLP 的一般训练过程,也代表很多可微模型的训练过程。区别在于:不同模型的前向函数不同,损失函数可能不同,梯度的计算难度也不同。
+
+## 2. 参数 $\theta$ 到底是什么
+
+在线性模型里,参数可能只是 $\mathbf w,b$。在 MLP 里,参数包括每一层的权重矩阵和偏置向量。以一个隐藏层为例:
+
+$$
+\mathbf h=\sigma(XW_1+\mathbf b_1),\qquad
+\mathbf o=\mathbf hW_2+\mathbf b_2
+$$
+
+那么参数集合就是:
+
+$$
+\theta=\{W_1,\mathbf b_1,W_2,\mathbf b_2\}
+$$
+
+为了写梯度下降公式,常把所有参数想象成一个很长的向量:
+
+$$
+\theta=
+\begin{bmatrix}
+\theta_1\\
+\theta_2\\
+\theta_3\\
+\vdots
+\end{bmatrix}
+$$
+
+梯度 $g=\nabla_\theta L$ 也是同样长度的向量,每一项告诉我们:在当前参数位置,某个参数变大一点会让损失怎么变。
+
+## 3. 损失是参数的函数
+
+训练数据固定以后,预测结果由参数决定,损失也就由参数决定:
+
+$$
+\theta \rightarrow \hat y=f_\theta(x) \rightarrow L(\hat y,y)
+$$
+
+如果用全部 $N$ 条样本定义训练损失,可以写成:
+
+$$
+L(\theta)=\frac{1}{N}\sum_{n=1}^{N}\ell(f_\theta(x_n),y_n)
+$$
+
+实际训练深度网络时,通常不会每次都用全部数据算梯度,而是取一个小批量 batch。若当前 batch 是 $\mathcal B$,batch size 为 $B$,则这一小批上的损失是:
+
+$$
+L_{\mathcal B}(\theta)=\frac{1}{B}\sum_{n\in\mathcal B}\ell(f_\theta(x_n),y_n)
+$$
+
+于是一次更新用的是当前 batch 的梯度:
+
+$$
+g=\nabla_\theta L_{\mathcal B}(\theta)
+$$
+
+这个梯度不是完整训练集损失的精确梯度,而是一个小批量估计。它通常更快,也带有一点随机性,这就是 mini-batch SGD 的基本思想。
+
+## 4. 一次参数更新在做什么
+
+假设当前参数是 $\theta^t$,学习率是 $\eta$,当前 batch 上算出的梯度是:
+
+$$
+g^t=\nabla_\theta L_{\mathcal B_t}(\theta^t)
+$$
+
+最基本的 SGD 更新为:
+
+$$
+\theta^{t+1}\leftarrow\theta^t-\eta g^t
+$$
+
+逐项看就是:
+
+$$
+\begin{bmatrix}
+\theta_1^{t+1}\\
+\theta_2^{t+1}\\
+\vdots
+\end{bmatrix}
+\leftarrow
+\begin{bmatrix}
+\theta_1^t\\
+\theta_2^t\\
+\vdots
+\end{bmatrix}
+-
+\eta
+\begin{bmatrix}
+\dfrac{\partial L_{\mathcal B_t}}{\partial \theta_1}\\
+\dfrac{\partial L_{\mathcal B_t}}{\partial \theta_2}\\
+\vdots
+\end{bmatrix}
+$$
+
+直觉是:如果某个参数增大会让损失上升,它的梯度为正,更新时就减小它;如果某个参数增大会让损失下降,它的梯度为负,更新时反而会增大它。学习率 $\eta$ 控制这一步走多远。
+
+## 5. batch、update、epoch 的关系
+
+把训练集分成很多个 batch,每处理一个 batch 就更新一次参数。若训练集有 $N$ 条样本,batch size 是 $B$,且 $N$ 能被 $B$ 整除,那么一轮 epoch 的更新次数是:
+
+$$
+\frac{N}{B}
+$$
+
+例如:
+
+| 样本数 $N$ | batch size $B$ | 1 个 epoch 的更新次数 |
+|---|---:|---:|
+| 10000 | 10 | 1000 |
+| 1000 | 100 | 10 |
+
+如果不能整除,最后一个 batch 可能更小,更新次数通常是 $\lceil N/B\rceil$。
+
+**1 个 epoch** 的意思是:训练过程已经把所有训练样本大致看过一遍。训练通常会跑很多个 epoch,每个 epoch 开始前还会打乱数据顺序,再重新分 batch。
+
+## 6. 为什么这里没有提反向传播
+
+因为这段内容讲的是**优化流程**,它把"求梯度"先写成一个抽象步骤:
+
+$$
+g=\nabla_\theta L(\theta)
+$$
+
+但对 MLP 来说,这个 $g$ 不是凭空出现的。MLP 的参数通过多层复合函数影响损失:
+
+$$
+W_1 \rightarrow \mathbf z_1 \rightarrow \mathbf h \rightarrow \mathbf o \rightarrow L
+$$
+
+早期层参数离损失很远,必须沿这条链用链式法则把梯度传回来。**反向传播负责的正是这件事:高效计算 $g$。**
+
+所以这两句话要区分开:
+
+- `compute gradient`:训练流程里的一个步骤,表示"现在需要梯度";
+- `backpropagation`:在多层网络里高效完成这个步骤的方法。
+
+换句话说,视频这段没有提反向传播,不是因为 MLP 不需要反向传播,而是因为它正在讲训练循环的外层框架。等进入"梯度如何计算"时,才需要专门展开反向传播。
+
+## 7. MLP 的一次 batch 训练过程
+
+把上面的内容合起来,一个 MLP 在一个 batch 上的一次更新是:
+
+1. **取 batch**:从训练集中取出 $X_{\mathcal B},Y_{\mathcal B}$。
+2. **前向传播**:用当前参数 $\theta^t$ 计算预测。
+
+$$
+\mathbf h=\sigma(X_{\mathcal B}W_1+\mathbf b_1),\qquad
+\mathbf o=\mathbf hW_2+\mathbf b_2
+$$
+
+3. **计算损失**:回归任务可用 MSE,分类任务常用交叉熵。
+4. **反向传播求梯度**:得到所有参数的梯度。
+
+$$
+\nabla_{W_1}L,\quad \nabla_{\mathbf b_1}L,\quad \nabla_{W_2}L,\quad \nabla_{\mathbf b_2}L
+$$
+
+5. **更新参数**:SGD 会直接沿负梯度方向更新;Adam 等优化器会在梯度基础上加入动量、自适应步长等机制。
+
+$$
+W_1\leftarrow W_1-\eta\nabla_{W_1}L,\qquad
+\mathbf b_1\leftarrow \mathbf b_1-\eta\nabla_{\mathbf b_1}L
+$$
+
+输出层参数 $W_2,\mathbf b_2$ 也同样更新。
+
+## 8. 这篇和反向传播文章的边界
+
+本篇回答的是:"拿到梯度之后,MLP 的训练循环如何推动参数一步步更新?"
+
+[反向传播与计算图](node:backprop) 回答的是:"这些梯度到底如何沿计算图一层层算出来?"
+
+因此可以把 MLP 训练理解成两层:
+
+| 层次 | 关注问题 |
+|---|---|
+| 外层训练循环 | batch 怎么取,loss 怎么算,参数什么时候更新,epoch 怎么数 |
+| 内层梯度计算 | 每个参数的梯度如何由反向传播得到 |
+
+两者合在一起,才是完整的 MLP 训练过程。
+
+## 常见误解
+
+- **误解 1:1 个 epoch 只更新一次参数。** 不对。1 个 epoch 通常包含多个 batch,每个 batch 更新一次。
+- **误解 2:batch loss 就是完整训练集 loss。** 不对。batch loss 是完整 loss 的小批量估计。
+- **误解 3:反向传播就是参数更新。** 不对。反向传播负责求梯度;SGD / Adam 负责用梯度更新参数。
+- **误解 4:MLP 的训练规则和线性模型完全不同。** 不对。训练闭环一致,只是 MLP 的梯度计算必须穿过多层结构。
+
+## 应掌握的要点
+
+- MLP 训练目标是最小化损失 $L(\theta)$;
+- $\theta$ 表示网络中所有可训练参数;
+- batch 是一次计算梯度和更新参数所用的小批量数据;
+- 1 个 epoch 表示大致看完全部训练样本一次,通常包含多次 update;
+- 参数更新公式是 $\theta^{t+1}\leftarrow\theta^t-\eta\nabla_\theta L_{\mathcal B_t}(\theta^t)$;
+- 反向传播不负责决定怎么更新,它负责把这个公式里的梯度高效算出来。
+
+---
+### 参考链接
+- 本库内链:[训练:线性模型 → 深度网络](node:training) · [反向传播与计算图](node:backprop)
+- 李宏毅机器学习 2021:[Optimization of New Model](https://www.youtube.com/watch?v=bHcJCp2Fyxs&list=PLJV_el3uVTsMhtt7_Y6sgTHGHp1Vb2P2J&index=2)
 </script>
 <script type="text/markdown" data-node="backprop">
 # 反向传播与计算图
@@ -1319,11 +1544,11 @@ $$\frac{\partial L}{\partial W_1}
 
 反向传播 = **链式法则 + 复用**:从 $L$ 出发($\partial L/\partial L=1$),沿图**逆向**逐节点计算"损失对该节点的梯度",每一步只需把下游传来的梯度乘以**本地导数**。因为复用了下游已算好的梯度,整张图只需**一次**反向遍历,代价与前向同阶——这正是它高效的原因(对比逐参数数值差商要前向无数次)。
 
-![反向传播:前向算值(黑),反向沿计算图回乘局部梯度(红)](../../assets/backprop-graph.png)
+![反向传播:前向算值(黑),反向沿计算图回乘局部梯度(红)](../../assets/backprop/backprop-graph.png)
 
 上图是 $L=(\sigma(wx+b)-y)^2$ 在 $x=2,w=1,b=0,y=0$ 处的完整一遍:黑色是前向值,红色是反向梯度。注意 $\partial L/\partial w$ 就是把链上三段本地导数乘起来。
 
-![前向点亮 → 反向回传 的两趟扫描](../../assets/backprop-sweep.gif)
+![前向点亮 → 反向回传 的两趟扫描](../../assets/backprop/backprop-sweep.gif)
 
 ## 4. 与自动微分 / 框架的关系
 
@@ -1345,11 +1570,15 @@ $$\frac{\partial L}{\partial W_1}
 <script type="text/markdown" data-node="cnn">
 # 卷积神经网络 CNN
 
-> 处理图像若用全连接 [MLP](node:mlp),参数会爆炸(百万像素 × 隐藏单元),且没利用图像的**空间结构**。CNN 用**卷积**替代全连接:局部连接 + 参数共享,大幅减少参数,并自带**平移不变性**——是计算机视觉的基石。记号锚定 d2l 第 6 章。
+> 处理图像若用全连接 [MLP](node:mlp),参数会随图像尺寸快速膨胀,且没有把"相邻像素更相关、同一局部特征可出现在不同位置"这些**空间结构先验**写进模型。CNN 用**卷积**替代全连接:局部连接 + 参数共享,大幅减少参数,并增强对小位移的鲁棒性——是计算机视觉的基石。记号锚定 d2l 第 6 章。
+
+📌 **过渡承接**:如果从 MLP 到 CNN 的动机还没接上,先读子篇 [从 MLP 到 CNN](node:mlp2cnn)。
+
+📌 **展开阅读**:本节点先给出 CNN 的最小概念框架;完整原理见 [CNN 原理](node:cnnprinciples),经典模型脉络见 [CNN 经典模型](node:cnnmodels)。
 
 ## 1. 为什么不用全连接处理图像
 
-一张 $1000\times1000$ 的图展平就是百万维输入,接一个千单元的全连接层就有十亿参数——既算不动也极易过拟合。而且全连接**打乱了像素的空间关系**,没利用"相邻像素相关、同一特征可出现在任意位置"这些先验。
+一张 $1000\times1000$ 的图展平就是百万维输入,接一个千单元的全连接层就有十亿参数——既算不动也极易过拟合。展平本身并不会删除像素信息,但全连接层没有显式利用"相邻像素相关、同一特征可出现在不同位置"这些先验;模型必须从数据中把这些规律硬学出来。
 
 ## 2. 卷积运算:局部加权和 + 参数共享
 
@@ -1357,9 +1586,9 @@ $$\frac{\partial L}{\partial W_1}
 
 用一个小的**卷积核(filter)**在输入上滑动,每到一处就和覆盖的局部区域做**逐元素相乘再求和**,得到输出**特征图**的一个值(深度学习里实际用的是"互相关")。
 
-![卷积核在输入上滑动,每处做局部加权和,生成特征图](../../assets/cnn-conv.gif)
+![卷积核在输入上滑动,每处做局部加权和,生成特征图](../../assets/cnn-overview/cnn-conv.gif)
 
-两个关键性质:**局部连接**(每个输出只看一小块,不是全部像素)与**参数共享**(同一个核扫遍全图)。这让参数量从"与图像大小成正比"降到"只有一个小核",并带来**平移不变性**——同一特征(如边缘)出现在哪里都能被同一个核检测到。
+两个关键性质:**局部连接**(每个输出只看一小块,不是全部像素)与**参数共享**(同一个核扫遍全图)。注意,一层卷积的输出格子数不一定大幅减少;它真正先减少的是可训练参数,并把"同一特征可在不同位置复用"写进结构。同一特征(如边缘)出现在哪里,都能被同一个核检测到;后续再通过 stride、池化或更深层逐步降低空间分辨率、扩大感受野。
 
 ## 3. 关键概念:核 / 步幅 / 填充 / 通道
 
@@ -1372,23 +1601,550 @@ $$\frac{\partial L}{\partial W_1}
 
 在每个小区域取最大(**最大池化**)或平均,降低特征图分辨率:减少计算、扩大后续层的感受野,并增强对微小平移的鲁棒性。
 
-![最大池化:每 2×2 取最大值,下采样](../../assets/cnn-pool.png)
+![最大池化:每 2×2 取最大值,下采样](../../assets/cnn-overview/cnn-pool.png)
 
 ## 5. 典型结构
 
 一个经典 CNN = 若干 **[卷积 + 激活 + 池化]** 块堆叠(逐层提取由低到高的特征:边缘 → 纹理 → 部件 → 物体)→ 末端接全连接层做分类。代表网络:**LeNet**(手写数字)、**AlexNet**(点燃深度学习热潮)、**VGG / ResNet**(更深,ResNet 用残差连接训练上百层)。
+
+![一个完整 CNN:卷积/池化提取空间特征,展平后接全连接层分类](../../assets/cnn-principles/cnn-lee-page30.png)
+
+进一步学习时,先用 [CNN 原理](node:cnnprinciples) 理清局部感受野、参数共享、filter、feature map、pooling;再用 [CNN 经典模型](node:cnnmodels) 把 LeNet、AlexNet、VGG、NiN、GoogLeNet、ResNet、DenseNet 串成结构演进脉络。
 
 ## 应掌握的要点
 - 全连接处理图像:参数爆炸 + 不利用空间结构;
 - 卷积 = 局部加权和 + **参数共享**,带来平移不变、参数大减;
 - 核 / 步幅 / 填充 / 通道的作用;多核 → 多特征图;
 - 池化 = 下采样,减计算、增平移鲁棒;
-- 经典结构 = [卷积+激活+池化] 堆叠 + 全连接;逐层特征由低到高。
+- 经典结构 = [卷积+激活+池化] 堆叠 + 全连接;逐层特征由低到高;
+- 详细原理见 [CNN 原理](node:cnnprinciples),经典模型结构见 [CNN 经典模型](node:cnnmodels)。
 
 ---
 ### 参考链接
 - [d2l 第 6 章 卷积神经网络](https://zh.d2l.ai/chapter_convolutional-neural-networks/index.html) · [第 7 章 现代卷积网络](https://zh.d2l.ai/chapter_convolutional-modern/index.html)
 - [卷积神经网络](https://zh.wikipedia.org/wiki/卷积神经网络) · [卷积](https://zh.wikipedia.org/wiki/卷积)(维基百科)
+</script>
+<script type="text/markdown" data-node="mlp2cnn">
+# 从 MLP 到 CNN
+
+> [MLP](node:mlp) 已经解决了"如何用多层非线性函数学习复杂关系";CNN 进一步解决的是:**当输入是图片这种有空间结构的数据时,网络层应该怎样设计才更合理**。
+
+## 1. 手写数字:MLP 的经典入门例子
+
+手写数字识别是引入神经网络的经典例子。比如一张 $28\times28$ 的灰度图,可以展平成 $784$ 维向量,输入到 MLP:
+
+$$
+\text{image }(28\times28)\rightarrow \mathbf x\in\mathbb R^{784}\rightarrow \text{hidden layers}\rightarrow \mathbf p\in\mathbb R^{10}
+$$
+
+这类例子很适合第一次理解神经网络:每个像素是一个输入神经元,隐藏层尝试组合像素形成更高层特征,最后输出层给出 $0\sim9$ 的分类概率。3Blue1Brown 的神经网络入门也采用了这个路线:先用手写数字说明 $28\times28=784$ 个输入、隐藏层和 10 个输出类别。
+
+## 2. MLP 也能学到笔画,问题是低效
+
+容易误解的一点是:说 MLP 不适合图像,并不是说它完全学不到笔画、边缘、环形这类信息。对于 $28\times28$ 的小图,MLP 确实可以训练出能识别数字的模型;某些隐藏单元的权重重新摆成 $28\times28$ 后,也可能看起来像是在响应某些局部笔画。
+
+但这是一种**从数据里硬学出来的规律**,而不是模型结构一开始就知道的规律。MLP 的全连接层有三个低效点:
+
+- **展平没有删除信息,但没有显式利用相邻关系**:像素原本有上下左右邻接关系;展平成向量后,模型仍能通过权重学习这些关系,但结构上没有告诉它"相邻像素更相关"。
+- **局部特征需要重复学习**:同一条竖笔画出现在左上、右上、下方,对 MLP 来说是不同位置上的不同输入连接,往往需要不同隐藏单元或不同权重模式分别学习。
+- **参数量随图像尺寸快速膨胀**:一个隐藏单元若连接全部 $784$ 个输入,就有 $784$ 个权重;若输入是 $1000\times1000$ 图像,全连接层参数会立刻变得巨大。
+
+所以更准确的说法是:MLP 可以处理图像,但它把"局部结构"和"同一特征可出现在不同位置"这些常识都交给训练去慢慢学,因此参数更多、数据需求更高、泛化也更吃力。
+
+## 3. CNN 把图像先验写进网络结构
+
+CNN 的核心动机,就是把上面的图像常识直接写进层的设计:
+
+- **局部连接**:一个输出只看输入中的一小块区域,例如 $3\times3$ 像素;
+- **参数共享**:同一个卷积核在整张图上滑动,用同一组权重检测同一种局部特征;
+- **保留位置**:输出不是一个孤立神经元,而是一张特征图,记录"这个特征在什么位置出现"。
+
+![同一个手写数字输入:MLP 展平成 784 维全连接,CNN 用 3×3 卷积核保留局部空间结构](../../assets/cnn-transition/mlp-to-cnn-digit.png)
+
+拿手写数字里的"竖笔画"举例。MLP 若想检测某个位置的竖笔画,一个隐藏单元通常要给 $784$ 个像素都配权重;如果竖笔画换到另一个位置,它还要再学一套位置相关的权重模式。
+
+CNN 则用一个小卷积核表示"局部竖边缘 / 竖笔画"检测器。例如一个 $3\times3$ 核只需要 $9$ 个权重。它从图像左上角滑到右下角,每到一个位置只看附近 $3\times3$ 像素,计算一次局部加权和。若不加 padding、stride 为 1,一张 $28\times28$ 图经过一个 $3\times3$ 卷积核会得到 $26\times26$ 的特征图:
+
+$$
+28\times28 \xrightarrow{3\times3\ \text{kernel}} 26\times26
+$$
+
+这里要特别分清三种数量:
+
+- **输出激活数**:从 $28\times28$ 到 $26\times26$,确实没有少很多;如果使用 padding,甚至可以保持 $28\times28$。第一层卷积的主要目标不是压缩图像,而是生成"局部模式在哪里出现"的响应图。
+- **前向计算次数**:一个 $3\times3$ 核会在 $26\times26$ 个位置各算一次,所以乘加次数是 $26\times26\times9=6084$,不是只算 9 次。
+- **可训练参数数**:这 $6084$ 次计算复用的是同一组 $3\times3$ 权重,所以可训练参数只有 $9$ 个(再加一个偏置)。这才是和全连接差异最大的地方。
+
+这张特征图的每个位置都回答同一个问题:"这里附近像不像这个卷积核要找的局部模式?" 于是同一条小边缘无论出现在图像上方、左侧还是右下方,都可以由同一个卷积核检测出来。
+
+## 4. 网络连接效果的具体对比
+
+为了把对比说清楚,假设 MLP 和 CNN 都产生 $26\times26=676$ 个局部响应:
+
+| | MLP 全连接层 | CNN 卷积层 |
+|---|---|---|
+| 输出激活数 | $676$ 个输出单元 | $26\times26=676$ 个特征图位置 |
+| 每个输出看哪里 | 全部 $784$ 个像素 | 附近 $3\times3=9$ 个像素 |
+| 可训练参数 | $784\times676=529984$ | $3\times3=9$(加 1 个偏置) |
+| 前向乘加量 | 约 $529984$ 次 | $26\times26\times9=6084$ 次 |
+| 参数是否共享 | 不共享;每个输出位置一套权重 | 共享;同一个核扫完整张图 |
+
+所以你看到的没错:卷积层的输出格子数没有比输入少多少。CNN 这里真正减少的是**每个输出的连接范围**和**独立可训练参数数量**。
+
+如果一层 CNN 有 $8$ 个 $3\times3$ 卷积核,灰度图输入通道为 1,参数量大约是:
+
+$$
+3\times3\times1\times8+8=80
+$$
+
+这里的 $+8$ 是每个卷积核一个偏置;输出激活数则是 $26\times26\times8=5408$。如果用全连接层也输出 $5408$ 个响应,仅权重就有:
+
+$$
+784\times5408=4239872
+$$
+
+如果 MLP 只设 $128$ 个隐藏单元,那参数是 $784\times128=100352$,但它输出的就不是一张保留位置的特征图,而是 128 个全局隐藏特征。两者比较的对象已经变了。
+
+图片越大,这种差别越明显。对一张 $1000\times1000$ 的灰度图,一个 $3\times3$ 卷积核仍然只有 $9$ 个权重;但如果全连接层要为每个空间位置都输出一个响应,参数量会接近"输入像素数 $\times$ 输出位置数",数量级会变得极大。
+
+这不是说 CNN 永远比 MLP 好,而是说明:在图像任务上,CNN 用很少的参数表达了更合适的结构假设。
+
+## 5. 从 MLP 学到 CNN,该抓住什么
+
+从学习脉络看,不必把 CNN 当作完全陌生的新模型。它仍然沿用 MLP 已经建立的训练闭环:
+
+$$
+\text{forward}\rightarrow \text{loss}\rightarrow \text{backward}\rightarrow \text{update}
+$$
+
+真正变化的是**层的前向计算方式**:
+
+- MLP 层:每个神经元对上一层全部输入做加权和;
+- CNN 层:每个卷积核对局部窗口做加权和,并在全图复用同一组权重。
+
+因此从 MLP 到 CNN 的过渡可以这样记:
+
+> MLP 让我们理解"多层非线性函数可以学习复杂关系";CNN 让我们理解"面对图像这种网格数据,把局部连接和参数共享写进结构,会比纯全连接更高效"。
+
+## 6. 后续学习顺序
+
+读完这篇后,再进入 [卷积神经网络 CNN](node:cnn) 主文时,重点按这个顺序理解:
+
+1. 图像表示:$H\times W\times C$。
+2. 卷积核:局部窗口里的加权和。
+3. 特征图:某个局部模式在各个位置的响应。
+4. 多通道与多卷积核:一层同时检测多类局部特征。
+5. padding / stride:控制输出尺寸和滑动方式。
+6. 池化:降低分辨率,增强小位移鲁棒性。
+7. CNN 分类器:卷积层提特征,末端用全连接 / softmax 做分类。
+
+---
+### 参考链接
+- [3Blue1Brown:But what is a Neural Network?](https://www.3blue1brown.com/lessons/neural-networks/)
+- [d2l 第 6 章 卷积神经网络](https://zh.d2l.ai/chapter_convolutional-neural-networks/index.html)
+</script>
+<script type="text/markdown" data-node="cnnprinciples">
+# CNN 原理:完整课件脉络
+
+> 本篇按李宏毅 CNN 课件 `cnn_v4.pdf` 的 1-35 页顺序整理,并用 d2l 卷积章节校对术语。核心主线是:图像分类若直接全连接会忽略图像结构;CNN 通过**局部感受野**、**参数共享**、**多个 filters**、**多层卷积**和**池化**把图像先验写进模型。
+
+![课件封面:Convolutional Neural Network](../../assets/cnn-principles/cnn-lee-page1.png)
+
+## 1. 从图像分类任务出发
+
+图像分类的目标是:输入一张固定大小的图像,输出每个类别的分数或概率,再用交叉熵衡量预测和真实标签的差距。这个任务本身和 softmax 分类一致,区别在于输入不是普通向量,而是有空间结构的图像。
+
+![图像分类:输入图像,模型输出类别概率,用 cross entropy 训练](../../assets/cnn-principles/cnn-lee-page2.png)
+
+彩色图像可以看成一个三维张量:
+
+$$
+H\times W\times C
+$$
+
+其中 $H,W$ 是高和宽,$C$ 是通道数。课件里用 $100\times100$ 彩色图说明:它不是一串无结构数字,而是三张通道图叠在一起,每个数表示某个位置某个通道的强度。
+
+![彩色图像是 3-D tensor:高、宽、通道](../../assets/cnn-principles/cnn-lee-page3.png)
+
+如果把 $100\times100\times3$ 直接展平成向量再接全连接层,第一层参数会非常大。课件用 $1000$ 个神经元举例,参数量达到 $3\times10^7$ 量级,于是提出问题:图像处理真的需要 fully connected 吗?
+
+![全连接处理图像会产生巨大参数量,引出是否必须 fully connected](../../assets/cnn-principles/cnn-lee-page4.png)
+
+这一页是 CNN 动机的关键:不是说全连接完全不能做图像分类,而是它没有利用图像的两个强先验:
+
+- 重要模式通常是局部的;
+- 同一模式可能出现在不同位置。
+
+## 2. Observation 1:重要模式小于整张图
+
+人识别鸟时,常常不是先把整张图每个像素都等量看一遍,而是注意到一些关键局部:鸟喙、眼睛、轮廓、羽毛纹理。课件先用直观图说明:图像分类可以先找关键 pattern。
+
+![Observation 1:人也可能先识别关键局部模式](../../assets/cnn-principles/cnn-lee-page5.png)
+
+课件中间用一个网络迷因图做过渡,强调"看起来像鸟"往往来自局部视觉线索。这页不是数学推导,但它的作用是把抽象模型拉回直观经验。
+
+![直观过渡:局部视觉线索可能主导识别结果](../../assets/cnn-principles/cnn-lee-page6.png)
+
+于是得到第一条简化:一个神经元不一定要看完整图像,只需要看某个局部区域。这就是**局部感受野**的直觉来源。
+
+![局部模式小于整张图,一个神经元不一定要看完整图像](../../assets/cnn-principles/cnn-lee-page7.png)
+
+## 3. Simplification 1:局部感受野
+
+在全连接层里,每个神经元都连接全部输入;在 CNN 里,每个输出位置只看输入中的一个小窗口,这个窗口叫**感受野**。
+
+![Simplification 1:每个神经元只连接一个局部 receptive field](../../assets/cnn-principles/cnn-lee-page8.png)
+
+课件随后说明:感受野可以有不同大小、可以重叠、也不一定是正方形;但典型设置会让许多局部窗口滑过整张图。
+
+![感受野可以重叠,不同神经元看不同局部区域](../../assets/cnn-principles/cnn-lee-page9.png)
+
+典型设置包括:
+
+- kernel size:局部窗口大小,如 $3\times3$;
+- stride:窗口每次滑动几格;
+- padding:边界是否补零;
+- all channels:卷积核通常跨过输入的全部通道。
+
+![典型设置:kernel size、stride、padding、overlap、all channels](../../assets/cnn-principles/cnn-lee-page10.png)
+
+若输入是单通道图像,一个 $3\times3$ 局部窗口的输出可以写成:
+
+$$
+y_{i,j}=\sum_{u=0}^{2}\sum_{v=0}^{2}K_{u,v}X_{i+u,j+v}+b
+$$
+
+如果输入有 $C$ 个通道,卷积核也要有 $C$ 个通道:
+
+$$
+K\in\mathbb R^{3\times3\times C}
+$$
+
+## 4. Observation 2:同一模式会出现在不同位置
+
+只做局部连接还不够。因为同一种模式可能出现在图像不同位置,例如鸟喙可以在左上、右下或中间。如果每个局部位置都各自学习一套"鸟喙检测器",仍然浪费参数。
+
+![Observation 2:同一模式可能出现在不同区域](../../assets/cnn-principles/cnn-lee-page11.png)
+
+于是得到第二条简化:**参数共享**。不同位置的神经元如果在检测同一种模式,就可以使用同一组参数。
+
+![Simplification 2:不同位置共享同一组参数](../../assets/cnn-principles/cnn-lee-page12.png)
+
+注意,共享参数并不是说两个神经元输入值相同;它们看的是不同位置的局部窗口,但使用同一组权重去做同一种检测。
+
+![参数共享:不同输入局部窗口,相同权重模式](../../assets/cnn-principles/cnn-lee-page13.png)
+
+典型设置中,每个局部位置会有一组神经元,不同位置的对应神经元共享参数。
+
+![参数共享的典型设置:不同 receptive fields 上有同组参数](../../assets/cnn-principles/cnn-lee-page14.png)
+
+把共享参数的一组神经元换个说法,就是一个 **filter**。多个 filter 就代表多种局部模式检测器。
+
+![多个 filters:同一组 filter 在不同位置复用](../../assets/cnn-principles/cnn-lee-page15.png)
+
+课件把 CNN 相比全连接的收益总结为两点:
+
+- 局部感受野:局部模式小于整张图;
+- 参数共享:同一模式会出现在不同区域。
+
+![卷积层收益:局部感受野 + 参数共享](../../assets/cnn-principles/cnn-lee-page16.png)
+
+## 5. Filter 视角:卷积层如何产生 feature map
+
+前面是从神经元视角讲 CNN。接下来换成 filter 视角更直观:一个 filter 是一个小张量,如 $3\times3\times C$,负责检测一种小模式。
+
+![Filter 视角:每个 filter 检测一个小模式](../../assets/cnn-principles/cnn-lee-page17.png)
+
+以单通道 $6\times6$ 图像为例,课件给出两个 $3\times3$ filters。filter 里的数值都是模型要学习的参数,不是人工固定的模板。
+
+![卷积示例:输入图像与两个 filters](../../assets/cnn-principles/cnn-lee-page18.png)
+
+filter 在图像上滑动,每个位置做局部加权求和,得到一个输出值。stride 为 1 时,它会逐格移动。
+
+![filter 在图像上滑动,每个位置产生一个响应](../../assets/cnn-principles/cnn-lee-page19.png)
+
+对每个 filter 都做同样过程,就会得到一张 feature map。多个 filters 产生多张 feature maps,也就是输出的多个通道。
+
+![每个 filter 产生一张 feature map](../../assets/cnn-principles/cnn-lee-page20.png)
+
+如果一层有 64 个 filters,输出就可以看成一张有 64 个通道的"新图像"。这不是原始 RGB 图像,而是 64 种局部模式的响应图。
+
+![一层卷积输出可以看成有多个通道的新 image](../../assets/cnn-principles/cnn-lee-page21.png)
+
+## 6. 多层卷积:在 feature maps 上继续卷积
+
+第二层卷积的输入不再是原始像素,而是上一层产生的多通道 feature maps。若上一层输出 64 个通道,下一层的 filter 尺寸就可能是 $3\times3\times64$。
+
+![多层卷积:下一层 filter 的深度等于上一层通道数](../../assets/cnn-principles/cnn-lee-page22.png)
+
+多层卷积让网络可以逐层组合特征:
+
+- 第一层可能学边缘、颜色变化、简单纹理;
+- 中间层组合成角点、笔画、局部形状;
+- 更深层组合成物体部件和类别相关特征。
+
+![多层卷积:由浅层局部响应继续组合成高层特征](../../assets/cnn-principles/cnn-lee-page23.png)
+
+## 7. 两种故事其实是同一件事
+
+课件接着对比"神经元版本"和"filter 版本":一个是说不同位置的神经元共享参数,一个是说同一个 filter 在输入图像上卷积。两者是同一件事的两种描述。
+
+![神经元视角与 filter 视角的对照](../../assets/cnn-principles/cnn-lee-page24.png)
+
+从神经元视角看:不同 receptive fields 上的神经元共享参数。
+
+![神经元视角:不同 receptive fields 共享参数](../../assets/cnn-principles/cnn-lee-page25.png)
+
+从 filter 视角看:同一个 filter 在整张输入图像上滑动。
+
+![两种故事等价:神经元只看局部 + filter 扫过全图](../../assets/cnn-principles/cnn-lee-page26.png)
+
+这一步很重要:卷积并不是额外神秘操作,而是"局部连接 + 参数共享"的紧凑表示。
+
+## 8. Observation 3:适度下采样不改变对象
+
+第三个观察是:对许多图像分类任务,适度降低分辨率不会改变物体类别。鸟缩小后仍然是鸟,猫缩小后仍然是猫。
+
+![Observation 3:适度 subsampling 不改变对象类别](../../assets/cnn-principles/cnn-lee-page27.png)
+
+这引出 pooling。最大池化会在一个局部区域里取最大值:
+
+$$
+y_{i,j}=\max_{(u,v)\in \Omega_{i,j}}x_{u,v}
+$$
+
+![Max Pooling:每个局部区域取最大响应](../../assets/cnn-principles/cnn-lee-page28.png)
+
+池化的作用:
+
+- 降低 feature map 的空间尺寸;
+- 减少后续计算;
+- 增强对小范围位移的鲁棒性;
+- 扩大后续层间接看到的原图范围。
+
+卷积层和池化层可以交替堆叠,逐步提取特征并降低空间分辨率。
+
+![卷积层 + 池化层可以重复堆叠](../../assets/cnn-principles/cnn-lee-page29.png)
+
+## 9. 完整 CNN:卷积/池化提特征,全连接分类
+
+经典图像分类 CNN 可以概括为:
+
+$$
+\text{image}\rightarrow \text{conv/pool blocks}\rightarrow \text{flatten}\rightarrow \text{fully connected}\rightarrow \text{softmax}
+$$
+
+![完整 CNN:Convolution、Pooling、Flatten、Fully Connected、Softmax](../../assets/cnn-principles/cnn-lee-page30.png)
+
+这条结构线和 MLP 的关系是:
+
+| 阶段 | 作用 |
+|---|---|
+| 卷积层 | 学局部模式检测器 |
+| 多个 filters | 同时检测多种局部模式 |
+| 多层卷积 | 从小模式组合成更高层模式 |
+| 池化 / 下采样 | 降低分辨率,增强小位移鲁棒 |
+| 全连接 / softmax | 基于提取出的特征做最终分类 |
+
+## 10. 应用:围棋与其他序列任务
+
+课件最后说明 CNN 不只用于自然图像。围棋棋盘也可以看成 $19\times19$ 的二维结构,每个位置有黑子、白子、空位等通道。全连接也能用,但 CNN 更适合利用局部棋形和位置复用。
+
+![应用:围棋棋盘可以看成 image-like input](../../assets/cnn-principles/cnn-lee-page31.png)
+
+围棋里同样存在 CNN 的前两个观察:
+
+- 局部棋形小于整张棋盘;
+- 相似棋形可出现在不同区域。
+
+![为什么 CNN 可用于围棋:局部模式与位置复用](../../assets/cnn-principles/cnn-lee-page32.png)
+
+但池化不一定适合围棋,因为棋盘上的精确位置关系很重要。课件用 AlphaGo 不使用 pooling 提醒:池化是常见工具,不是 CNN 的必选件。
+
+![围棋任务中 pooling 未必合适,因为位置精度很重要](../../assets/cnn-principles/cnn-lee-page33.png)
+
+CNN 也可以扩展到语音和自然语言等领域。关键不在于输入是不是照片,而在于输入是否有局部结构、模式复用和层级组合。
+
+![更多应用:Speech 与 Natural Language Processing](../../assets/cnn-principles/cnn-lee-page34.png)
+
+最后,课件提醒 CNN 本身并不天然对缩放和旋转不变,通常需要数据增强或专门结构,例如 Spatial Transformer Layer。
+
+![CNN 对缩放和旋转不天然不变,可用数据增强或空间变换层](../../assets/cnn-principles/cnn-lee-page35.png)
+
+## 11. 和 d2l 标准术语对齐
+
+把课件直觉和 d2l 术语合起来:
+
+| 课件直觉 | d2l / 标准术语 | 作用 |
+|---|---|---|
+| 神经元只看一小块 | receptive field / kernel | 局部连接 |
+| 不同位置共享检测器 | parameter sharing | 减少参数,复用模式 |
+| filter 扫过整张图 | convolution / cross-correlation | 生成 feature map |
+| 多个 filters | output channels | 同时检测多种特征 |
+| 多层卷积 | hierarchical features | 低层到高层组合 |
+| pooling | downsampling | 降低分辨率,增强鲁棒性 |
+
+## 应掌握的要点
+
+- 图像分类输入是 $H\times W\times C$,不是普通无结构向量;
+- 全连接可以训练,但参数大且没有利用图像先验;
+- CNN 的三个核心观察是:局部模式小、模式位置可变、适度下采样常不改类别;
+- 局部感受野让神经元只看一小块;
+- 参数共享让同一个 filter 在全图复用;
+- 多个 filters 产生多张 feature maps;
+- 多层卷积在 feature maps 上继续组合更复杂的特征;
+- pooling 常用于下采样,但不一定适合所有任务;
+- 完整 CNN 通常是卷积/池化提特征,末端分类器输出类别概率。
+
+---
+### 参考链接
+- 李宏毅机器学习 2021:[CNN 课程视频](https://www.youtube.com/watch?v=OP5HcXJg2Aw&list=PLJV_el3uVTsMhtt7_Y6sgTHGHp1Vb2P2J&index=9),课件截图来自本地 `cnn_v4.pdf`
+- d2l:[第 6 章 卷积神经网络](https://zh.d2l.ai/chapter_convolutional-neural-networks/index.html)
+</script>
+<script type="text/markdown" data-node="cnnmodels">
+# CNN 经典模型:从 LeNet 到 DenseNet
+
+> 本篇不追求论文细节,先建立 CNN 架构演进的主线:LeNet 给出基本范式;AlexNet 证明深 CNN 在大规模视觉任务上的威力;VGG 用规则卷积块堆深;NiN 用 $1\times1$ 卷积和全局平均池化减少全连接依赖;GoogLeNet 用多分支 Inception;ResNet 用残差连接解决深层训练;DenseNet 进一步强化特征复用。
+
+![CNN 经典模型结构脉络:LeNet、AlexNet、VGG、NiN、GoogLeNet、ResNet、DenseNet](../../assets/cnn-models/cnn-classic-models-overview.png)
+
+## 1. LeNet:卷积网络的基本范式
+
+LeNet 面向手写数字识别,结构可以简化为:
+
+$$
+\text{Conv}\rightarrow \text{Pool}\rightarrow \text{Conv}\rightarrow \text{Pool}\rightarrow \text{FC}\rightarrow \text{Output}
+$$
+
+它确立了早期 CNN 的基本套路:
+
+- 卷积层提取局部特征;
+- 池化层降低空间分辨率;
+- 后面用全连接层做分类。
+
+从学习角度看,LeNet 是理解 CNN 的起点:先不急着看很深的网络,先把"卷积提特征 + 分类器输出类别"这件事吃透。
+
+## 2. AlexNet:深度学习视觉爆发点
+
+AlexNet 把 CNN 扩展到更大规模的 ImageNet 图像分类任务,结构比 LeNet 更深更宽:
+
+$$
+\text{Conv/Pool blocks}\rightarrow \text{FC layers}\rightarrow \text{softmax}
+$$
+
+它的重要性主要在工程和历史层面:
+
+- 使用 ReLU,比 sigmoid / tanh 更适合训练深层网络;
+- 使用 dropout 缓解全连接层过拟合;
+- 在大数据和 GPU 训练条件下,证明深 CNN 可以大幅提升视觉分类效果。
+
+如果 LeNet 说明"CNN 可以识别简单图像",AlexNet 则说明"CNN 可以扩展到真实大规模视觉任务"。
+
+## 3. VGG:用规则小卷积核堆深网络
+
+VGG 的特点是结构非常规整:反复使用 $3\times3$ 卷积,每若干个卷积后接池化:
+
+$$
+\text{VGG block}=(3\times3\ \text{Conv})\times n+\text{Pool}
+$$
+
+它的直觉是:多个小卷积核堆叠,可以获得更大的有效感受野,同时引入更多非线性。例如两个 $3\times3$ 卷积叠起来,有效感受野接近 $5\times5$,但参数更少、层间多一次激活。
+
+VGG 很适合作为"卷积块"思想的入门:网络不再是一层一层零散设计,而是由重复模块组成。
+
+## 4. NiN:用 $1\times1$ 卷积增强通道混合
+
+NiN(Network in Network) 的核心是:在普通卷积之后接 $1\times1$ 卷积。$1\times1$ 卷积不看更大的空间窗口,但会在通道维度上做组合,相当于对每个空间位置做一个小型 MLP。
+
+它还引入了一个重要方向:用**全局平均池化**替代大量全连接层。
+
+$$
+\text{feature maps}\rightarrow \text{global average pooling}\rightarrow \text{class scores}
+$$
+
+这样可以减少参数,也让类别输出更直接地对应到特征图响应。
+
+## 5. GoogLeNet:Inception 多分支结构
+
+GoogLeNet 的核心组件是 Inception block。它不是只选一种卷积核大小,而是在同一层里并行使用多种分支:
+
+$$
+1\times1,\quad 3\times3,\quad 5\times5,\quad \text{pool}
+$$
+
+然后把这些分支的输出在通道维度拼接起来。直觉是:同一层同时看不同尺度的局部模式,让网络自己组合多尺度特征。
+
+Inception 里常用 $1\times1$ 卷积做降维,否则多分支会带来很大的计算量。它代表的设计思想是:不是简单加深或加宽,而是设计更高效的模块。
+
+## 6. ResNet:残差连接让深层网络更容易训练
+
+网络变深后,训练不一定更好。深层网络可能出现梯度传播困难、退化等问题。ResNet 的关键是残差块:
+
+$$
+\mathbf y=\mathbf x+F(\mathbf x)
+$$
+
+其中 $\mathbf x$ 是直接跳过若干层的输入,$F(\mathbf x)$ 是卷积分支学习到的残差。这样一来,模块不必从零学习完整映射,只要学习"在原输入基础上需要改什么"。
+
+从直觉上看:
+
+- 如果某些层暂时没学到有用东西,直接通路仍能把信息传下去;
+- 梯度也可以沿跳连路径更顺畅地传回浅层;
+- 因此网络可以堆得更深。
+
+ResNet 是现代 CNN 中非常核心的一条思想线,也影响了后来的 Transformer 残差连接设计。
+
+## 7. DenseNet:更彻底的特征复用
+
+DenseNet 进一步强化连接方式:一个 dense block 中,每一层都会接收前面所有层的输出。
+
+$$
+\mathbf x_l=H_l([\mathbf x_0,\mathbf x_1,\ldots,\mathbf x_{l-1}])
+$$
+
+这里 $[\cdot]$ 表示在通道维度拼接。它的核心想法是:
+
+- 浅层特征可以直接传到深层;
+- 不同层学到的特征被反复复用;
+- 梯度传播路径更多,训练更顺。
+
+DenseNet 可以看作从 ResNet 的"相加跳连"走向"拼接式密集连接"。
+
+## 8. 模型演进主线
+
+把这些模型串起来,可以看到 CNN 结构演进并不是随机堆名字:
+
+| 模型 | 解决的关键问题 | 结构关键词 |
+|---|---|---|
+| LeNet | CNN 基本图像分类流程 | Conv + Pool + FC |
+| AlexNet | 大规模视觉任务上训练深 CNN | ReLU、Dropout、更深更宽 |
+| VGG | 如何规则地加深网络 | 重复 $3\times3$ 卷积块 |
+| NiN | 如何减少大 FC、增强通道组合 | $1\times1$ 卷积、全局平均池化 |
+| GoogLeNet | 如何高效融合多尺度特征 | Inception 多分支 |
+| ResNet | 很深网络如何训练 | 残差连接 |
+| DenseNet | 如何更充分复用特征 | 密集连接 |
+
+学习时建议先按下面顺序抓主线:
+
+1. **LeNet**:明白 CNN 分类器长什么样;
+2. **AlexNet / VGG**:明白加深网络和卷积块;
+3. **NiN / GoogLeNet**:明白 $1\times1$ 卷积、多分支和全局平均池化;
+4. **ResNet / DenseNet**:明白深层网络里的连接设计。
+
+## 应掌握的要点
+
+- 经典 CNN 模型的差别主要在结构模块,不是训练闭环;
+- LeNet 是基本范式,AlexNet 是大规模视觉里程碑;
+- VGG 用重复小卷积块建立规则深网络;
+- NiN 强调 $1\times1$ 卷积和全局平均池化;
+- GoogLeNet 用 Inception 并行多尺度分支;
+- ResNet 用残差连接让深层训练更容易;
+- DenseNet 用密集连接强化特征复用。
+
+---
+### 参考链接
+- d2l:[第 7 章 现代卷积神经网络](https://zh.d2l.ai/chapter_convolutional-modern/index.html)
+- Medium:[CNN 經典模型 LeNet, AlexNet, VGG, NiN](https://medium.com/ching-i/%E5%8D%B7%E7%A9%8D%E7%A5%9E%E7%B6%B2%E7%B5%A1-cnn-%E7%B6%93%E5%85%B8%E6%A8%A1%E5%9E%8B-lenet-alexnet-vgg-nin-with-pytorch-code-84462d6cf60c)
 </script>
 <script type="text/markdown" data-node="rnn">
 # 循环神经网络 RNN
@@ -1407,7 +2163,7 @@ $$\frac{\partial L}{\partial W_1}
 $$\mathbf h_t=\sigma(W\mathbf h_{t-1}+U\mathbf x_t+\mathbf b),\qquad \mathbf y_t=V\mathbf h_t$$
 关键:$W,U,V$ 在**所有时间步共享**,参数量与序列长度无关。
 
-![RNN:折叠的自环 ↔ 按时间展开,隐藏状态沿时间传递](../../assets/rnn-unfold.png)
+![RNN:折叠的自环 ↔ 按时间展开,隐藏状态沿时间传递](../../assets/rnn/rnn-unfold.png)
 
 ## 3. 时间上展开与 BPTT
 
@@ -1425,7 +2181,7 @@ $$\mathbf h_t=\sigma(W\mathbf h_{t-1}+U\mathbf x_t+\mathbf b),\qquad \mathbf y_t
 
 **LSTM** 引入一条几乎不受阻的**细胞状态**(长期记忆传输带),并用**门**(sigmoid,输出 0~1)控制信息流:遗忘门决定丢弃多少旧记忆、输入门决定写入多少新信息、输出门决定输出多少。这让梯度能沿细胞状态稳定回传,显著缓解梯度消失。**GRU** 是其简化版(更少的门)。
 
-![LSTM:用门控保护细胞状态,缓解长依赖](../../assets/rnn-lstm.png)
+![LSTM:用门控保护细胞状态,缓解长依赖](../../assets/rnn/rnn-lstm.png)
 
 ## 应掌握的要点
 - 序列需要记忆;RNN 用隐藏状态 $\mathbf h_t$ 沿时间传递,**权重跨时间共享**;
@@ -1458,13 +2214,13 @@ RNN 把整段历史压在一个隐藏状态里逐步传递:远处信息易丢失
 $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V.$$
 除以 $\sqrt{d_k}$ 是防止点积过大把 softmax 推向饱和。两个零件都是旧识:打分核心 $QK^\top$ 就是 [线性代数 · 点积](node:linalg#点积) 的相似度,归一化用的 [softmax](node:softmax) 来自分类那一节——注意力是前面知识的直接组合。
 
-![注意力:Q 与各 K 点积打分 → softmax → 对 V 加权求和](../../assets/attn-qkv.png)
+![注意力:Q 与各 K 点积打分 → softmax → 对 V 加权求和](../../assets/transformer/attn-qkv.png)
 
 ### 3. 自注意力与多头
 
 **自注意力(self-attention)**:Q、K、V 都来自同一序列,于是序列内部两两互相关注,一步捕捉任意距离的依赖。
 
-![自注意力权重:每个词关注序列里哪些词](../../assets/attn-heatmap.png)
+![自注意力权重:每个词关注序列里哪些词](../../assets/transformer/attn-heatmap.png)
 
 **多头注意力**:并行做多组注意力(多个"头"),每头在不同子空间关注不同关系,再把结果拼接——类似 CNN 用多个卷积核提取不同特征。
 
@@ -1480,7 +2236,7 @@ $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\Big(\frac{QK^\top}{\s
 
 Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Add & Norm → 前馈网络 FFN → Add & Norm**;其中 Add 是**残差连接**(缓解深层训练,与 [卷积神经网络](node:cnn) 里 ResNet 同一思路),Norm 是层归一化。
 
-![Transformer 编码器块:自注意力 + FFN + 残差 + 层归一化](../../assets/transformer-block.png)
+![Transformer 编码器块:自注意力 + FFN + 残差 + 层归一化](../../assets/transformer/transformer-block.png)
 
 编码器、解码器都由这种块堆成;GPT 这类生成模型用的是**带掩码的解码器**堆叠(每个位置只能看到左侧已生成的词)。
 
@@ -1501,6 +2257,69 @@ Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Ad
 - [注意力机制](https://zh.wikipedia.org/wiki/注意力机制) · [Transformer 模型](https://zh.wikipedia.org/wiki/Transformer模型)(维基百科)
 - [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) · [The Annotated Transformer](http://nlp.seas.harvard.edu/annotated-transformer/)
 - 本库内链:[线性代数 · 点积](node:linalg#点积) · [概率 · 交叉熵](node:prob#交叉熵) · [循环神经网络](node:rnn)
+</script>
+<script type="text/markdown" data-node="embed">
+# 输入表示:词元、嵌入与位置编码
+
+> 父篇 [注意力 → Transformer](node:attn) 讲的注意力,算的是**向量之间**的关系:点积打分、softmax 加权。但语言不是向量,而是一串离散符号(字、词)。所以在注意力开始工作之前,必须先把一段文本变成一串**带位置的向量**。这一步分三小步:**分词**(把文本切成词元)、**嵌入**(把每个词元查成一个稠密向量)、**位置编码**(把"第几个"注入向量)。记号锚定 d2l 第 10–11 章。
+
+![把文本变成带位置的向量序列:文本 → 词元 → id → 嵌入 → 加位置编码 → 输入向量](../../assets/transformer-inputs/embed-pipeline.png)
+
+## 1. 分词:把文本切成词元(token)
+
+模型的词表(vocabulary)是有限的,而文本千变万化。**分词**把一段文本切成词表里的基本单位——**词元(token)**,再把每个词元映射成一个整数 **id**。
+
+切分粒度有三种取舍:
+
+- **字符级**:词表极小,但序列很长、单个字符语义弱;
+- **词级**:语义完整,但词表巨大,且总会遇到没见过的词(未登录词,OOV);
+- **子词级(subword)**:折中方案,把常见词整体保留、把罕见词拆成更小的部件。GPT 等模型采用的 **BPE(字节对编码)** 即属此类——从字符出发,反复把最高频的相邻对合并成新词元,直到词表达到设定大小。
+
+子词级是现代语言模型的主流:词表可控,又几乎不会遇到完全无法表示的输入。本篇不展开 BPE 的合并算法,只需记住其结果:**一段文本 → 一串 token id**。
+
+## 2. 嵌入:把词元 id 查成稠密向量
+
+📌 **前置承接**:[线性代数 · 矩阵](node:linalg#矩阵) · [逻辑回归 / softmax 回归](node:softmax)
+
+token id 只是个编号,本身没有语义距离(id 88 和 89 并不更相似)。要让模型能计算"词与词有多像",得把每个 id 换成一个**稠密向量**。
+
+做法是准备一张**嵌入表(embedding matrix)** $E\in\mathbb R^{|V|\times d}$:词表有 $|V|$ 个词元,每个词元占表中一行,行长为嵌入维度 $d$(即 $d_{\text{model}}$)。"查表"就是取出第 id 行:
+$$\mathbf e_{\text{id}}=E[\text{id}]=\text{one-hot}(\text{id})^{\top}E.$$
+右边把它写成"one-hot 向量乘矩阵",正是 [线性代数 · 矩阵](node:linalg#矩阵) 里"矩阵乘法对行/列做选择与加权"的特例——查表只是一次特别简单的矩阵运算。
+
+关键在于:**$E$ 的每个数都是可学习参数**。初始随机,训练中与其它参数一起被梯度下降更新,最终让语义相近的词元落在相近的向量位置。这就是把"离散符号"接进"连续可微网络"的入口。
+
+## 3. 位置编码:把"第几个"注入向量
+
+📌 **前置承接**:[注意力 → Transformer · 位置编码](node:attn#位置编码)
+
+到这里,一段文本已变成一串词嵌入向量,但还差一样东西:**顺序**。父篇指出过,注意力本身是**无序**的——打乱输入顺序,输出只是跟着换位,词与词的关系不变。可是"猫追狗"和"狗追猫"语义截然不同。于是要显式地把**位置信息**加进每个向量。
+
+最经典的是**正弦位置编码**:给位置 $pos$、维度按对编号 $k$,赋一组固定值
+$$PE(pos,2k)=\sin\!\Big(\frac{pos}{10000^{2k/d}}\Big),\qquad PE(pos,2k+1)=\cos\!\Big(\frac{pos}{10000^{2k/d}}\Big).$$
+每一对维度用一个频率:低维频率高(波长短)、高维频率低(波长长)。于是每个位置都得到一个**独一无二**的编码向量,且不同位置间的相对关系能被注意力线性地利用。
+
+![正弦位置编码:左为 PE 矩阵热图,右为不同维度随位置的取值——低维高频、高维低频](../../assets/transformer-inputs/pos-encoding.png)
+
+另一种常见做法是**可学习位置嵌入**:像词嵌入一样,再准备一张"位置 → 向量"的可学习表(GPT 系列即用此法)。两种方式都把位置变成一个与词嵌入同维的向量。
+
+最后把它**加**到词嵌入上(不是拼接):
+$$\mathbf x_{pos}=\mathbf e_{\text{id}(pos)}+PE(pos).$$
+于是每个位置得到一个**既含语义、又含位置**的向量;整段文本成为一个形状为(序列长度 $\times\ d$)的矩阵,这才是送进 [掩码自注意力](node:masked) 的真正输入。
+
+## 应掌握的要点
+
+- 注意力算的是向量间关系,而语言是离散符号,故须先把"文本 → 带位置的向量序列";
+- **分词**把文本切成词元(token)再映射成 id;子词(如 BPE)兼顾词表大小与未登录词,是主流;
+- **嵌入**用一张可学习的表 $E$ 把 id 查成稠密向量,本质是 one-hot 乘矩阵;语义相近的词元被训练到相近位置;
+- **位置编码**把顺序注入向量(因为注意力本身无序):正弦编码或可学习位置嵌入,**加**到词嵌入上;
+- 三步合起来:输入 = 词嵌入 + 位置编码,形状(序列长度 $\times\ d$),送入掩码自注意力。
+
+---
+### 参考链接
+- [d2l 10.6 自注意力与位置编码](https://zh.d2l.ai/chapter_attention-mechanisms/self-attention-and-positional-encoding.html)
+- 本库内链:[注意力 → Transformer](node:attn) · [线性代数 · 矩阵](node:linalg#矩阵) · [逻辑回归 / softmax 回归](node:softmax) · [掩码自注意力](node:masked) · [语言建模](node:lm)
+- 配图复现:[实验 · Transformer图示](node:lab)(`embed-pipeline.png` 为示意、`pos-encoding.png` 为真实计算)
 </script>
 <script type="text/markdown" data-node="lab">
 # 🧪 实验
@@ -1529,7 +2348,7 @@ Transformer 由若干相同的**块**堆叠,每块 = **多头自注意力 → Ad
 每个实验开始前先对齐设计:确认目标、数据、需观察的现象,以及与前序内容的衔接。
 </script>
 <script>
-const TREE=[{"id": "refs", "label": "📚 参考资料"}, {"id": "math", "label": "🧮 数学基础", "children": [{"id": "prob", "label": "概率基础"}, {"id": "linalg", "label": "线性代数"}, {"id": "calc", "label": "微积分:导数、梯度与矩阵求导", "children": [{"id": "mathexample", "label": "例子:Xw、均方误差与梯度下降"}]}]}, {"id": "ml", "label": "🤖 机器学习基础", "children": [{"id": "mlwhat", "label": "机器学习概述"}, {"id": "linreg", "label": "线性回归"}, {"id": "softmax", "label": "逻辑回归 / softmax 回归"}]}, {"id": "dl", "label": "🧠 深度学习", "children": [{"id": "mlp", "label": "感知机 → 多层感知机", "children": [{"id": "geometry", "label": "线性分类的几何视角"}, {"id": "nonlinear", "label": "MLP 引入非线性的作用"}, {"id": "training", "label": "训练:线性模型 → 深度网络"}]}, {"id": "backprop", "label": "反向传播与计算图"}, {"id": "cnn", "label": "卷积神经网络 CNN"}, {"id": "rnn", "label": "循环神经网络 RNN"}, {"id": "attn", "label": "注意力 → Transformer"}]}, {"id": "lab", "label": "🧪 实验"}];
+const TREE=[{"id": "refs", "label": "📚 参考资料"}, {"id": "math", "label": "🧮 数学基础", "children": [{"id": "prob", "label": "概率基础"}, {"id": "linalg", "label": "线性代数"}, {"id": "calc", "label": "微积分:导数、梯度与矩阵求导", "children": [{"id": "mathexample", "label": "例子:Xw、均方误差与梯度下降"}]}]}, {"id": "ml", "label": "🤖 机器学习基础", "children": [{"id": "mlwhat", "label": "机器学习概述"}, {"id": "linreg", "label": "线性回归"}, {"id": "softmax", "label": "逻辑回归 / softmax 回归"}]}, {"id": "dl", "label": "🧠 深度学习", "children": [{"id": "mlp", "label": "感知机 → 多层感知机", "children": [{"id": "geometry", "label": "线性分类的几何视角"}, {"id": "nonlinear", "label": "MLP 引入非线性的作用"}, {"id": "training", "label": "训练:线性模型 → 深度网络"}, {"id": "mlptrain", "label": "MLP 训练:batch、epoch 与参数更新"}]}, {"id": "backprop", "label": "反向传播与计算图"}, {"id": "cnn", "label": "卷积神经网络 CNN", "children": [{"id": "mlp2cnn", "label": "从 MLP 到 CNN"}, {"id": "cnnprinciples", "label": "CNN 原理"}, {"id": "cnnmodels", "label": "CNN 经典模型"}]}, {"id": "rnn", "label": "循环神经网络 RNN"}, {"id": "attn", "label": "注意力 → Transformer", "children": [{"id": "embed", "label": "输入表示:词元、嵌入与位置编码"}, {"id": "masked", "label": "掩码自注意力"}, {"id": "lm", "label": "语言建模:下一个 token 预测"}]}]}, {"id": "lab", "label": "🧪 实验"}];
 const CONTENT={},LABEL={},PARENT={};
 document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
 (function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");

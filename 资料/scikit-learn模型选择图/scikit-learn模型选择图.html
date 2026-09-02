@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>scikit-learn 模型选择图</title>
+<style>
+  :root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#62a8ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  main{max-width:1180px;margin:0 auto;padding:42px 28px 80px}
+  h1{font-size:34px;line-height:1.25;margin:0 0 12px}
+  h2{font-size:24px;margin:38px 0 12px}
+  p{color:#d8d1c6;margin:10px 0}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .note{border-left:4px solid var(--accent);background:#1d1b17;padding:12px 16px;margin:18px 0;color:#cfc8bd}
+  figure{margin:22px 0 34px;background:#f8f8f5;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto}
+  figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+  figcaption{color:#5f5a50;text-align:center;font-size:14px;margin-top:10px}
+  ul{padding-left:1.4em}
+  li{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>scikit-learn 模型选择图</h1>
+  <p>这张图用于在建模初期根据任务类型、样本量和数据形态，快速收敛到一组候选模型。</p>
+  <p class="note">英文官方图作为主依据；中文汉化图用于快速阅读和对照。实际建模仍需要结合数据规模、特征类型、评价指标和实验结果选择模型。</p>
+
+  <h2>英文官方版</h2>
+  <p>来源：<a href="https://scikit-learn.org/stable/machine_learning_map.html" target="_blank" rel="noopener">scikit-learn：Choosing the right estimator</a></p>
+  <figure>
+    <img src="assets/ml_map_en.svg" alt="scikit-learn Choosing the right estimator">
+    <figcaption>scikit-learn 官方模型选择图</figcaption>
+  </figure>
+
+  <h2>中文汉化版</h2>
+  <p>来源：<a href="https://www.cda.cn/discuss/post/details/5ee3078fe5d9ba154e6179b6" target="_blank" rel="noopener">CDA：Scikit-Learn 算法选择路径图</a>；中文参考页：<a href="https://sklearn123.com/SecondSection/2.4-Choosing%20the%20right%20estimator/" target="_blank" rel="noopener">sklearn 中文文档：选择正确的估计器</a></p>
+  <figure>
+    <img src="assets/ml_map_zh.png" alt="scikit-learn 算法选择路径图中文汉化版">
+    <figcaption>scikit-learn 算法选择路径图中文汉化版</figcaption>
+  </figure>
+
+  <h2>使用提示</h2>
+  <ul>
+    <li>先判断任务：分类、回归、聚类、降维，还是只想观察数据结构。</li>
+    <li>再看数据条件：是否有标签、样本量大致多少、是否是文本数据。</li>
+    <li>图中给的是候选模型入口，不是最终答案；最终选择仍要通过验证集、交叉验证和业务指标确认。</li>
+    <li>如果候选模型效果不稳定，优先回到数据预处理、特征工程和评价方式检查。</li>
+  </ul>
+</main>
+</body>
+</html>

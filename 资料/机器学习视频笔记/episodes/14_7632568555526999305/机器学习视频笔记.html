@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 14 集: PCA 主成分分析</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 14 集: PCA 主成分分析</h1>
+<p class="meta">来源: 抖音视频《PCA 主成分分析》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7632568555526999305" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep14">返回系列总览</a></p>
+
+<h2>1. 本集定位: 高维特征太多怎么办</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 高维特征太多怎么办" src="selected_frames/01-high-dimensional-problem.jpg"/><figcaption>本集定位: 高维特征太多怎么办</figcaption></figure>
+<p class="">PCA 解决的是特征多、冗余高、可视化困难的问题。它属于无监督降维方法。</p>
+<h2>2. 传统降维方法</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="传统降维方法" src="selected_frames/02-traditional-dimensionality-reduction.jpg"/><figcaption>传统降维方法</figcaption></figure>
+<p class="">降维可以分为特征选择和特征提取。PCA 属于特征提取: 它把原特征组合成新的主成分。</p>
+<h2>3. 什么是 PCA</h2>
+<p class="meta">约 03:00</p>
+<figure><img alt="什么是 PCA" src="selected_frames/03-what-is-pca.jpg"/><figcaption>什么是 PCA</figcaption></figure>
+<p class="">PCA 寻找能保留数据最大方差的方向,用少数新坐标表示原始数据中的主要变化。</p>
+<h2>4. 身高体重例子</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="身高体重例子" src="selected_frames/04-height-weight.jpg"/><figcaption>身高体重例子</figcaption></figure>
+<p class="">当两个变量高度相关时,它们包含的信息有重叠。PCA 会找出最能代表整体变化的一条方向。</p>
+<h2>5. 寻找最佳代表方向</h2>
+<p class="meta">约 05:00</p>
+<figure><img alt="寻找最佳代表方向" src="selected_frames/05-best-direction.jpg"/><figcaption>寻找最佳代表方向</figcaption></figure>
+<p class="">第一主成分是数据投影后方差最大的方向。它尽量保留原数据的主要差异。</p>
+<h2>6. 房价地图例子</h2>
+<p class="meta">约 06:00</p>
+<figure><img alt="房价地图例子" src="selected_frames/06-house-map.jpg"/><figcaption>房价地图例子</figcaption></figure>
+<p class="">二维地理坐标或多维房价特征都可能存在冗余结构。PCA 用新轴重新表达数据。</p>
+<h2>7. PCA 的压缩结果</h2>
+<p class="meta">约 07:00</p>
+<figure><img alt="PCA 的压缩结果" src="selected_frames/07-compression-result.jpg"/><figcaption>PCA 的压缩结果</figcaption></figure>
+<p class="">压缩不是简单删除列,而是用主成分保留尽可能多的信息。保留多少主成分要看解释方差比例。</p>
+<h2>8. 方差与协方差</h2>
+<p class="meta">约 08:00</p>
+<figure><img alt="方差与协方差" src="selected_frames/08-variance-covariance.jpg"/><figcaption>方差与协方差</figcaption></figure>
+<p class="">方差衡量单个特征的变化范围,协方差衡量两个特征是否一起变化。PCA 的数学基础就在这里。</p>
+<h2>9. 数学流程总览</h2>
+<p class="meta">约 10:00</p>
+<figure><img alt="数学流程总览" src="selected_frames/09-math-flow.jpg"/><figcaption>数学流程总览</figcaption></figure>
+<p class="">PCA 的步骤可以概括为: 去中心化、计算协方差矩阵、求特征值和特征向量、选择主成分、投影数据。</p>
+<h2>10. 数据去中心化</h2>
+<p class="meta">约 11:00</p>
+<figure><img alt="数据去中心化" src="selected_frames/10-centering.jpg"/><figcaption>数据去中心化</figcaption></figure>
+<p class="">去中心化让每个特征均值为 0,避免均值位置影响协方差和方向判断。</p>
+<h2>11. 协方差矩阵</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="协方差矩阵" src="selected_frames/11-covariance-matrix.jpg"/><figcaption>协方差矩阵</figcaption></figure>
+<p class="">协方差矩阵描述所有特征之间的共同变化关系,它是 PCA 找方向的输入。</p>
+<h2>12. 特征值与特征向量</h2>
+<p class="meta">约 12:30</p>
+<figure><img alt="特征值与特征向量" src="selected_frames/12-eigen.jpg"/><figcaption>特征值与特征向量</figcaption></figure>
+<p class="">特征向量给出方向,特征值表示该方向上的方差大小。特征值越大,对应方向保留的信息越多。</p>
+<h2>13. 选择主成分并构建投影矩阵</h2>
+<p class="meta">约 14:00</p>
+<figure><img alt="选择主成分并构建投影矩阵" src="selected_frames/13-projection-matrix.jpg"/><figcaption>选择主成分并构建投影矩阵</figcaption></figure>
+<p class="">按特征值从大到小选择前几个特征向量,就得到投影矩阵。这个矩阵把原数据映射到低维空间。</p>
+<h2>14. 数据投影</h2>
+<p class="meta">约 15:30</p>
+<figure><img alt="数据投影" src="selected_frames/14-projection.jpg"/><figcaption>数据投影</figcaption></figure>
+<p class="">投影后得到的新数据维度更低,但仍尽量保留原数据的主要结构。</p>
+<h2>15. 实战结果: 2D 投影可视化</h2>
+<p class="meta">约 18:00</p>
+<figure><img alt="实战结果: 2D 投影可视化" src="selected_frames/15-pca-result.jpg"/><figcaption>实战结果: 2D 投影可视化</figcaption></figure>
+<p class="">PCA 常用于把高维数据压到 2D/3D 进行可视化。它不是分类器,但能帮助观察数据结构。</p>
+<h2>16. 随机森林 vs PCA</h2>
+<p class="meta">约 20:00</p>
+<figure><img alt="随机森林 vs PCA" src="selected_frames/16-random-forest-vs-pca.jpg"/><figcaption>随机森林 vs PCA</figcaption></figure>
+<p class="">PCA 是无监督降维,随机森林特征重要性是监督信号下的特征评估。两者回答的问题不同。</p>
+<h2>17. 总结与局限</h2>
+<p class="meta">约 21:00</p>
+<figure><img alt="总结与局限" src="selected_frames/17-summary.jpg"/><figcaption>总结与局限</figcaption></figure>
+<p class="">PCA 高效、可解释、适合线性降维,但只能捕捉线性结构,且主成分未必有直观业务含义。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>PCA: 用主成分压缩高维数据</code>。</li>
+<li>数学引用应落到线性代数的协方差矩阵、特征值、特征向量。</li>
+<li>实验建议用鸢尾花或手写数字先做 2D 可视化,再讨论信息损失。</li>
+</ul></main></body></html>

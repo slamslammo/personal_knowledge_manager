@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 11 集: 随机森林</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 11 集: 随机森林</h1>
+<p class="meta">来源: 抖音视频《随机森林: 决策树模型升级版》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7627346565849484607" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep11">返回系列总览</a></p>
+
+<h2>1. 本集定位: 用多棵树降低单棵树的不稳定</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 用多棵树降低单棵树的不稳定" src="selected_frames/01-tree-problem.jpg"/><figcaption>本集定位: 用多棵树降低单棵树的不稳定</figcaption></figure>
+<p class="">单棵决策树解释性强,但容易过拟合且对数据扰动敏感。随机森林用一组树投票来提升稳定性。</p>
+<h2>2. 核心思想: 集成学习</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="核心思想: 集成学习" src="selected_frames/02-ensemble-learning.jpg"/><figcaption>核心思想: 集成学习</figcaption></figure>
+<p class="">集成学习把多个弱模型组合成更强模型。随机森林属于 Bagging 思路: 多个模型独立训练,最后投票或平均。</p>
+<h2>3. 为什么叫随机森林</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="为什么叫随机森林" src="selected_frames/03-why-random-forest.jpg"/><figcaption>为什么叫随机森林</figcaption></figure>
+<p class="">森林来自很多棵树,随机来自两层随机: 样本随机和特征随机。正是这种随机性让树与树之间产生差异。</p>
+<h2>4. 样本随机: Bootstrap</h2>
+<p class="meta">约 03:00</p>
+<figure><img alt="样本随机: Bootstrap" src="selected_frames/04-bootstrap.jpg"/><figcaption>样本随机: Bootstrap</figcaption></figure>
+<p class="">每棵树从训练集中有放回抽样得到自己的训练数据。不同树看到的数据不同,因此错误也不完全相同。</p>
+<h2>5. 特征随机: Random Subspace</h2>
+<p class="meta">约 04:00</p>
+<figure><img alt="特征随机: Random Subspace" src="selected_frames/05-feature-randomness.jpg"/><figcaption>特征随机: Random Subspace</figcaption></figure>
+<p class="">每次分裂只从部分特征中选择最佳特征,让不同树形成不同视角,避免大家都长成同一棵树。</p>
+<h2>6. 袋外估计 OOB</h2>
+<p class="meta">约 05:00</p>
+<figure><img alt="袋外估计 OOB" src="selected_frames/06-oob.jpg"/><figcaption>袋外估计 OOB</figcaption></figure>
+<p class="">Bootstrap 会让部分样本没有被某棵树抽到,这些样本可以作为该树的临时验证集,形成 OOB 估计。</p>
+<h2>7. 算法工作流程</h2>
+<p class="meta">约 06:00</p>
+<figure><img alt="算法工作流程" src="selected_frames/07-workflow.jpg"/><figcaption>算法工作流程</figcaption></figure>
+<p class="">随机森林流程是: 抽样本、抽特征、训练多棵树、汇总投票。它把一棵高方差模型变成一个更稳的整体。</p>
+<h2>8. 代码实现: 鸢尾花分类</h2>
+<p class="meta">约 07:00</p>
+<figure><img alt="代码实现: 鸢尾花分类" src="selected_frames/08-iris-code.jpg"/><figcaption>代码实现: 鸢尾花分类</figcaption></figure>
+<p class="">视频用 sklearn 训练随机森林。实践上,它常被用作表格数据的强 baseline。</p>
+<h2>9. 评估结果</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="评估结果" src="selected_frames/09-evaluation.jpg"/><figcaption>评估结果</figcaption></figure>
+<p class="">随机森林通常能比单棵树更稳定,但也要继续用测试集、交叉验证和指标评估,不能只看训练准确率。</p>
+<h2>10. 特征重要性</h2>
+<p class="meta">约 08:30</p>
+<figure><img alt="特征重要性" src="selected_frames/10-feature-importance.jpg"/><figcaption>特征重要性</figcaption></figure>
+<p class="">随机森林可以给出特征重要性,帮助判断哪些变量对预测贡献更大。但重要性不等于因果关系。</p>
+<h2>11. 特征重要性可视化</h2>
+<p class="meta">约 09:30</p>
+<figure><img alt="特征重要性可视化" src="selected_frames/11-feature-importance-plot.jpg"/><figcaption>特征重要性可视化</figcaption></figure>
+<p class="">可视化特征重要性很适合做模型解释,尤其在表格数据项目里能帮助做特征筛选和业务沟通。</p>
+<h2>12. 核心优势</h2>
+<p class="meta">约 10:30</p>
+<figure><img alt="核心优势" src="selected_frames/12-advantages.jpg"/><figcaption>核心优势</figcaption></figure>
+<p class="">随机森林的优势是抗过拟合、对异常值较稳、能处理非线性关系,且默认效果往往不错。</p>
+<h2>13. 局限性</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="局限性" src="selected_frames/13-limitations.jpg"/><figcaption>局限性</figcaption></figure>
+<p class="">局限是模型体积较大、预测速度慢于单棵树、解释性弱于单棵树,并且在超高维稀疏数据上未必最佳。</p>
+<h2>14. 下一站: 梯度提升树家族</h2>
+<p class="meta">约 12:30</p>
+<figure><img alt="下一站: 梯度提升树家族" src="selected_frames/14-next-gbdt.jpg"/><figcaption>下一站: 梯度提升树家族</figcaption></figure>
+<p class="">随机森林是多棵树并行投票,GBDT/XGBoost 则是一棵接一棵纠错。两者都是树模型的重要分支。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>随机森林: Bagging 与多树投票</code>。</li>
+<li>正文重点讲两层随机、OOB、特征重要性、优缺点。</li>
+<li>要和下一节 Boosting 对比: 随机森林并行独立,GBDT 前后依赖。</li>
+</ul></main></body></html>

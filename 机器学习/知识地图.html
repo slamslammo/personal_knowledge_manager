@@ -1,0 +1,1476 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器学习 知识梳理</title>
+<style>
+  :root{--bg:#f7f7f4;--panel:#fff;--ink:#23211c;--sub:#6b6860;--line:#e3e0d8;--accent:#2f74d0;--ok:#1d9e75;--todo:#b9791a;--shadow:0 1px 3px rgba(0,0,0,.06)}
+  @media (prefers-color-scheme:dark){:root{--bg:#1c1b18;--panel:#26241f;--ink:#ece9e1;--sub:#a39e93;--line:#3a372f;--shadow:0 1px 3px rgba(0,0,0,.3)}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  header{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  header h1{margin:0;font-size:18px;font-weight:600}
+  header .note{font-size:12.5px;color:var(--sub)}
+  header .prog{margin-left:auto;font-size:12px;color:var(--sub)}
+  .wrap{display:flex;align-items:stretch;min-height:calc(100vh - 50px)}
+  aside{width:310px;flex:none;border-right:1px solid var(--line);padding:12px 8px;overflow:auto}
+  @media(max-width:760px){.wrap{flex-direction:column}aside{width:auto;border-right:none;border-bottom:1px solid var(--line)}}
+  .tnode{display:flex;align-items:center;gap:6px;padding:7px 9px;margin:3px 4px;border:1px solid transparent;border-radius:8px;cursor:pointer;font-size:14px}
+  .tnode:hover{background:var(--bg)}
+  .tnode.sel{background:var(--panel);border-color:var(--line);box-shadow:var(--shadow);font-weight:600}
+  .tnode .cv{width:14px;color:var(--sub);font-size:11px;flex:none;transition:transform .15s}
+  .tnode .cv.open{transform:rotate(90deg)}
+  .tnode .lbl{flex:1}
+  .tnode .chk{font-size:12px;color:var(--ok)}
+  .tnode.lvl0{font-weight:600;font-size:14.5px}
+  .kids{margin-left:6px;border-left:1px dashed var(--line)}
+  main{flex:1;overflow:auto;padding:22px 30px;max-width:880px}
+  main.wide{max-width:1180px}
+  .rdrhead{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .rdrhead .markbtn{margin-left:auto;font:12.5px/1 inherit;border:1px solid var(--line);background:var(--panel);color:var(--sub);border-radius:999px;padding:6px 12px;cursor:pointer}
+  .rdrhead .markbtn.done{color:var(--ok);border-color:var(--ok);background:rgba(29,158,117,.08)}
+  main h1{font-size:22px;margin:.2em 0 .5em} main h2{font-size:17px;margin:1.3em 0 .4em} main h3{font-size:15px;margin:1em 0 .3em;color:var(--sub)}
+  main p{margin:.5em 0} main ul,main ol{margin:.4em 0;padding-left:1.4em} main li{margin:.25em 0}
+  main code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.92em}
+  main blockquote{margin:.6em 0;padding:.5em .9em;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;color:var(--sub)}
+  main hr{border:none;border-top:1px solid var(--line);margin:1.4em 0}
+  main a{color:var(--accent)}
+  main img{max-width:100%;display:block;margin:.8em auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+  main pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto}
+  main .tw{overflow-x:auto;margin:.8em 0}
+  main table{border-collapse:collapse;width:100%;font-size:13.5px}
+  main th,main td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  main thead th{background:var(--bg);font-weight:600;white-space:nowrap}
+  main th:nth-child(1),main td:nth-child(1),main th:nth-child(2),main td:nth-child(2){white-space:nowrap}
+  main tbody tr:nth-child(even) td{background:rgba(127,127,127,.06)}
+  .atlas{margin:0 0 1.4em;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:var(--shadow)}
+  .atlas h2{margin:.1em 0 .25em;font-size:18px}
+  .atlas .hint{margin:0 0 12px;color:var(--sub);font-size:13px}
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow:visible;margin:12px 0 16px;padding-bottom:2px}
+  .flow a{display:inline-flex;align-items:center;min-height:34px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-weight:600;text-decoration:none}
+  .flow .arrow{color:var(--sub)}
+  .atlasgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+  @media(max-width:1180px){.flow{flex-wrap:wrap}.atlasgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:760px){.atlasgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:520px){.atlasgrid{grid-template-columns:1fr}}
+  .atlascard{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:8px;min-height:0}
+  .atlascard>a{display:block;font-weight:700;text-decoration:none;margin-bottom:6px;font-size:14px;line-height:1.25;white-space:nowrap}
+  .chips{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+  .chips a{font-size:11.5px;line-height:1.25;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:var(--panel)}
+  .featuremap{margin:0 0 1.4em;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .featureflow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .featurestep{padding:3px 14px;border-left:1px solid var(--line)}
+  .featurestep:first-child{border-left:none;padding-left:0}
+  .featurestep:last-child{padding-right:0}
+  .featurestep strong{display:block;color:var(--accent);font-size:13.5px;margin-bottom:4px}
+  .featurestep span{display:block;color:var(--sub);font-size:12px;line-height:1.45}
+  @media(max-width:900px){.featureflow{grid-template-columns:1fr 1fr}.featurestep{border-left:none;border-top:1px solid var(--line);padding:10px 0}.featurestep:first-child{border-top:none}}
+  .todo{color:var(--todo)}
+  mjx-container{overflow-x:auto;overflow-y:hidden}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<header>
+  <h1>机器学习 知识梳理</h1>
+  <span class="prog" id="prog"></span>
+</header>
+<div class="wrap">
+  <aside id="tree"></aside>
+  <main id="reader"></main>
+</div>
+<script type="text/markdown" data-node="root">
+# 机器学习知识梳理
+
+> 本板块用于系统学习机器学习。中文体系与英文体系都可作为主线；教材负责知识结构与理论，代码资料和 scikit-learn 文档负责可运行实践。
+
+## 机器学习路线图
+
+数据 → 特征 → 模型 → 损失函数 → 优化训练 → 验证评估 → 泛化应用
+
+机器学习不是算法名列表,而是一套从数据到泛化模型的学习闭环。知识组织按三层展开:
+
+| 层级 | 核心问题 | 代表内容 |
+|---|---|---|
+| 学习框架 | 机器学习在学什么 | 模型、损失、优化、泛化 |
+| 数据基础 | 样本和特征如何进入模型 | 数据定义、诊断、预处理、特征工程 |
+| 评估方法 | 如何判断模型能否泛化 | 数据划分、指标、过拟合、交叉验证、泄漏 |
+| 模型家族 | 不同模型如何表达假设 | 线性模型、树模型、贝叶斯、SVM、集成、聚类、降维 |
+| 实践闭环 | 如何可靠训练和复现 | Pipeline、GridSearchCV、Notebook 与实验报告 |
+
+## 机器学习指引
+
+- [知识地图](node:map):查看整体结构与模型家族位置。
+- [资料清单](node:refs):确认西瓜书、南瓜书、李航、sklearn 文档各自承担的角色。
+- [基本框架](node:framework):先统一模型、损失、优化、泛化这些基本语言。
+- [数据与特征](node:features):用 Iris 主例子理解数据集、特征分布、相关性和基础预处理。
+- [模型评估](node:evaluation):在理解数据后,建立训练集、验证集、测试集与泛化判断。
+- [实验实践](node:practice):进入实验环境、实验路线与 MLPClassifier 桥接实验。
+- [深度学习](../深度学习/知识地图.html):跳转到独立深度学习知识地图。
+
+## 内容状态
+
+当前已完成知识树、资料入口、实验环境，以及“数据与特征”的概念和 Iris 实验闭环。模型评估、监督学习和无监督学习已有章节位置，但正文与实验仍将逐章加厚。准确进度记录在板块项目管理文档中，不把维护任务混入知识节点。
+</script>
+<script type="text/markdown" data-node="map">
+# 知识地图
+
+## 机器学习指引
+
+机器学习不按算法清单展开,而按一个学习闭环组织:
+
+`数据 → 特征 → 模型 → 损失函数 → 优化训练 → 验证评估 → 泛化应用`
+
+- **基本框架**统一语言:模型、损失、优化、泛化。
+- **数据与特征**建立共同样本:数据集、任务、标签、特征分布、相关性和基础预处理。
+- **模型评估**建立可靠判断:训练集、验证集、测试集、评价指标、过拟合与欠拟合。
+- **监督学习**展开带标签任务:线性模型、概率模型、树模型、核方法与集成方法。
+- **无监督学习**处理无标签结构:PCA、K-means、GMM/EM、层次聚类。
+- **实验实践**把机器学习跑通:实验环境、实验路线、sklearn 范式、Pipeline 与调参、MLPClassifier 桥接实验。
+- **深度学习**链接到独立板块:从机器学习地基过渡到表示学习、神经网络和端到端训练。
+
+## 章节关系
+
+- 数据与特征先定义模型接收什么输入。
+- 模型评估规定如何判断一次训练是否可信。
+- 监督学习和无监督学习展开不同任务下的模型假设。
+- 实验实践把预处理、模型、指标和调参封装为可复现流程。
+- 深度学习在同一学习闭环上进一步自动学习特征表示。
+
+SVM、朴素贝叶斯、GMM/EM 等视频笔记未覆盖的内容，由教材、课程讲义和 scikit-learn 文档补齐，不以单一资料的章节范围代替完整知识体系。
+</script>
+<script type="text/markdown" data-node="refs">
+# 资料清单
+
+> 资料分为中文体系与英文体系。两套材料都可以作为机器学习主线,差别主要在语言成本、讲解风格和实践侧重点。阅读时按自己的理解成本选择入口,再用另一套材料对照补足。
+
+## 中文资料
+
+| 资料 | 定位 | 核心内容 | 用法 |
+|---|---|---|---|
+| [机器学习视频笔记](../资料/机器学习视频笔记/机器学习视频笔记.html) | 脉络导览 | 概念、线性回归、梯度下降、评估、逻辑回归、树模型、集成、K-Means、PCA。 | 快速抓章节顺序,回看截图讲解。 |
+| [sklearn 模型选择图](../资料/scikit-learn模型选择图/scikit-learn模型选择图.html) | 模型导览 | 按分类、回归、聚类、降维和样本量给出 estimator 选择路径。 | 建模前快速确定候选模型。 |
+| [周志华《机器学习》](../资料/（西瓜书）周志华-机器学习.pdf) | 体系教材 | 监督学习、无监督学习、模型评估、集成学习等机器学习全景。 | 建立知识地图和章节主线。 |
+| [南瓜书](https://datawhalechina.github.io/pumpkin-book/) | 公式解析 | 西瓜书公式来源、推导依据与关键中间步骤。 | 查损失、优化、SVM、EM 等数学细节。 |
+| [Datawhale toy code](https://github.com/datawhalechina/machine-learning-toy-code) | 代码桥接 | 西瓜书模型的 Python toy code。 | 对照公式和算法流程跑最小实现。 |
+| [李航《统计学习方法》](../资料/统计学习方法_李航.pdf) | 理论加厚 | 模型、策略、算法;感知机、逻辑回归、SVM、朴素贝叶斯、EM、HMM、CRF。 | 加厚重点模型的数学结构。 |
+| [李航代码实现](https://github.com/fengdu78/lihang-code/tree/master) | 代码辅助 | 《统计学习方法》相关算法的 Python 实现与示例。 | 对照李航书理解模型算法步骤。 |
+
+## 英文资料
+
+| 资料 | 定位 | 核心内容 | 用法 |
+|---|---|---|---|
+| [ISLP Python Edition](https://www.statlearning.com/) | 统计学习 | 回归、分类、重采样、树模型、SVM、无监督学习与 Python 实验。 | 作为英文体系主线。 |
+| [Mathematics for Machine Learning](https://mml-book.github.io/) | 数学基础 | 线性代数、解析几何、矩阵分解、向量微积分、概率、优化,以及线性回归、PCA、GMM、SVM。 | 查模型背后的数学结构。 |
+| [Stanford CS229 Notes](https://cs229.stanford.edu/main_notes.pdf) | 数学推导 | 监督学习、广义线性模型、SVM、生成模型、EM、强化学习。 | 查模型推导。 |
+| [Hands-On ML](https://github.com/ageron/handson-ml3) | 工程实践 | 配套 Jupyter notebooks、sklearn、神经网络、端到端项目。 | 查建模流程、特征处理、训练和部署。 |
+| [sklearn User Guide](https://scikit-learn.org/stable/user_guide.html) | 实践标准 | 预处理、模型评估、Pipeline、GridSearchCV、模型参数。 | 查接口与实验规范。 |
+| [mlcourse.ai](https://mlcourse.ai/book/prereqs/software_devops.html) | 备选实践 | EDA、可视化、分类、线性模型、随机森林、特征工程、无监督、GBDT、时间序列。 | 补充项目式练习和竞赛风格经验。 |
+
+## 资料说明
+
+不同资料会重复讲线性模型、SVM、树模型、聚类和降维,但各自承担的问题不同:
+
+- 西瓜书 / ISLP：这个模型在机器学习体系中解决什么问题。
+- 南瓜书 / MML / CS229：公式来源、推导依据与关键中间步骤。
+- 李航：模型、策略、算法如何严谨对应。
+- Datawhale toy code / Hands-On ML / sklearn / mlcourse.ai：如何把模型放进可运行的训练、评估和调参流程。
+</script>
+<script type="text/markdown" data-node="framework">
+# 基本框架
+
+## 为什么需要机器学习
+
+传统编程依赖人先写出规则:输入满足什么条件,程序就执行什么判断。但很多现实问题很难穷举规则。例如识别苹果、判断垃圾邮件、预测房价、判断用户是否会流失,人能凭经验判断,却很难把所有细节写成固定的 if...else。
+
+机器学习把方向反过来:不先写死规则,而是给机器足够多的样本,让模型从数据中学习规律。学习完成后,模型要能把这种规律迁移到未见过的新样本上,这就是泛化。
+
+## 机器学习在学什么
+
+机器学习学习的是一个可泛化的模型。这个模型可以是线性函数、决策树、概率模型、聚类规则,也可以是神经网络。形式不同,目标相同:把输入数据映射成有用的输出或结构。
+
+最基本的学习闭环是:
+
+数据 → 特征 → 模型 → 损失函数 → 优化训练 → 验证评估 → 泛化应用
+
+这条闭环解释了大多数机器学习问题:
+
+- 数据提供经验。
+- 特征描述样本。
+- 模型表达假设。
+- 损失函数衡量预测好坏。
+- 优化算法调整参数。
+- 验证和测试判断模型是否能泛化。
+
+## 任务类型
+
+机器学习问题通常先按数据是否有标签来区分:
+
+| 类型 | 学习目标 | 典型问题 |
+|---|---|---|
+| 监督学习 | 从带标签样本学习输入到输出的映射 | 回归、分类、排序 |
+| 无监督学习 | 从无标签样本中发现结构 | 聚类、降维、密度估计 |
+| 强化学习 | 在环境反馈中学习行动策略 | 游戏、控制、决策优化 |
+
+后续所有模型都可以放回这条主线中理解:它使用什么数据,表达什么假设,用什么损失或准则学习,又如何证明自己能泛化。
+
+## 资料对应
+
+- 西瓜书：第 1、2 章;
+- 李航：统计学习三要素;
+- sklearn：User Guide 中的 model selection 与 metrics。
+</script>
+<script type="text/markdown" data-node="lossopt">
+# 模型、损失与优化
+
+一个机器学习方法通常可以拆成:
+
+模型:用什么函数表达假设
+策略:用什么目标衡量好坏
+算法:如何求解这个目标
+
+这正好对应李航《统计学习方法》的核心框架。
+
+## 三个层次
+
+| 层次 | 问题 | 例子 |
+|---|---|---|
+| 模型 | $f(x)$ 长什么样 | 线性函数、树、核函数、神经网络 |
+| 损失 | 错了怎么算 | MSE、交叉熵、hinge loss |
+| 优化 | 怎么找参数 | 闭式解、梯度下降、坐标下降、EM |
+
+## 理解检查
+
+- 模型的参数是什么?
+- 损失函数为什么适合这个任务?
+- 有没有正则化项?
+- 优化过程是否保证全局最优?
+- 超参数由谁决定?
+</script>
+<script type="text/markdown" data-node="generalization">
+# 泛化与归纳偏好
+
+机器学习的核心不只是把训练集拟合好,而是在未见过的数据上表现好。
+
+## 关键概念
+
+- 训练误差:模型在训练数据上的误差;
+- 测试误差:模型在未见数据上的误差;
+- 泛化误差:模型推广到真实分布时的误差;
+- 归纳偏好:模型对“什么规律更合理”的预设。
+
+## 为什么重要
+
+没有归纳偏好,模型无法从有限样本推广到无限可能的数据。不同算法的差异,很大一部分来自不同的偏好:
+
+- 线性模型偏好线性边界;
+- 决策树偏好分段规则;
+- SVM 偏好大间隔分类;
+- KNN 偏好局部相似;
+- 神经网络通过结构和训练过程形成表示偏好。
+
+## 资料对应
+
+- 西瓜书：模型评估与选择、偏差-方差;
+- 李航：经验风险最小化与结构风险最小化。
+</script>
+<script type="text/markdown" data-node="features">
+# 数据与特征
+
+模型不会直接理解现实对象，只会接收整理后的数值表示。进入算法之前，必须先回答：一行数据代表什么、哪些信息是输入、要预测什么、输入是否可靠，以及怎样把原始记录转换成模型能够稳定使用的特征。
+
+这也是本章放在模型评估和具体模型之前的原因。任务与输入尚未定义清楚，后面的损失、训练和指标就没有可靠基础。
+
+## 四类工作
+
+| 工作 | 回答的问题 | 典型内容 | 最终产物 |
+|---|---|---|---|
+| 数据定义 | 学习对象和目标是什么 | 样本、特征、标签、分类、回归、聚类、降维 | 明确的 $X$、$y$ 与任务 |
+| 数据诊断 | 数据当前有什么问题 | 分布、缺失、异常、重复、类别比例、变量关系 | 数据质量判断 |
+| 数据预处理 | 如何形成稳定一致的输入 | 划分、填补、编码、缩放、异常处理 | 可复现的转换流程 |
+| 特征工程 | 怎样改善模型看到的表达 | 选择、构造、组合、变换、压缩 | 更适合任务的特征表示 |
+
+数据诊断负责发现问题；预处理和特征工程负责采取行动。三者经常连续发生，但不能混为一谈。例如，相关性热力图是诊断工具；根据相关性删除重复特征才是特征选择。
+
+## 一条完整主线
+
+`原始记录 → 定义样本与目标 → 诊断数据 → 划分数据 → 预处理 → 特征工程 → 模型输入`
+
+其中有两条贯穿原则：
+
+- **预测时可获得**：训练使用的每个特征，在真实预测发生时都必须能够取得。
+- **只从训练集学习**：均值、方差、类别集合、填补值和被选特征都只能从训练集估计，不能提前查看验证集或测试集。
+
+第二条原则把本章和后续 [数据泄漏](node:leakage)、[Pipeline 与 GridSearchCV](node:pipeline) 直接连接起来。
+
+## Iris 如何承担共同例子
+
+Iris 鸢尾花有 150 个样本、4 个连续数值特征和 3 个均衡类别，适合验证从数据理解到分类建模的基础流程。
+
+| 本章问题 | Iris 中的验证 | 实验输出 |
+|---|---|---|
+| 数据结构是否清楚 | 一行是一朵花，四列测量值构成输入，品种是标签 | 数据概览与类别分布 |
+| 特征是否具有区分力 | 比较四个特征在三个类别中的分布 | 分组分布图 |
+| 是否需要缩放 | 原始特征范围不同，标准化后变成可比较尺度 | 缩放前后对比 |
+| 特征是否重复表达信息 | 花瓣长度和花瓣宽度高度相关 | 相关性图与二维散点图 |
+| 能否构造新表达 | 用花瓣长度与宽度构造面积代理特征 | 构造特征分布图 |
+
+Iris 本身没有缺失值，也没有作为输入的类别型特征，因此它不能诚实覆盖缺失值填补和 one-hot 编码。本章讲清这些方法的适用条件；后续遇到混合类型数据时再做对应实验，不为凑齐流程而伪造结论。
+
+## 阅读与实验
+
+- [数据集、任务与特征](node:data)：定义样本、特征、标签和任务。
+- [数据预处理](node:preprocess)：诊断数据质量，并形成无泄漏的转换流程。
+- [特征工程](node:featureeng)：选择、构造和压缩输入表示。
+- [Iris 数据分析实验](node:irisdata)：查看可运行代码、图表、观察与结论。
+
+传统机器学习通常更依赖人工理解和设计特征；深度学习更强调从数据中自动学习表示。但数据定义、划分、质量检查、泄漏防范和可复现转换，在两类方法中同样成立。
+</script>
+<script type="text/markdown" data-node="data">
+# 数据集、任务与特征
+
+机器学习的起点不是算法，而是把现实问题翻译成“从什么输入学习什么目标”。这个翻译由样本、特征和标签共同完成。
+
+## 从数据表到数学对象
+
+假设数据包含 $n$ 个样本、每个样本有 $d$ 个特征，可以写成：
+
+$$
+X\in\mathbb{R}^{n\times d},\qquad y=(y_1,\ldots,y_n)^\top
+$$
+
+- $X$ 的一行 $mathbf{x}_i$ 是第 $i$ 个样本。
+- $X$ 的一列是同一种测量或描述方式，即一个特征。
+- $y_i$ 是监督学习中第 $i$ 个样本的目标；无监督学习暂时不使用 $y$。
+
+Iris 的前五条记录如下：
+
+| 样本 | 花萼长度 | 花萼宽度 | 花瓣长度 | 花瓣宽度 | 品种标签 |
+|---|---:|---:|---:|---:|---|
+| 1 | 5.1 | 3.5 | 1.4 | 0.2 | setosa |
+| 2 | 4.9 | 3.0 | 1.4 | 0.2 | setosa |
+| 3 | 4.7 | 3.2 | 1.3 | 0.2 | setosa |
+| 4 | 4.6 | 3.1 | 1.5 | 0.2 | setosa |
+| 5 | 5.0 | 3.6 | 1.4 | 0.2 | setosa |
+
+这里的四个测量值组成 $mathbf{x}_i$，品种组成 $y_i$。模型不会看到“一朵花”这个现实对象，只会看到这四维向量与对应标签。
+
+## 同一份数据可以提出不同任务
+
+| 任务 | 使用的信息 | 学习结果 | Iris 中的问题 |
+|---|---|---|---|
+| 分类 | $X$ 与类别 $y$ | 类别边界或类别概率 | 根据四项测量预测品种 |
+| 回归 | $X$ 与连续目标 $y$ | 连续数值函数 | Iris 没有自然的主回归目标 |
+| 聚类 | 只使用 $X$ | 相似样本的分组 | 不看品种，能否形成三个自然簇 |
+| 降维 | 只使用 $X$ | 保留主要信息的低维表示 | 四维特征能否压缩到二维观察 |
+
+因此“监督学习还是无监督学习”不是数据集的固定属性，而取决于当前是否使用标签、希望模型输出什么。
+
+## 三个容易被忽略的定义
+
+### 样本单位
+
+一行必须代表稳定且一致的观察单位。若有的行代表用户、有的行代表一次访问，模型学到的对象就混乱了。时间序列、医疗记录和交易数据中，同一对象还可能出现多行，需要先确定预测发生在哪个时点。
+
+### 特征可用性
+
+特征不仅要和标签相关，还必须在预测时可获得。使用“事后才产生”的字段训练模型，即使分数很高，也属于未来信息泄漏。
+
+### 标签语义
+
+标签是现实目标的可计算代理。标签定义不准确、标注规则不一致或存在系统偏差，模型会忠实地学习这些偏差，而不是理想目标。
+
+## 建模前检查
+
+1. 每一行究竟代表什么对象或事件？
+2. 目标是类别、连续值，还是没有标签的结构发现？
+3. 每个特征在真实预测时能否获得？
+4. 标签如何产生，是否稳定、一致并接近真正目标？
+5. 训练数据是否代表未来要处理的数据？
+
+[Iris 数据分析实验](node:irisdata) 的“数据结构与质量”部分会读取 $X$、$y$，展示样本、字段、类别数量和基础质量检查。
+</script>
+<script type="text/markdown" data-node="preprocess">
+# 数据预处理
+
+数据预处理的目标，是把原始记录转换成模型能够稳定、重复接收的输入。它不是“把数据洗得越干净越好”，而是针对已确认的数据问题采取可解释的处理，并保证验证集和测试集没有提前参与处理规则的学习。
+
+## 先诊断，再处理
+
+| 诊断现象 | 风险 | 处理策略 | 不能机械执行的原因 |
+|---|---|---|---|
+| 缺失值 | 模型无法计算，或缺失本身带有偏差 | 删除、统计量填补、模型填补、缺失指示 | 缺失可能代表真实状态，不能一律补均值 |
+| 异常值 | 拉动均值、距离和损失 | 核查来源、修正、截尾、稳健缩放、保留并标记 | 极端值也可能是最重要的少数样本 |
+| 重复记录 | 某些样本被重复加权 | 核对主键和采集流程后去重 | 数值完全相同不一定代表同一对象 |
+| 类别输入 | 多数模型不能直接使用字符串 | one-hot、序数编码、频率或目标编码 | 编码必须符合类别是否有顺序这一语义 |
+| 尺度差异 | 大量纲特征主导距离或梯度 | 标准化、归一化、稳健缩放 | 树模型通常对单调缩放不敏感 |
+| 类别不均衡 | 少数类被总体准确率掩盖 | 分层划分、类别权重、重采样、调整指标 | 处理方式取决于误判成本和数据规模 |
+
+EDA（探索性数据分析）属于诊断：它用统计量和图形发现现象。填补、编码、缩放等步骤才是预处理。先有诊断依据，才知道应该处理什么。
+
+## 处理顺序
+
+1. **明确样本和标签**：先确认一行数据及预测目标的含义。
+2. **划分训练、验证和测试数据**：保留真正不可见的数据。
+3. **只用训练集拟合转换器**：学习填补值、均值、方差和类别集合。
+4. **对各数据集执行同一转换**：验证集和测试集只能 `transform`。
+5. **把转换与模型封装**：用 Pipeline 让交叉验证和最终预测遵守同一流程。
+
+可以概括为：
+
+`split → fit preprocessing on train → transform train/validation/test → fit model`
+
+## 为什么必须先划分
+
+标准化以均值 $\mu$ 和标准差 $\sigma$ 为例：
+
+$$
+z=\frac{x-\mu}{\sigma}
+$$
+
+如果先用全部数据计算 $\mu$ 和 $\sigma$，测试集的分布就提前参与了训练流程。单个数值看似没有“标签”，仍然泄漏了本应不可见的信息。缺失值填补、编码、特征选择和 PCA 同理。
+
+归一化则把数据映射到给定区间，最常见的是：
+
+$$
+x'=\frac{x-x_{\min}}{x_{\max}-x_{\min}}
+$$
+
+标准化保留相对均值的偏离程度；归一化强调固定范围。两者都不是提高精度的保证，只是使输入表达与模型机制更匹配。
+
+## 哪些模型更依赖缩放
+
+| 模型 | 缩放影响 | 原因 |
+|---|---|---|
+| KNN、K-Means、SVM | 明显 | 距离或间隔会被大量纲特征主导 |
+| 线性模型、神经网络 | 通常明显 | 梯度更新和正则化会受尺度影响 |
+| PCA | 明显 | 主成分由方差方向决定 |
+| 决策树、随机森林、GBDT | 通常较小 | 主要按单个特征阈值切分 |
+
+## Iris 中能验证什么
+
+Iris 是经过整理的教学数据，真实检查结果是：
+
+| 检查 | 结果 | 判断 |
+|---|---:|---|
+| 缺失单元格 | 0 | 不需要填补 |
+| 完全重复记录 | 1 | 仅凭数值相同不能确认是重复采集，实验保留 |
+| 类别数量 | 每类 50 | 当前没有类别不均衡问题 |
+| 输入类型 | 4 个连续数值特征 | 不需要 one-hot 编码 |
+| 数值范围 | 0.1 到 7.9 | 距离、梯度和 PCA 模型前应考虑标准化 |
+
+以第一条记录的花萼长度 5.1 cm 为例，全数据均值约为 5.843、标准差约为 0.825，探索性计算得到：
+
+$$
+z\approx\frac{5.1-5.843}{0.825}=-0.901
+$$
+
+它表示该值比总体均值低约 0.9 个标准差。这个手算只用于理解缩放；正式建模时必须改为只在训练集上拟合 `StandardScaler`。
+
+## 实验连接
+
+- [Iris 数据分析实验](node:irisdata)：检查缺失、重复、类别平衡，并比较标准化前后的尺度。
+- [数据泄漏](node:leakage)：解释为什么测试数据不能参与预处理规则的学习。
+- [Pipeline 与 GridSearchCV](node:pipeline)：把预处理与模型训练封装成同一条可验证流程。
+</script>
+<script type="text/markdown" data-node="featureeng">
+# 特征工程
+
+特征工程改变的是“模型看到问题的方式”。同一个现实对象可以有多种数值表示；好的表示能让目标关系更容易被模型捕捉，差的表示则会放大噪声、泄漏答案或制造不必要的复杂度。
+
+特征工程的目标不是增加列数，而是在信息、复杂度、解释性和泛化能力之间取得更合适的平衡。
+
+## 四类操作
+
+| 操作 | 核心动作 | 典型例子 | 主要风险 |
+|---|---|---|---|
+| 特征选择 | 从原特征中保留有效子集 | 删除泄漏列、常量列、强重复列 | 用全量数据挑特征造成泄漏 |
+| 特征构造 | 用已有信息形成新变量 | 比例、差值、交互项、时间窗口统计 | 加入噪声或把未来信息带入特征 |
+| 特征变换 | 改变分布或表示方式 | 对数变换、分箱、多项式、文本向量化 | 失去原始含义或扩大维度 |
+| 特征压缩 | 用更少维度表达主要信息 | PCA、特征选择、embedding | 丢失信息或降低可解释性 |
+
+编码和缩放既可归入预处理，也可视为特征变换。区分它们的实用标准是：预处理首先保证输入可用与一致；特征工程进一步追求更适合任务和模型的表达。
+
+## 从观察到改造
+
+一个可靠的特征工程过程不是“想到一个新特征就加入”，而是：
+
+1. 看单个特征的分布、尺度和异常情况。
+2. 看特征与标签的关系，提出它可能有用的理由。
+3. 看特征之间的关系，判断重复、互补或交互。
+4. 在训练流程内部执行选择或构造。
+5. 用交叉验证比较改造前后的结果，并检查稳定性与解释性。
+
+相关性只能帮助提出候选，不等于因果，也不等于一定要删除特征。两个高度相关的特征对线性模型可能造成参数不稳定，对树模型却未必构成同样问题；最终处理仍需结合模型与验证结果。
+
+## Iris 中的三个观察
+
+### 1. 选择观察视角
+
+分组分布图显示，花瓣长度和花瓣宽度比两个花萼特征更容易分开三个类别。因此后续绘制二维决策边界时，可以优先选用这两个特征。这里的选择是为了可视化和解释，不代表四特征模型一定更差。
+
+### 2. 识别重复信息
+
+Iris 全数据中，花瓣长度与花瓣宽度的 Pearson 相关系数约为 0.963，说明两者携带大量共同变化信息。这一现象会自然连接到 [PCA](node:pca)：能否用更少的方向保留主要变化。
+
+### 3. 构造候选特征
+
+可以构造一个简单的花瓣面积代理：
+
+$$
+\text{petal area proxy}=\text{petal length}\times\text{petal width}
+$$
+
+它把两个尺寸合成一个量，三个类别的分布仍有明显差异。但它完全由原特征计算而来，可能没有增加新信息。是否保留，必须在后续模型实验中比较交叉验证结果，而不能只凭图形下结论。
+
+## 与模型偏好的关系
+
+| 模型 | 常见特征要求 |
+|---|---|
+| 线性模型 | 缩放、交互项或非线性变换可以改变表达能力 |
+| KNN、SVM、K-Means、PCA | 对尺度敏感，距离或方差结构必须可比较 |
+| 树与集成模型 | 能学习非线性阈值，但仍受泄漏、噪声和无意义高维输入影响 |
+| 朴素贝叶斯 | 特征表示应与分布假设相匹配 |
+| 神经网络 | 能自动学习多层表示，但输入质量、缩放和数据划分仍是基础 |
+
+## 实验连接
+
+[Iris 数据分析实验](node:irisdata) 会用分组分布、相关矩阵、成对散点和构造特征四种证据完整呈现上述判断。真正的“是否提升模型”留到监督学习与交叉验证实验中验证。
+</script>
+<script type="text/markdown" data-node="evaluation">
+# 模型评估
+
+模型评估回答的问题是:
+
+> 当前模型是否真的学到了可泛化规律,而不是只记住训练数据?
+
+## 本章主线
+
+- [训练/验证/测试集](node:split);
+- [常用评价指标](node:metrics);
+- [过拟合与欠拟合](node:overfit);
+- [交叉验证](node:cv);
+- [数据泄漏](node:leakage)。
+
+## 为什么先学
+
+如果评估方式错了,后面所有模型比较都会失真。机器学习实践中,很多问题不是模型不够复杂,而是数据划分、指标选择、调参流程或特征处理泄漏了测试信息。
+</script>
+<script type="text/markdown" data-node="split">
+# 训练集、验证集与测试集
+
+## 三种数据
+
+| 数据集 | 用途 | 注意 |
+|---|---|---|
+| 训练集 | 拟合模型参数 | 模型直接学习 |
+| 验证集 | 选择超参数和模型 | 会被间接使用 |
+| 测试集 | 最终评估泛化 | 不应参与任何选择 |
+
+## 理解检查
+
+- 是否先划分数据再做预处理?
+- 验证集是否被反复看太多次?
+- 测试集是否真的只用一次?
+- 时间序列或用户数据能否随机切分?
+
+## sklearn 对应
+
+- `train_test_split`;
+- `StratifiedKFold`;
+- `TimeSeriesSplit`。
+</script>
+<script type="text/markdown" data-node="metrics">
+# 常用评价指标
+
+评价指标必须匹配任务目标。
+
+## 分类指标
+
+- accuracy;
+- precision / recall;
+- F1;
+- ROC-AUC;
+- PR-AUC;
+- log loss;
+- confusion matrix。
+
+## 回归指标
+
+- MSE / RMSE;
+- MAE;
+- $R^2$;
+- MAPE。
+
+## 理解检查
+
+- 类别是否不均衡?
+- 错误代价是否对称?
+- 需要概率质量还是只需要类别?
+- 指标是否能反映业务目标?
+</script>
+<script type="text/markdown" data-node="overfit">
+# 过拟合与欠拟合
+
+## 直觉
+
+- 欠拟合:模型太简单或训练不足,训练误差和测试误差都高;
+- 过拟合:模型过度贴合训练集,训练误差低但测试误差高。
+
+## 常见原因
+
+- 模型复杂度过高;
+- 数据量不足;
+- 特征噪声大;
+- 数据泄漏导致虚高;
+- 超参数调得过细。
+
+## 典型手段
+
+- 增加数据;
+- 正则化;
+- 降低模型复杂度;
+- 交叉验证;
+- 早停;
+- 集成学习。
+
+## 资料对应
+
+- 西瓜书：偏差-方差分解;
+- sklearn：validation curve 与 learning curve。
+</script>
+<script type="text/markdown" data-node="cv">
+# 交叉验证
+
+交叉验证用于更稳定地估计模型泛化表现,特别是在数据量有限时。
+
+## 基本思想
+
+把数据分成 $k$ 份,轮流用其中一份做验证,其余做训练,最后平均验证结果。
+
+## 常见形式
+
+- K-Fold;
+- Stratified K-Fold;
+- Leave-One-Out;
+- TimeSeriesSplit。
+
+## 理解检查
+
+- 分类任务是否需要分层抽样?
+- 时间序列是否不能打乱?
+- 交叉验证是否包住了预处理步骤?
+- 调参是否嵌套在交叉验证里?
+</script>
+<script type="text/markdown" data-node="leakage">
+# 数据泄漏
+
+数据泄漏是机器学习实践里最容易造成“看似效果很好,实际不可用”的问题。
+
+## 常见泄漏
+
+- 在全量数据上做标准化、填补缺失值、特征选择,再划分训练/测试;
+- 特征中包含未来信息;
+- 同一用户或同一对象同时出现在训练集和测试集;
+- 调参时反复看测试集;
+- 数据增强或采样方式跨越了划分边界。
+
+## 防范原则
+
+所有会从数据中学习统计量的步骤,都应只在训练集上 `fit`,再对验证/测试集 `transform`。这也是 sklearn `Pipeline` 的核心意义。
+</script>
+<script type="text/markdown" data-node="supervised">
+# 监督学习
+
+监督学习使用带标签样本学习输入到输出的映射。
+
+## 模型族
+
+- [线性回归](node:linreg);
+- [逻辑回归与 softmax](node:logreg);
+- [KNN](node:knn);
+- [朴素贝叶斯](node:bayes);
+- [决策树](node:tree);
+- [随机森林与集成学习](node:ensemble);
+- [SVM 与核方法](node:svm)。
+
+## 学习方式
+
+不要只记算法名字,而要问:
+
+- 它表达什么假设?
+- 损失函数是什么?
+- 怎么训练?
+- 边界长什么样?
+- 对特征缩放、异常值、维度、样本量敏感吗?
+</script>
+<script type="text/markdown" data-node="linreg">
+# 线性回归
+
+线性回归学习连续目标的线性预测函数:
+
+$$
+\hat y = \mathbf w^\top \mathbf x + b
+$$
+
+## 核心要点
+
+- 模型形式:线性函数;
+- 损失函数:均方误差 MSE;
+- 求解方式:最小二乘闭式解或梯度下降;
+- 几何直觉:在特征空间中拟合一个超平面;
+- 实践注意:异常值、共线性、尺度差异。
+
+## 资料对应
+
+- 西瓜书：线性模型;
+- 李航：最小二乘法;
+- sklearn：`LinearRegression`。
+</script>
+<script type="text/markdown" data-node="logreg">
+# 逻辑回归与 softmax
+
+逻辑回归把线性打分通过 sigmoid 转成二分类概率。softmax 回归把多个类别的线性打分转成多分类概率。
+
+## 核心要点
+
+- 逻辑回归虽然叫回归,但用于分类;
+- 决策边界仍是线性的;
+- 损失函数通常是交叉熵;
+- softmax 是二分类逻辑回归到多分类的推广;
+- 它是理解神经网络分类输出层的关键前置。
+
+## 资料对应
+
+- 西瓜书：对数几率回归;
+- 李航：逻辑斯谛回归与最大熵模型;
+- sklearn：`LogisticRegression`。
+</script>
+<script type="text/markdown" data-node="regularization">
+# 正则化
+
+正则化通过限制模型复杂度来改善泛化。
+
+## 常见形式
+
+- Ridge / L2:惩罚参数平方和;
+- Lasso / L1:惩罚参数绝对值,可产生稀疏参数;
+- Elastic Net:L1 与 L2 的组合。
+
+## 理解检查
+
+- 正则化是在损失函数里加了什么?
+- 为什么 L1 容易产生稀疏解?
+- 正则化强度如何通过验证集选择?
+- 特征尺度是否影响正则化效果?
+
+## sklearn 对应
+
+- `Ridge`;
+- `Lasso`;
+- `ElasticNet`;
+- `LogisticRegression(C=...)`。
+</script>
+<script type="text/markdown" data-node="knn">
+# KNN
+
+KNN 用“离当前样本最近的 $k$ 个训练样本”来预测。
+
+## 核心直觉
+
+相似的样本应该有相似的输出。
+
+## 核心要点
+
+- KNN 几乎没有显式训练过程;
+- 预测成本较高;
+- 对特征尺度敏感;
+- 高维空间中距离度量会变得困难;
+- $k$ 控制模型复杂度。
+
+## sklearn 对应
+
+- `KNeighborsClassifier`;
+- `KNeighborsRegressor`。
+</script>
+<script type="text/markdown" data-node="bayes">
+# 朴素贝叶斯
+
+朴素贝叶斯基于贝叶斯公式,并假设特征在类别条件下相互独立。
+
+## 核心要点
+
+- 生成式分类模型;
+- 核心是估计 $P(y)$ 和 $P(x_i|y)$;
+- 条件独立假设很强,但常常有效;
+- 在文本分类中常作为强基线。
+
+## 资料对应
+
+- 西瓜书：贝叶斯分类器;
+- 李航：朴素贝叶斯法;
+- sklearn：`GaussianNB`、`MultinomialNB`。
+</script>
+<script type="text/markdown" data-node="tree">
+# 决策树
+
+决策树通过一系列特征划分形成分段规则。
+
+## 核心要点
+
+- 每个内部节点是一个划分条件;
+- 叶节点给出预测;
+- 分类树常用信息增益、增益率、基尼指数;
+- 回归树常用平方误差下降;
+- 容易过拟合,需要剪枝或限制深度。
+
+## 资料对应
+
+- 西瓜书：决策树;
+- 李航：决策树;
+- sklearn：`DecisionTreeClassifier`、`DecisionTreeRegressor`。
+</script>
+<script type="text/markdown" data-node="ensemble">
+# 随机森林与集成学习
+
+集成学习把多个弱模型组合成更强模型。
+
+## 三类主线
+
+- Bagging:并行训练多个模型再平均,代表是随机森林;
+- Boosting:逐步关注前一轮错误,代表是 AdaBoost、GBDT;
+- Stacking:不同模型输出再交给二级模型。
+
+## 理解检查
+
+- Bagging 为什么降低方差?
+- Boosting 为什么能逐步提高拟合能力?
+- 随机森林和 GBDT 的差异是什么?
+- 为什么树模型常作为表格数据强基线?
+
+## sklearn 对应
+
+- `RandomForestClassifier`;
+- `GradientBoostingClassifier`;
+- `HistGradientBoostingClassifier`;
+- `AdaBoostClassifier`。
+</script>
+<script type="text/markdown" data-node="svm">
+# SVM 与核方法
+
+SVM 的核心直觉是找到最大间隔分类边界。
+
+## 核心要点
+
+- 线性可分时:最大化间隔;
+- 线性不可分时:引入软间隔;
+- hinge loss 与支持向量;
+- 核技巧把内积替换成核函数,隐式进入高维特征空间;
+- 对特征缩放敏感。
+
+## 资料对应
+
+- 西瓜书：支持向量机;
+- 李航：支持向量机;
+- sklearn：`SVC`、`LinearSVC`。
+</script>
+<script type="text/markdown" data-node="unsupervised">
+# 无监督学习
+
+无监督学习没有标签,目标是发现数据结构。
+
+## 主要任务
+
+- 降维:把高维数据压缩到低维表示;
+- 聚类:把相似样本分组;
+- 密度估计:学习数据分布;
+- 表示学习:找到更有用的特征表达。
+
+## 本章主线
+
+- [PCA](node:pca);
+- [K-means](node:kmeans);
+- [GMM 与 EM](node:gmmem);
+- [层次聚类](node:hiercluster)。
+</script>
+<script type="text/markdown" data-node="pca">
+# PCA
+
+PCA 寻找能保留最大方差的低维线性子空间。
+
+## 核心要点
+
+- 用正交方向解释数据方差;
+- 常用于降维、可视化、去噪、压缩;
+- 与协方差矩阵、特征值分解、SVD 关系密切;
+- PCA 是线性方法,不能表达非线性流形。
+
+## sklearn 对应
+
+- `PCA`;
+- `StandardScaler + PCA`。
+</script>
+<script type="text/markdown" data-node="kmeans">
+# K-means
+
+K-means 把样本划分为 $k$ 个簇,让样本到所属簇中心的距离平方和尽量小。
+
+## 核心要点
+
+- 需要预先指定 $k$;
+- 对初始化敏感;
+- 偏好球形、尺度相近的簇;
+- 对特征尺度敏感;
+- 可用肘部法、轮廓系数辅助选择 $k$。
+
+## sklearn 对应
+
+- `KMeans`;
+- `MiniBatchKMeans`。
+</script>
+<script type="text/markdown" data-node="gmmem">
+# GMM 与 EM
+
+GMM 假设数据由多个高斯分布混合生成。EM 用于在存在隐变量时迭代估计参数。
+
+## 核心要点
+
+- K-means 可以看成某种硬分配,GMM 是软分配;
+- E 步估计隐变量的后验责任;
+- M 步更新模型参数;
+- EM 不一定找到全局最优;
+- 适合理解生成模型和隐变量学习。
+
+## 资料对应
+
+- 西瓜书：EM 与混合模型;
+- 李航：EM 算法及其推广;
+- sklearn：`GaussianMixture`。
+</script>
+<script type="text/markdown" data-node="hiercluster">
+# 层次聚类
+
+层次聚类通过逐步合并或拆分形成树状聚类结构。
+
+## 核心要点
+
+- 凝聚式:从每个样本独立成簇开始,逐步合并;
+- 分裂式:从整体开始,逐步拆分;
+- linkage 决定簇间距离;
+- 树状图有助于观察多层结构。
+
+## sklearn 对应
+
+- `AgglomerativeClustering`。
+</script>
+<script type="text/markdown" data-node="practice">
+# 实验实践
+
+机器学习实验属于本板块自身的实践闭环,用于把数据处理、模型训练、评估和调参跑通。
+
+## 组织原则
+
+- 实验优先使用 sklearn、小型公开数据集和本地 CPU 环境。
+- 目标是验证机器学习概念,不是提前进入深度学习训练工程。
+- MLPClassifier 只作为机器学习到神经网络的桥接实验,不替代深度学习板块。
+
+## 入口
+
+- [实验环境](node:env):配置本地机器学习实验环境。
+- [实验路线](node:experiments):按顺序完成基础模型实验。
+- [Iris 数据分析实验](node:irisdata):查看主例子的 Notebook、HTML 预览和输出图。
+- [sklearn 实践范式](node:sklearn):用统一接口组织训练和预测。
+- [Pipeline 与 GridSearchCV](node:pipeline):把预处理、模型和调参放进可复现流程。
+- [MLPClassifier 连接深度学习](node:mlpbridge):用 sklearn 风格理解多层非线性模型。
+</script>
+<script type="text/markdown" data-node="env">
+# 实验环境
+
+## 推荐选择
+
+机器学习实验环境使用 Miniforge + 独立 conda 环境，当前环境名为 `pkm-ml`。
+
+不使用完整 Anaconda 作为项目默认方案。
+
+原因:
+
+- Miniforge 默认使用 `conda-forge`，依赖来源清晰，适合开源项目复现;
+- 安装体积更小，不会一次性安装大量暂时不用的包;
+- 每个项目独立环境，避免本机不同 Python 和 pip 之间互相干扰;
+- 机器学习实验以 `numpy`、`pandas`、`scikit-learn` 为主，Mac 本地 CPU 足够。
+
+## 环境创建
+
+```bash
+conda env create -f environment.yml
+conda activate pkm-ml
+python -m ipykernel install --user --name pkm-ml --display-name "Python (pkm-ml)"
+```
+
+如果本机安装了 `mamba`，也可以用:
+
+```bash
+mamba env create -f environment.yml
+```
+
+## 使用规则
+
+进入项目实验前先激活环境:
+
+```bash
+conda activate pkm-ml
+```
+
+激活后统一使用:
+
+```bash
+python --version
+python -m pip --version
+python -m pip install xxx
+```
+
+不要在项目环境里直接依赖全局 `python3`、`pip3` 的指向。`python -m pip` 可以保证 pip 安装到当前激活环境对应的 Python 里。
+
+Notebook 中选择内核 `Python (pkm-ml)`。
+
+## 当前配置
+
+`pkm-ml` 使用 Python 3.11，核心依赖包括:
+
+- `numpy`、`pandas`、`scipy`;
+- `matplotlib`、`seaborn`;
+- `scikit-learn`;
+- `jupyterlab`、`ipykernel`。
+
+后续如果进入 PyTorch、CNN、Transformer 实验，再单独建立深度学习环境，不要提前把机器学习环境做重。
+</script>
+<script type="text/markdown" data-node="experiments">
+# 实验路线
+
+机器学习实验先用 sklearn 和经典小数据集，目标是验证概念，不是追求工程完整。
+
+本板块以 Iris 鸢尾花作为主例子。它足够小，又能覆盖数据分析、模型评估、监督学习、无监督学习、特征工程和通往深度学习的桥接实验。
+
+知识正文和实验章节的关系：
+
+- 正文解释知识点在机器学习体系中解决什么问题;
+- 正文用 Iris 做一个直观例子，帮助理解指标、模型边界或降维结果;
+- 实验 Notebook 负责把同一个例子跑通，生成图和指标;
+- 正文通过链接跳到对应实验，实验再反向标注覆盖哪些知识点。
+
+## 第一批实验
+
+| 顺序 | 实验 | 目标 |
+|---|---|---|
+| 1 | Iris 数据分析与特征理解 | 查看类别分布、单变量分布、特征相关性和散点关系 |
+| 2 | 模型评估 | 用 Iris 跑训练/测试划分、交叉验证、混淆矩阵和分类指标 |
+| 3 | 监督学习模型对比 | 比较逻辑回归、KNN、决策树、随机森林、SVM、朴素贝叶斯 |
+| 4 | 无监督学习模型对比 | 用 PCA、K-means、GMM、层次聚类观察 Iris 结构 |
+| 5 | Pipeline 与调参 | 串联标准化、模型、GridSearchCV 和泄漏防范 |
+| 6 | MLPClassifier 桥接实验 | 用 sklearn 风格连接多层非线性模型与深度学习 |
+| 7 | 线性回归补充实验 | 用极简回归数据理解 MSE、残差和 $R^2$ |
+
+## 数据来源
+
+优先使用：
+
+- sklearn 内置数据集，第一主例子为 Iris;
+- UCI / OpenML 小型公开数据;
+- Datawhale toy code 中的示例数据。
+
+补充数据只在 Iris 不适合表达时使用：
+
+- 自造一维线性数据：线性回归、残差、过拟合曲线;
+- `make_moons` / `make_circles`：非线性决策边界;
+- `digits`：通往神经网络和深度学习的桥接。
+
+## Notebook 规划
+
+| Notebook | 覆盖章节 | 主要输出 |
+|---|---|---|
+| [01_iris_data_analysis](node:irisdata) | 数据与特征 | 分布图、相关性热力图、成对散点图 |
+| `02_model_evaluation.ipynb` | 模型评估 | 划分对比、交叉验证、混淆矩阵、分类报告 |
+| `03_supervised_models.ipynb` | 监督学习 | 决策边界、树结构、模型指标对比 |
+| `04_unsupervised_models.ipynb` | 无监督学习 | PCA 投影、聚类结果、轮廓系数 |
+| `05_pipeline_gridsearch.ipynb` | 特征工程与实践范式 | Pipeline、GridSearchCV、泄漏对比 |
+| `06_mlp_bridge.ipynb` | 通往深度学习 | MLPClassifier 训练曲线与分类效果 |
+
+每个 Notebook 生成的图保存到 `实验/outputs/`，再由知识正文引用。
+</script>
+<script type="text/markdown" data-node="mlpbridge">
+# MLPClassifier 连接深度学习
+
+`sklearn.neural_network.MLPClassifier` 可以作为传统机器学习到神经网络的桥。
+
+## 为什么适合本地 Mac
+
+- 数据集通常很小;
+- CPU 可运行;
+- API 保持 sklearn 风格;
+- 能观察隐藏层、激活函数、正则化、迭代次数等概念;
+- 不需要先进入 PyTorch 训练工程。
+
+## 它不适合做什么
+
+- 不适合训练大型深度网络;
+- 不适合作为 CNN/RNN/Transformer 实验平台;
+- 不适合处理大规模图像或文本任务。
+
+## 学习价值
+
+它适合用来理解:
+
+- 多层非线性模型;
+- 训练迭代;
+- 正则化;
+- 过拟合;
+- 从手工特征到表示学习的过渡。
+</script>
+<script type="text/markdown" data-node="sklearn">
+# sklearn 实践范式
+
+scikit-learn 的核心不是某个模型 API,而是一套统一范式:
+
+estimator.fit(X_train, y_train)
+estimator.predict(X_test)
+estimator.score(X_test, y_test)
+
+## 重要概念
+
+- estimator;
+- transformer;
+- predictor;
+- pipeline;
+- cross-validation;
+- model selection;
+- metrics。
+
+## 理解检查
+
+- 哪些对象有 `fit_transform`?
+- `fit` 和 `transform` 的边界是什么?
+- 为什么 Pipeline 能防止数据泄漏?
+- 如何把预处理和模型选择合在一起调参?
+</script>
+<script type="text/markdown" data-node="pipeline">
+# Pipeline 与 GridSearchCV
+
+Pipeline 把预处理和模型串成一个整体,GridSearchCV 在交叉验证中搜索超参数。
+
+## 核心价值
+
+- 避免数据泄漏;
+- 让预处理和模型一起参与交叉验证;
+- 让实验更可复现;
+- 让代码从“脚本堆叠”变成“训练流程”。
+
+## 典型结构
+
+ColumnTransformer
+→ StandardScaler / OneHotEncoder
+→ Model
+→ GridSearchCV
+
+## 本地运行
+
+Pipeline 与 GridSearchCV 完全适合本地 Mac。多数经典数据集规模很小,CPU 足够。
+</script>
+<script type="text/markdown" data-node="irisdata">
+# Iris 数据分析实验
+
+本实验对应 [数据与特征](node:features)，用同一份 Iris 数据把概念章节中的判断变成可运行、可检查的证据。Notebook 不训练分类器，重点是先回答“数据长什么样、有哪些质量问题、哪些特征值得后续建模”。
+
+## 阅读与运行
+
+- [实验报告 HTML](../../实验/reports/01_iris_data_analysis.html)：浏览器直接阅读代码、输出、观察和结论。
+- [Notebook 源码](../../实验/notebooks/01_iris_data_analysis.ipynb)：在 JupyterLab 或 VS Code 中重新运行。
+- [实验说明](../../实验/README.md)：环境、运行方式与实验规范。
+
+直接用浏览器打开 `.ipynb` 只会看到 JSON 文本，因为 Notebook 是结构化源文件，不是网页。项目因此同时提交可执行的 `.ipynb` 和静态 `.html` 报告；GitHub 也能直接渲染 Notebook。
+
+## 实验问题
+
+| 步骤 | 要回答的问题 | 证据 |
+|---|---|---|
+| 数据结构与质量 | 样本、特征、标签分别是什么，是否缺失、重复或失衡 | 数据表与质量摘要 |
+| 单变量分布 | 每个特征对三个类别的区分程度如何 | 分组小提琴图 |
+| 尺度比较 | 原始量纲差异怎样影响可比性 | 标准化前后箱线图与手算核对 |
+| 变量关系 | 哪些特征重复表达信息，哪些二维组合更清楚 | 相关矩阵与三组成对散点 |
+| 特征构造 | 新特征是否提供了更紧凑的观察视角 | 花瓣面积代理分布 |
+
+## 关键观察
+
+### 数据质量不是“全都正常”
+
+Iris 没有缺失值，三个类别各 50 条，但存在一条数值完全相同的记录。数值相同不等于一定是重复采集，因此实验只标记、不盲目删除。这正是数据诊断与机械清洗的区别。
+
+![数据概览与质量检查](../../实验/outputs/iris_data_analysis/01_data_overview.png)
+
+### 花瓣特征更能区分类别
+
+四个特征都具有信息，但花瓣长度和花瓣宽度的类别分布分离更明显；花萼特征的重叠更多。后续二维决策边界优先使用花瓣特征，依据来自数据而不是经验猜测。
+
+![四个特征的分组分布](../../实验/outputs/iris_data_analysis/02_feature_distributions.png)
+
+### 标准化改变尺度，不改变样本相对顺序
+
+标准化后每个特征都围绕 0 波动，量纲差异不再直接主导距离和梯度。实验还用第一条记录核对了手算结果与 `StandardScaler` 输出。
+
+![标准化前后对比](../../实验/outputs/iris_data_analysis/03_scaling_comparison.png)
+
+### 相关性与可分性是两个不同问题
+
+花瓣长度和花瓣宽度的相关系数约为 0.963，说明它们高度共同变化；同时，这两个特征构成的二维空间又最容易观察类别分离。高度相关不等于“其中一个一定无用”，还要结合模型和验证结果判断。
+
+![特征相关结构](../../实验/outputs/iris_data_analysis/04_correlation_structure.png)
+
+![不同特征组合的类别分离](../../实验/outputs/iris_data_analysis/05_feature_pair_comparison.png)
+
+### 构造特征只是提出候选
+
+花瓣长度乘花瓣宽度形成面积代理后，类别分布仍有明显差异；但它没有引入原始数据之外的新信息。后续必须通过交叉验证判断它是否真正改善模型。
+
+![花瓣面积代理特征](../../实验/outputs/iris_data_analysis/06_engineered_feature.png)
+
+## 本实验的边界
+
+Iris 没有类别型输入和缺失值，因此本实验不演示 one-hot 编码和缺失值填补；也不在全数据上完成正式建模。数据划分、训练集拟合预处理器和 Pipeline 将在后续模型实验中完成。
+</script>
+<script type="text/markdown" data-node="bridge">
+# 深度学习
+
+深度学习已经作为独立知识板块维护。机器学习板块只保留承接关系和跳转入口,不在这里展开深度学习正文。
+
+[打开深度学习知识地图](../深度学习/知识地图.html)
+
+## 机器学习提供的地基
+
+- train/validation/test;
+- loss function;
+- gradient descent;
+- overfitting / regularization;
+- softmax / cross entropy;
+- feature engineering 与 representation learning 的差异;
+- model selection 与 hyperparameter tuning。
+
+## 学习路线
+
+先把 [逻辑回归与 softmax](node:logreg)、[正则化](node:regularization)、[模型评估](node:evaluation)、[sklearn 实践范式](node:sklearn) 理顺,再进入深度学习板块会更自然。
+</script>
+<script>
+const TREE=[{"id": "map", "label": "🧭 知识地图"}, {"id": "refs", "label": "📚 资料清单"}, {"id": "framework", "label": "🧩 基本框架", "children": [{"id": "lossopt", "label": "模型、损失与优化"}, {"id": "generalization", "label": "泛化与归纳偏好"}]}, {"id": "features", "label": "🔎 数据与特征", "children": [{"id": "data", "label": "数据集、任务与特征"}, {"id": "preprocess", "label": "数据预处理"}, {"id": "featureeng", "label": "特征工程"}]}, {"id": "evaluation", "label": "📏 模型评估", "children": [{"id": "split", "label": "训练集、验证集与测试集"}, {"id": "metrics", "label": "常用评价指标"}, {"id": "overfit", "label": "过拟合与欠拟合"}, {"id": "cv", "label": "交叉验证"}, {"id": "leakage", "label": "数据泄漏"}]}, {"id": "supervised", "label": "🎯 监督学习", "children": [{"id": "linreg", "label": "线性回归"}, {"id": "logreg", "label": "逻辑回归与 softmax"}, {"id": "regularization", "label": "正则化"}, {"id": "knn", "label": "KNN"}, {"id": "bayes", "label": "朴素贝叶斯"}, {"id": "tree", "label": "决策树"}, {"id": "ensemble", "label": "随机森林与集成学习"}, {"id": "svm", "label": "SVM 与核方法"}]}, {"id": "unsupervised", "label": "🧱 无监督学习", "children": [{"id": "pca", "label": "PCA"}, {"id": "kmeans", "label": "K-means"}, {"id": "gmmem", "label": "GMM 与 EM"}, {"id": "hiercluster", "label": "层次聚类"}]}, {"id": "practice", "label": "🧪 实验实践", "children": [{"id": "env", "label": "实验环境"}, {"id": "experiments", "label": "实验路线"}, {"id": "irisdata", "label": "Iris 数据分析实验"}, {"id": "sklearn", "label": "sklearn 实践范式"}, {"id": "pipeline", "label": "Pipeline 与 GridSearchCV"}, {"id": "mlpbridge", "label": "MLPClassifier 连接深度学习"}]}, {"id": "bridge", "label": "🌉 深度学习", "href": "../深度学习/知识地图.html"}];
+const CONTENT={},LABEL={},PARENT={},HREF={};
+document.querySelectorAll('script[type="text/markdown"]').forEach(s=>CONTENT[s.dataset.node]=s.textContent);
+(function walk(ns,parent){ns.forEach(n=>{LABEL[n.id]=n.label;if(n.href)HREF[n.id]=n.href;if(parent)PARENT[n.id]=parent;if(n.children)walk(n.children,n.id)})})(TREE,"");
+let done=JSON.parse(localStorage.getItem("mlkb_done")||"{}");
+let currentRoute={id:"root",anchor:""};
+if("scrollRestoration" in history){history.scrollRestoration="manual";}
+function attr(s){return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function routeUrl(id,anchor){
+  let h="#node="+encodeURIComponent(id);
+  if(anchor) h+="&anchor="+encodeURIComponent(anchor);
+  return h;
+}
+function routeFromHash(){
+  if(!location.hash) return null;
+  const raw=location.hash.slice(1);
+  const q=new URLSearchParams(raw);
+  if(q.has("node")) return {id:q.get("node")||"root",anchor:q.get("anchor")||"",scroll:0};
+  const old=decodeURIComponent(raw);
+  if(CONTENT[old]||LABEL[old]) return {id:old,anchor:"",scroll:0};
+  return null;
+}
+function getScrollY(){
+  const rd=document.getElementById("reader");
+  return Math.max(rd?rd.scrollTop:0,window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0);
+}
+function setScrollY(y){
+  const rd=document.getElementById("reader");
+  if(rd) rd.scrollTop=y||0;
+  window.scrollTo(0,y||0);
+}
+function currentState(){return {id:currentRoute.id,anchor:currentRoute.anchor||"",scroll:getScrollY()};}
+function saveCurrentState(){try{history.replaceState(currentState(),"",location.href);}catch(e){}}
+let scrollTimer=null;
+function rememberScroll(){clearTimeout(scrollTimer);scrollTimer=setTimeout(saveCurrentState,80);}
+function inline(t){return t
+  .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,function(m,alt,src){return '<img src="'+src.replace(/^(?:\.\.\/)+/,'')+'" alt="'+alt+'">'})
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(m,txt,url){if(url.indexOf('node:')===0){var r=url.slice(5).split('#'),nid=r[0],an=r[1]||'';return '<a href="'+attr(routeUrl(nid,an))+'" class="xref" data-node="'+attr(nid)+'" data-anchor="'+attr(an)+'">'+txt+'</a>';}var cross=url.indexOf('../资料/')===0||url.indexOf('../深度学习/')===0;var out=/^(https?:|mailto:|#)/.test(url)?url:(cross?url:url.replace(/^(?:\.\.\/)+/,''));return '<a href="'+out+'" target="_blank" rel="noopener">'+txt+'</a>';});}
+function md(src){
+  src=src.replace(/\r/g,'');
+  var M=[];
+  src=src.replace(/\$\$([\s\S]+?)\$\$/g,function(_,x){M.push('$$'+x+'$$');return '@@M'+(M.length-1)+'@@';}).replace(/\$([^\$\n]+?)\$/g,function(_,x){M.push('$'+x+'$');return '@@M'+(M.length-1)+'@@';});
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const out=[];let list=false,olist=false,quote=false,code=false,para=[],codebuf=[];
+  const fp=()=>{if(para.length){out.push('<p>'+inline(esc(para.join(' ')))+'</p>');para=[]}};
+  const cl=()=>{if(list){out.push('</ul>');list=false}if(olist){out.push('</ol>');olist=false}};const cq=()=>{if(quote){out.push('</blockquote>');quote=false}};
+  const fc=()=>{if(code){out.push('<pre><code>'+esc(codebuf.join('\n'))+'</code></pre>');code=false;codebuf=[]}};
+  const cells=s=>s.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>c.trim());
+  const L=src.split('\n');
+  for(let i=0;i<L.length;i++){
+    const t=L[i].trim();let m;
+    if(/^```/.test(t)){if(code){fc();}else{fp();cl();cq();code=true;codebuf=[];}continue;}
+    if(code){codebuf.push(L[i]);continue;}
+    if(/^\|.*\|$/.test(t)&&i+1<L.length&&/^\|[\s:|-]+\|$/.test(L[i+1].trim())){
+      fp();cl();cq();
+      var hd=cells(t),bd=[],j=i+2;
+      while(j<L.length&&/^\|.*\|$/.test(L[j].trim())){bd.push(cells(L[j].trim()));j++;}
+      var tb='<div class="tw"><table><thead><tr>';
+      hd.forEach(c=>{tb+='<th>'+inline(esc(c))+'</th>';});tb+='</tr></thead><tbody>';
+      bd.forEach(r=>{tb+='<tr>';r.forEach(c=>{tb+='<td>'+inline(esc(c))+'</td>';});tb+='</tr>';});
+      out.push(tb+'</tbody></table></div>');i=j-1;continue;
+    }
+    if(t===''){fp();cl();cq();continue;}
+    if(m=t.match(/^(#{1,4})\s+(.*)/)){fp();cl();cq();out.push('<h'+m[1].length+'>'+inline(esc(m[2]))+'</h'+m[1].length+'>');continue;}
+    if(t==='---'){fp();cl();cq();out.push('<hr>');continue;}
+    if(m=t.match(/^[-*]\s+(.*)/)){fp();cq();if(olist){out.push('</ol>');olist=false}if(!list){out.push('<ul>');list=true}out.push('<li>'+inline(esc(m[1]))+'</li>');continue;}
+    if(m=t.match(/^\d+\.\s+(.*)/)){fp();cq();if(list){out.push('</ul>');list=false}if(!olist){out.push('<ol>');olist=true}out.push('<li>'+inline(esc(m[1]))+'</li>');continue;}
+    if(m=t.match(/^>\s?(.*)/)){fp();cl();if(!quote){out.push('<blockquote>');quote=true}out.push(inline(esc(m[1]))+'<br>');continue;}
+    para.push(t);
+  }
+  fc();
+  fp();cl();cq();
+  var html=out.join('\n');
+  html=html.replace(/@@M(\d+)@@/g,function(_,i){return M[+i];});
+  return html;
+}
+function typeset(cb){
+  if(window.MathJax&&MathJax.typesetPromise){
+    MathJax.typesetPromise([document.getElementById("reader")]).catch(function(){}).then(function(){if(cb)cb();});
+  }else if(cb){cb();}
+}
+function tnode(n,lvl){
+  const kids=n.children&&n.children.length;
+  const href=n.href?' data-href="'+attr(n.href)+'"':'';
+  let h='<div class="tnode lvl'+lvl+'" data-id="'+n.id+'"'+href+'><span class="cv">'+(kids?'▸':(n.href?'↗':'·'))+'</span><span class="lbl">'+n.label+'</span><span class="chk">'+(!n.href&&done[n.id]?'✓':'')+'</span></div>';
+  if(kids){h+='<div class="kids" data-kids="'+n.id+'" style="display:none">'+n.children.map(c=>tnode(c,lvl+1)).join('')+'</div>';}
+  return h;
+}
+function buildTree(){document.getElementById("tree").innerHTML=TREE.map(n=>tnode(n,0)).join('');}
+function revealNode(id){
+  let p=PARENT[id];
+  while(p){
+    const box=document.querySelector('[data-kids="'+p+'"]');
+    const t=document.querySelector('.tnode[data-id="'+p+'"]');
+    if(box) box.style.display="";
+    if(t){const cv=t.querySelector(".cv");if(cv)cv.classList.add("open");}
+    p=PARENT[p];
+  }
+}
+function bindXrefs(){
+  document.querySelectorAll("#reader a.xref").forEach(a=>{
+    a.onclick=function(e){
+      if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;
+      e.preventDefault();
+      navigateNode(a.dataset.node,a.dataset.anchor||"");
+    };
+  });
+}
+function overviewHtml(){
+  const flowIds=["framework","features","evaluation","supervised","unsupervised","practice","bridge"];
+  const flow='<div class="flow">'+flowIds.map(function(id,i){
+    const href=HREF[id]||routeUrl(id);
+    const cls=HREF[id]?'':' class="xref" data-node="'+attr(id)+'"';
+    return (i?'<span class="arrow">→</span>':'')+'<a href="'+attr(href)+'"'+cls+'>'+(LABEL[id]||id)+'</a>';
+  }).join('')+'</div>';
+  const cards=TREE.filter(function(n){return ["map","refs","bridge"].indexOf(n.id)<0;}).map(function(n){
+    const kids=(n.children||[]).map(function(c){
+      return '<a class="xref" href="'+attr(routeUrl(c.id))+'" data-node="'+attr(c.id)+'">'+(LABEL[c.id]||c.id)+'</a>';
+    }).join('');
+    const href=HREF[n.id]||routeUrl(n.id);
+    const cls=HREF[n.id]?'':' class="xref" data-node="'+attr(n.id)+'"';
+    return '<article class="atlascard"><a href="'+attr(href)+'"'+cls+'>'+n.label+'</a><div class="chips">'+kids+'</div></article>';
+  }).join('');
+  return '<section class="atlas"><h2>机器学习路线图</h2>'+flow+'<div class="atlasgrid">'+cards+'</div></section>';
+}
+function featureOverviewHtml(){
+  const steps=[
+    ["1. 定义数据","样本、特征、标签","明确要学习什么"],
+    ["2. 诊断数据","分布、缺失、异常、关系","判断数据有什么问题"],
+    ["3. 预处理","清洗、编码、缩放","形成稳定一致的输入"],
+    ["4. 特征工程","选择、构造、压缩","改进模型看到的表达"],
+    ["5. 进入建模","划分、训练、评估","验证处理是否真正有效"],
+  ];
+  return '<section class="featuremap"><div class="featureflow">'+steps.map(function(s){return '<div class="featurestep"><strong>'+s[0]+'</strong><span>'+s[1]+'</span><span>'+s[2]+'</span></div>';}).join('')+'</div></section>';
+}
+function scrollToAnchor(anchor,smooth){
+  const rd=document.getElementById("reader");
+  const hs=rd.querySelectorAll("h1,h2,h3,h4");
+  for(let i=0;i<hs.length;i++){
+    if(hs[i].textContent.indexOf(anchor)>=0){hs[i].scrollIntoView({behavior:smooth?"smooth":"auto",block:"start"});return true;}
+  }
+  return false;
+}
+function finishScroll(anchor,opts){
+  const y=opts&&typeof opts.scroll==="number"?opts.scroll:null;
+  const restore=!!(opts&&opts.restore);
+  const run=function(){
+    if(anchor){if(!scrollToAnchor(anchor,!restore))setScrollY(0);}
+    else if(y!==null){setScrollY(y);}
+    else{setScrollY(0);}
+  };
+  run();setTimeout(run,80);setTimeout(run,250);
+}
+function renderNode(id,anchor,opts){
+  let body=CONTENT[id];
+  if(!body) body="# "+(LABEL[id]||id)+"\n\n> 🚧 本知识点待编写。";
+  currentRoute={id:id,anchor:anchor||""};
+  const isDone=!!done[id];
+  const rd=document.getElementById("reader");
+  rd.classList.toggle("wide",["root","map","refs","features","data","preprocess","featureeng","irisdata"].indexOf(id)>=0);
+  rd.innerHTML='<div class="rdrhead"><button class="markbtn '+(isDone?'done':'')+'" onclick="toggleDone(\''+id+'\',this)">'+(isDone?'✓ 已掌握':'标记已掌握')+'</button></div>'+((id==="root"||id==="map")?overviewHtml():"")+(id==="features"?featureOverviewHtml():"")+md(body);
+  bindXrefs();
+  typeset(function(){finishScroll(anchor,opts||{});});
+  revealNode(id);
+  document.querySelectorAll('.tnode').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+}
+function navigateNode(id,anchor){
+  saveCurrentState();
+  const st={id:id,anchor:anchor||"",scroll:0};
+  history.pushState(st,"",routeUrl(id,anchor));
+  renderNode(id,anchor);
+}
+function openNode(id,anchor){
+  navigateNode(id,anchor);
+}
+function toggleDone(id,btn){
+  const st=currentState();
+  done[id]=!done[id]; if(!done[id])delete done[id];
+  localStorage.setItem("mlkb_done",JSON.stringify(done));
+  buildTree();bind();updateProg();
+  history.replaceState(st,"",location.href);
+  renderNode(id,st.anchor,{scroll:st.scroll,restore:true});
+}
+function updateProg(){
+  const groups=['map','refs','framework','features','evaluation','supervised','unsupervised','practice','bridge'];
+  const ids=Object.keys(LABEL).filter(i=>groups.indexOf(i)<0);
+  const d=ids.filter(i=>done[i]).length;
+  document.getElementById("prog").textContent='已掌握 '+d+'/'+ids.length;
+}
+function bind(){
+  document.querySelectorAll('.tnode').forEach(el=>{
+    el.onclick=function(e){e.stopPropagation();const id=el.dataset.id;
+      if(el.dataset.href){location.href=el.dataset.href;return;}
+      const kidsBox=document.querySelector('[data-kids="'+id+'"]');
+      if(kidsBox){const showing=kidsBox.style.display!=='none';kidsBox.style.display=showing?'none':'';el.querySelector('.cv').classList.toggle('open',!showing);}
+      navigateNode(id);
+    };
+  });
+}
+window.addEventListener("popstate",function(e){
+  const st=e.state||routeFromHash()||{id:"root",anchor:"",scroll:0};
+  renderNode(st.id,st.anchor||"",{scroll:st.scroll||0,restore:true});
+});
+window.addEventListener("scroll",rememberScroll,{passive:true});
+document.getElementById("reader").addEventListener("scroll",rememberScroll,{passive:true});
+buildTree();bind();updateProg();
+const initial=routeFromHash()||{id:"root",anchor:"",scroll:0};
+history.replaceState({id:initial.id,anchor:initial.anchor||"",scroll:0},"",location.href);
+renderNode(initial.id,initial.anchor||"",{scroll:initial.scroll||0,restore:true});
+</script>
+</body>
+</html>

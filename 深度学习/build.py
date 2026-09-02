@@ -34,11 +34,20 @@ TREE = [
       {"id":"geometry","label":"线性分类的几何视角"},
       {"id":"nonlinear","label":"MLP 引入非线性的作用"},
       {"id":"training","label":"训练:线性模型 → 深度网络"},
+      {"id":"mlptrain","label":"MLP 训练:batch、epoch 与参数更新"},
     ]},
     {"id":"backprop","label":"反向传播与计算图"},
-    {"id":"cnn","label":"卷积神经网络 CNN"},
+    {"id":"cnn","label":"卷积神经网络 CNN","children":[
+      {"id":"mlp2cnn","label":"从 MLP 到 CNN"},
+      {"id":"cnnprinciples","label":"CNN 原理"},
+      {"id":"cnnmodels","label":"CNN 经典模型"},
+    ]},
     {"id":"rnn","label":"循环神经网络 RNN"},
-    {"id":"attn","label":"注意力 → Transformer"},
+    {"id":"attn","label":"注意力 → Transformer","children":[
+      {"id":"embed","label":"输入表示:词元、嵌入与位置编码"},
+      {"id":"masked","label":"掩码自注意力"},
+      {"id":"lm","label":"语言建模:下一个 token 预测"},
+    ]},
   ]},
   {"id":"lab","label":"🧪 实验"},
 ]

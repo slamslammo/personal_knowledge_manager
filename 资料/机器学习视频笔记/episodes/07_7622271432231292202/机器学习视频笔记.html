@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 7 集: 模型评估</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 7 集: 模型评估</h1>
+<p class="meta">来源: 抖音视频《拟合前提: 线性回归模型评估》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7622271432231292202" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep07">返回系列总览</a></p>
+
+<h2>1. 本集定位: 训练完不等于模型好</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 训练完不等于模型好" src="selected_frames/01-title-model-evaluation.jpg"/><figcaption>本集定位: 训练完不等于模型好</figcaption></figure>
+<p class="">这一集补上线性回归之后最容易漏掉的一步: 如何判断模型是否真的有效。模型评估不是看训练时感觉不错,而是用指标和验证方式判断泛化能力。</p>
+<h2>2. Baseline: 先有参照物</h2>
+<p class="meta">约 00:30</p>
+<figure><img alt="Baseline: 先有参照物" src="selected_frames/02-baseline.jpg"/><figcaption>Baseline: 先有参照物</figcaption></figure>
+<p class="">Baseline 是最简单的参照模型。只有先知道“什么都不聪明的模型”能做到什么水平,我们才知道复杂模型是否真的带来收益。</p>
+<h2>3. 加州房价数据集</h2>
+<p class="meta">约 01:00</p>
+<figure><img alt="加州房价数据集" src="selected_frames/03-california-housing.jpg"/><figcaption>加州房价数据集</figcaption></figure>
+<p class="">视频用加州房价作为回归任务。它适合作为机器学习实践的早期例子: 特征是数值型,目标是连续值,能自然引出误差指标。</p>
+<h2>4. 训练 Baseline 模型</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="训练 Baseline 模型" src="selected_frames/04-train-baseline.jpg"/><figcaption>训练 Baseline 模型</figcaption></figure>
+<p class="">这里的重点不是模型多复杂,而是建立评估流程: 数据划分、训练、预测、计算指标。流程稳定后,后续模型替换才有意义。</p>
+<h2>5. MAE: 平均绝对误差</h2>
+<p class="meta">约 03:00</p>
+<figure><img alt="MAE: 平均绝对误差" src="selected_frames/05-mae.jpg"/><figcaption>MAE: 平均绝对误差</figcaption></figure>
+<p class="">MAE 直接表示平均预测偏差,单位和目标值一致,比较容易解释。缺点是对大误差不够敏感。</p>
+<h2>6. MSE: 平方误差</h2>
+<p class="meta">约 03:30</p>
+<figure><img alt="MSE: 平方误差" src="selected_frames/06-mse.jpg"/><figcaption>MSE: 平方误差</figcaption></figure>
+<p class="">MSE 会放大大误差,因此适合惩罚严重预测偏差。但它的单位是平方后的单位,解释不如 MAE 直观。</p>
+<h2>7. RMSE: 把 MSE 拉回原单位</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="RMSE: 把 MSE 拉回原单位" src="selected_frames/07-rmse.jpg"/><figcaption>RMSE: 把 MSE 拉回原单位</figcaption></figure>
+<p class="">RMSE 是 MSE 开根号后的结果,既保留了对大误差敏感的特点,又回到目标变量的原始单位。</p>
+<h2>8. R2: 解释了多少波动</h2>
+<p class="meta">约 05:00</p>
+<figure><img alt="R2: 解释了多少波动" src="selected_frames/08-r2.jpg"/><figcaption>R2: 解释了多少波动</figcaption></figure>
+<p class="">R2 试图回答: 模型相比“总是预测平均值”的基准,解释了多少目标变量变化。它适合做整体拟合效果判断。</p>
+<h2>9. Baseline 评估结果</h2>
+<p class="meta">约 06:30</p>
+<figure><img alt="Baseline 评估结果" src="selected_frames/09-baseline-result.jpg"/><figcaption>Baseline 评估结果</figcaption></figure>
+<p class="">把多个指标放在一起看,比只盯一个数字更稳。MAE、RMSE、R2 分别从不同角度刻画模型表现。</p>
+<h2>10. 残差分析: 数字之外的诊断</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="残差分析: 数字之外的诊断" src="selected_frames/10-residual-analysis.jpg"/><figcaption>残差分析: 数字之外的诊断</figcaption></figure>
+<p class="">残差图能看出模型有没有系统性偏差。若残差随预测值呈明显结构,说明模型可能遗漏了非线性或关键特征。</p>
+<h2>11. 交叉验证: 减少一次划分的偶然性</h2>
+<p class="meta">约 10:30</p>
+<figure><img alt="交叉验证: 减少一次划分的偶然性" src="selected_frames/11-cross-validation.jpg"/><figcaption>交叉验证: 减少一次划分的偶然性</figcaption></figure>
+<p class="">单次训练/测试切分可能碰巧容易或困难。交叉验证通过多次切分取平均,让评估更稳定。</p>
+<h2>12. K-Fold 交叉验证实战</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="K-Fold 交叉验证实战" src="selected_frames/12-kfold-code.jpg"/><figcaption>K-Fold 交叉验证实战</figcaption></figure>
+<p class="">K-Fold 把数据分成 K 份,轮流用一份验证、其余训练。它适合样本量不大时更充分地利用数据。</p>
+<h2>13. 训练集 vs 测试集: 看泛化差距</h2>
+<p class="meta">约 12:30</p>
+<figure><img alt="训练集 vs 测试集: 看泛化差距" src="selected_frames/13-train-vs-test.jpg"/><figcaption>训练集 vs 测试集: 看泛化差距</figcaption></figure>
+<p class="">训练分数高、测试分数低,通常指向过拟合。训练和测试都差,更可能是欠拟合。这个诊断连接到下一集。</p>
+<h2>14. 下一步: 欠拟合与过拟合</h2>
+<p class="meta">约 13:30</p>
+<figure><img alt="下一步: 欠拟合与过拟合" src="selected_frames/14-next-under-overfit.jpg"/><figcaption>下一步: 欠拟合与过拟合</figcaption></figure>
+<p class="">模型评估的价值在于指导行动: 指标差了,究竟该加复杂度、加数据、做正则化,还是换模型? 下一集正好展开。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>模型评估: 如何判断模型有没有学会</code>。</li>
+<li>回归指标建议按 MAE、MSE/RMSE、R2、残差分析、交叉验证展开。</li>
+<li>正式知识库正文要特别强调: 训练集表现不等于泛化能力。</li>
+</ul></main></body></html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 13 集: K-Means 聚类</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 13 集: K-Means 聚类</h1>
+<p class="meta">来源: 抖音视频《K-Means: 让数据自动物以类聚》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7630260821880212762" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep13">返回系列总览</a></p>
+
+<h2>1. 本集定位: 无监督学习的第一个模型</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 无监督学习的第一个模型" src="selected_frames/01-unsupervised-clustering.jpg"/><figcaption>本集定位: 无监督学习的第一个模型</figcaption></figure>
+<p class="">K-Means 处理的是没有标签的数据。它不问“这个样本是什么类”,而是问“哪些样本彼此更像”。</p>
+<h2>2. K-Means 核心思想</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="K-Means 核心思想" src="selected_frames/02-kmeans-idea.jpg"/><figcaption>K-Means 核心思想</figcaption></figure>
+<p class="">先设定 K 个簇中心,再让每个点归到最近中心,然后重新计算中心。重复这个过程直到稳定。</p>
+<h2>3. 质心与距离度量</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="质心与距离度量" src="selected_frames/03-centroid-distance.jpg"/><figcaption>质心与距离度量</figcaption></figure>
+<p class="">质心是簇内样本的平均位置,距离度量决定“相似”的定义。常见选择是欧氏距离。</p>
+<h2>4. 簇内相似度 SSE</h2>
+<p class="meta">约 04:00</p>
+<figure><img alt="簇内相似度 SSE" src="selected_frames/04-sse.jpg"/><figcaption>簇内相似度 SSE</figcaption></figure>
+<p class="">K-Means 的目标是让簇内平方误差 SSE 尽可能小,也就是每个点尽量靠近自己的簇中心。</p>
+<h2>5. 迭代流程</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="迭代流程" src="selected_frames/05-iteration-flow.jpg"/><figcaption>迭代流程</figcaption></figure>
+<p class="">算法流程是初始化中心、分配样本、更新中心、判断收敛。它简单,但会受初始点和 K 值影响。</p>
+<h2>6. 完整流程代码</h2>
+<p class="meta">约 06:00</p>
+<figure><img alt="完整流程代码" src="selected_frames/06-iteration-code.jpg"/><figcaption>完整流程代码</figcaption></figure>
+<p class="">手写迭代代码能看清 K-Means 不需要标签: 它完全根据距离和簇中心更新来组织数据。</p>
+<h2>7. 迭代动画</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="迭代动画" src="selected_frames/07-iteration-animation.jpg"/><figcaption>迭代动画</figcaption></figure>
+<p class="">动画能直观看到点不断换簇、中心不断移动,最后形成稳定划分。</p>
+<h2>8. K-Means++ 初始化</h2>
+<p class="meta">约 08:00</p>
+<figure><img alt="K-Means++ 初始化" src="selected_frames/08-kmeans-plus-plus.jpg"/><figcaption>K-Means++ 初始化</figcaption></figure>
+<p class="">K-Means++ 通过更聪明地选择初始中心,降低陷入坏局部解的概率。</p>
+<h2>9. 肘部法则选择 K</h2>
+<p class="meta">约 09:00</p>
+<figure><img alt="肘部法则选择 K" src="selected_frames/09-elbow-method.jpg"/><figcaption>肘部法则选择 K</figcaption></figure>
+<p class="">K 值不是模型自动知道的。肘部法则通过观察 SSE 随 K 增加的下降拐点,帮助选择合适簇数。</p>
+<h2>10. 二维数据可视化</h2>
+<p class="meta">约 10:30</p>
+<figure><img alt="二维数据可视化" src="selected_frames/10-2d-visualization-code.jpg"/><figcaption>二维数据可视化</figcaption></figure>
+<p class="">二维可视化适合教学演示,可以看到聚类前后样本如何被分组。真实高维数据则需要降维辅助观察。</p>
+<h2>11. 可视化结果</h2>
+<p class="meta">约 11:00</p>
+<figure><img alt="可视化结果" src="selected_frames/11-visualization-result.jpg"/><figcaption>可视化结果</figcaption></figure>
+<p class="">结果图能显示 K-Means 对球状、距离可分的簇较有效,但对复杂形状簇并不总是理想。</p>
+<h2>12. 常见应用</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="常见应用" src="selected_frames/12-applications.jpg"/><figcaption>常见应用</figcaption></figure>
+<p class="">聚类可用于客户分群、图像颜色压缩、异常检测、文本聚类等场景。核心是发现无标签数据中的结构。</p>
+<h2>13. 图像颜色压缩</h2>
+<p class="meta">约 12:00</p>
+<figure><img alt="图像颜色压缩" src="selected_frames/13-image-compression.jpg"/><figcaption>图像颜色压缩</figcaption></figure>
+<p class="">图像颜色压缩把像素颜色聚成 K 类,用 K 个中心色替代原始颜色,是 K-Means 很直观的应用。</p>
+<h2>14. 总结与局限</h2>
+<p class="meta">约 13:30</p>
+<figure><img alt="总结与局限" src="selected_frames/14-limitations.jpg"/><figcaption>总结与局限</figcaption></figure>
+<p class="">K-Means 简单高效,但需要预设 K,对初始值、尺度和离群点敏感,也偏好近似球形簇。</p>
+<h2>15. 实用改进策略</h2>
+<p class="meta">约 15:00</p>
+<figure><img alt="实用改进策略" src="selected_frames/15-improvement.jpg"/><figcaption>实用改进策略</figcaption></figure>
+<p class="">实践中常用多次初始化、特征缩放、Mini-Batch K-Means 等方法提升稳定性和效率。</p>
+<h2>16. 扩展算法</h2>
+<p class="meta">约 16:00</p>
+<figure><img alt="扩展算法" src="selected_frames/16-related-clustering.jpg"/><figcaption>扩展算法</figcaption></figure>
+<p class="">K-Medoids、DBSCAN、层次聚类等方法能处理不同聚类假设,适合作为无监督学习支线的扩展。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>K-Means: 用距离发现簇结构</code>。</li>
+<li>正文要强调无监督学习没有标签,评价标准与监督学习不同。</li>
+<li>实验建议用二维 toy data、鸢尾花特征和图像颜色压缩三个层级展开。</li>
+</ul></main></body></html>

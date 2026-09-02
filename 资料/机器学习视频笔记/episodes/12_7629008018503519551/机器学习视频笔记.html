@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 12 集: 集成学习与梯度提升树</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 12 集: 集成学习与梯度提升树</h1>
+<p class="meta">来源: 抖音视频《集成学习: XGBoost、LightGBM、CatBoost》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7629008018503519551" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep12">返回系列总览</a></p>
+
+<h2>1. 本集定位: 从多树投票到逐步纠错</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 从多树投票到逐步纠错" src="selected_frames/01-bagging-vs-boosting.jpg"/><figcaption>本集定位: 从多树投票到逐步纠错</figcaption></figure>
+<p class="">这一集从 Bagging 和 Boosting 对比开始。随机森林强调并行投票,Boosting 强调后一个模型修正前一个模型的错误。</p>
+<h2>2. Boosting: 接力纠错</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="Boosting: 接力纠错" src="selected_frames/02-boosting-chain.jpg"/><figcaption>Boosting: 接力纠错</figcaption></figure>
+<p class="">Boosting 的直觉是: 第一棵树先预测,第二棵树重点学习第一棵树没处理好的残差,不断迭代。</p>
+<h2>3. 核心对比</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="核心对比" src="selected_frames/03-core-comparison.jpg"/><figcaption>核心对比</figcaption></figure>
+<p class="">Bagging 降低方差,Boosting 更强调降低偏差并逐步提升拟合能力。它们都属于集成学习,但训练方式完全不同。</p>
+<h2>4. GBDT 核心原理</h2>
+<p class="meta">约 03:00</p>
+<figure><img alt="GBDT 核心原理" src="selected_frames/04-gbdt-principle.jpg"/><figcaption>GBDT 核心原理</figcaption></figure>
+<p class="">GBDT 用多棵决策树累加形成模型,每棵新树都沿着损失下降方向去修正当前模型。</p>
+<h2>5. 每棵树在做什么</h2>
+<p class="meta">约 05:30</p>
+<figure><img alt="每棵树在做什么" src="selected_frames/05-what-each-tree-does.jpg"/><figcaption>每棵树在做什么</figcaption></figure>
+<p class="">每一步训练新树时,目标不是重新拟合标签,而是拟合当前模型的负梯度或残差方向。</p>
+<h2>6. 损失函数与负梯度</h2>
+<p class="meta">约 06:30</p>
+<figure><img alt="损失函数与负梯度" src="selected_frames/06-loss-negative-gradient.jpg"/><figcaption>损失函数与负梯度</figcaption></figure>
+<p class="">负梯度表示让损失下降最快的方向。GBDT 可以理解为在函数空间里做梯度下降。</p>
+<h2>7. 手搓 GBDT: 代码实现</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="手搓 GBDT: 代码实现" src="selected_frames/07-gbdt-code.jpg"/><figcaption>手搓 GBDT: 代码实现</figcaption></figure>
+<p class="">手写代码有助于理解 GBDT 的本质: 初始化预测、计算残差/负梯度、训练新树、累加更新。</p>
+<h2>8. 残差变化可视化</h2>
+<p class="meta">约 09:30</p>
+<figure><img alt="残差变化可视化" src="selected_frames/08-residual-visualization.jpg"/><figcaption>残差变化可视化</figcaption></figure>
+<p class="">多棵树叠加后,模型会逐步逼近目标函数。可视化能看到每一轮如何修正上轮的不足。</p>
+<h2>9. GBDT 的优缺点</h2>
+<p class="meta">约 10:30</p>
+<figure><img alt="GBDT 的优缺点" src="selected_frames/09-gbdt-pros-cons.jpg"/><figcaption>GBDT 的优缺点</figcaption></figure>
+<p class="">GBDT 精度强、适合表格数据,但训练串行、对参数敏感,也容易在数据噪声上过拟合。</p>
+<h2>10. XGBoost: 工业界进化</h2>
+<p class="meta">约 12:00</p>
+<figure><img alt="XGBoost: 工业界进化" src="selected_frames/10-xgboost.jpg"/><figcaption>XGBoost: 工业界进化</figcaption></figure>
+<p class="">XGBoost 在 GBDT 基础上加入正则化、二阶梯度、列采样、缺失值处理等工程优化,长期是表格竞赛强基线。</p>
+<h2>11. LightGBM</h2>
+<p class="meta">约 13:30</p>
+<figure><img alt="LightGBM" src="selected_frames/11-lightgbm.jpg"/><figcaption>LightGBM</figcaption></figure>
+<p class="">LightGBM 强调速度和内存效率,常用 leaf-wise 生长、直方图算法等优化,适合大规模表格数据。</p>
+<h2>12. CatBoost</h2>
+<p class="meta">约 15:00</p>
+<figure><img alt="CatBoost" src="selected_frames/12-catboost.jpg"/><figcaption>CatBoost</figcaption></figure>
+<p class="">CatBoost 更擅长处理类别特征,减少目标泄漏和类别编码带来的偏差,在类别字段多的任务中很有价值。</p>
+<h2>13. 三者怎么选</h2>
+<p class="meta">约 17:00</p>
+<figure><img alt="三者怎么选" src="selected_frames/13-which-boosting.jpg"/><figcaption>三者怎么选</figcaption></figure>
+<p class="">简单判断: 追求稳妥强基线用 XGBoost,大数据和速度优先看 LightGBM,类别特征多可考虑 CatBoost。</p>
+<h2>14. XGBoost 实战</h2>
+<p class="meta">约 17:30</p>
+<figure><img alt="XGBoost 实战" src="selected_frames/14-xgboost-demo.jpg"/><figcaption>XGBoost 实战</figcaption></figure>
+<p class="">实践部分用加州房价预测对比随机森林和 XGBoost,适合作为表格数据建模实验。</p>
+<h2>15. 结果对比</h2>
+<p class="meta">约 19:30</p>
+<figure><img alt="结果对比" src="selected_frames/15-result-comparison.jpg"/><figcaption>结果对比</figcaption></figure>
+<p class="">结果对比要看训练误差、验证误差和泛化表现。提升树效果好,但也需要防止过拟合。</p>
+<h2>16. Early Stopping</h2>
+<p class="meta">约 20:00</p>
+<figure><img alt="Early Stopping" src="selected_frames/16-early-stopping.jpg"/><figcaption>Early Stopping</figcaption></figure>
+<p class="">早停通过验证集监控训练轮数,当性能不再提升时停止,是 Boosting 和深度学习里都常用的防过拟合手段。</p>
+<h2>17. 本集总结</h2>
+<p class="meta">约 21:30</p>
+<figure><img alt="本集总结" src="selected_frames/17-summary.jpg"/><figcaption>本集总结</figcaption></figure>
+<p class="">这集是传统机器学习表格建模的重点: GBDT/XGBoost/LightGBM/CatBoost 是从决策树一路发展出来的强模型家族。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>集成学习: Bagging、Boosting 与 GBDT 家族</code>。</li>
+<li>正文要用一张对比图串起随机森林、GBDT、XGBoost、LightGBM、CatBoost。</li>
+<li>实践建议用同一个表格回归数据对比 RandomForestRegressor 与 XGBoost/LightGBM。</li>
+</ul></main></body></html>

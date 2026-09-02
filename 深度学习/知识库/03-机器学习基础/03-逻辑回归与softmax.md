@@ -24,7 +24,7 @@ $$\ln\frac{p}{1-p}=z=\mathbf w\cdot\mathbf x+b.$$
 $$p=\frac{1}{1+e^{-z}}=\sigma(z).$$
 逻辑回归的模型就此成形:$P(y{=}1\mid\mathbf x)=\sigma(\mathbf w\cdot\mathbf x+b)$,$P(y{=}0\mid\mathbf x)=1-\sigma(\cdot)$。**sigmoid 不是随手挑的 S 形函数,而是"把概率改造到与打分同范围"这一要求的必然结果。**
 
-![Sigmoid 把打分压成 (0,1) 概率;一维逻辑回归按 0.5 阈值分两类](../../assets/softmax-sigmoid.png)
+![Sigmoid 把打分压成 (0,1) 概率;一维逻辑回归按 0.5 阈值分两类](../../assets/ml-softmax/softmax-sigmoid.png)
 
 这个结果还有几重旁证:$\sigma$ **光滑、单调、$\sigma(0)=0.5$**,天然配梯度下降与 0.5 阈值;若两类各服从等协方差的高斯分布,则后验 $P(y{=}1\mid\mathbf x)$ 精确地就是某线性函数的 sigmoid;在广义线性模型里,它也是伯努利分布的标准联系函数。
 
@@ -50,7 +50,7 @@ $$\mathcal L=-\big[\,y\ln p+(1-y)\ln(1-p)\,\big].$$
 合起来就是 **softmax**:
 $$\operatorname{softmax}(\mathbf z)_k=\frac{e^{z_k}}{\sum_{j=1}^{K}e^{z_j}}.$$
 
-![softmax 把任意实数 logits 变成非负、和为 1 的概率分布](../../assets/softmax-transform.png)
+![softmax 把任意实数 logits 变成非负、和为 1 的概率分布](../../assets/ml-softmax/softmax-transform.png)
 
 它与 sigmoid 一脉相承:$K=2$ 时
 $$\operatorname{softmax}(z_1,z_2)_1=\frac{e^{z_1}}{e^{z_1}+e^{z_2}}=\frac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1-z_2),$$
@@ -60,7 +60,7 @@ softmax 只依赖分数之**差**,恰好退化成一个 sigmoid。所以逻辑�
 
 损失同样从交叉熵推广:真实类是 one-hot,损失为 $-\ln q_{y}$($q_y$ 为真实类别的预测概率),它对 logit 的梯度仍是 $q-\text{one-hot}$,形式干净、数值稳定,故实现上 softmax 与交叉熵常合并成一个算子。
 
-![多分类:K 个线性打分把空间切成 K 块,每点归到分数最高的类](../../assets/softmax-boundary.png)
+![多分类:K 个线性打分把空间切成 K 块,每点归到分数最高的类](../../assets/ml-softmax/softmax-boundary.png)
 
 $K$ 个线性打分把空间切成 $K$ 块,两类得分相等处 $\mathbf w_i\cdot\mathbf x=\mathbf w_j\cdot\mathbf x$ 是一条**线性边界**。所以逻辑回归、softmax 都是**线性分类器**,决策边界是直的。更完整的空间解释见 [线性分类的几何视角](node:geometry);要拟合弯曲边界,必须引入非线性——这正是通往 [多层感知机](node:mlp) 的动因。
 

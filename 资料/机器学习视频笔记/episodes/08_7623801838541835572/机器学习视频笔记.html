@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 8 集: 欠拟合与过拟合</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 8 集: 欠拟合与过拟合</h1>
+<p class="meta">来源: 抖音视频《欠拟合与过拟合问题诊断与解决》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7623801838541835572" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep08">返回系列总览</a></p>
+
+<h2>1. 本集定位: 模型训练的两种困境</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 模型训练的两种困境" src="selected_frames/01-title-fitting-problems.jpg"/><figcaption>本集定位: 模型训练的两种困境</figcaption></figure>
+<p class="">评估指标告诉我们模型好不好,欠拟合和过拟合解释“为什么不好”。一个是模型太简单,一个是模型记住了训练集细节。</p>
+<h2>2. 欠拟合: 学得太粗</h2>
+<p class="meta">约 01:00</p>
+<figure><img alt="欠拟合: 学得太粗" src="selected_frames/02-underfitting.jpg"/><figcaption>欠拟合: 学得太粗</figcaption></figure>
+<p class="">欠拟合表示模型表达能力不足,连训练集规律都抓不住。典型表现是训练集和测试集都差。</p>
+<h2>3. 过拟合: 学得太碎</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="过拟合: 学得太碎" src="selected_frames/03-overfitting.jpg"/><figcaption>过拟合: 学得太碎</figcaption></figure>
+<p class="">过拟合表示模型把训练数据中的噪声也记住了。典型表现是训练集很好,测试集明显变差。</p>
+<h2>4. 三种状态对比</h2>
+<p class="meta">约 02:00</p>
+<figure><img alt="三种状态对比" src="selected_frames/04-comparison.jpg"/><figcaption>三种状态对比</figcaption></figure>
+<p class="">欠拟合、合适拟合、过拟合可以用训练误差和测试误差一起判断。只看训练误差会很容易被骗。</p>
+<h2>5. 学习曲线: 诊断工具</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="学习曲线: 诊断工具" src="selected_frames/05-learning-curve.jpg"/><figcaption>学习曲线: 诊断工具</figcaption></figure>
+<p class="">学习曲线把训练分数和验证分数随样本量变化画出来,能帮助判断是数据不够、模型太弱,还是复杂度太高。</p>
+<h2>6. 拟合效果可视化</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="拟合效果可视化" src="selected_frames/06-fit-visualization.jpg"/><figcaption>拟合效果可视化</figcaption></figure>
+<p class="">图像化对理解最有帮助: 欠拟合曲线太平,过拟合曲线过于弯折,合适模型在趋势和细节之间取得平衡。</p>
+<h2>7. 绘制学习曲线</h2>
+<p class="meta">约 06:30</p>
+<figure><img alt="绘制学习曲线" src="selected_frames/07-learning-curve-code.jpg"/><figcaption>绘制学习曲线</figcaption></figure>
+<p class="">实践中不要只凭肉眼看一张拟合图,还要用学习曲线、验证曲线和指标共同判断。</p>
+<h2>8. 如何解决欠拟合</h2>
+<p class="meta">约 08:00</p>
+<figure><img alt="如何解决欠拟合" src="selected_frames/08-solve-underfit.jpg"/><figcaption>如何解决欠拟合</figcaption></figure>
+<p class="">欠拟合通常需要增加模型表达能力、增加有效特征、减少过强正则化,或者训练更久。</p>
+<h2>9. 增加模型复杂度</h2>
+<p class="meta">约 08:30</p>
+<figure><img alt="增加模型复杂度" src="selected_frames/09-increase-complexity.jpg"/><figcaption>增加模型复杂度</figcaption></figure>
+<p class="">在线性回归里加入多项式特征,是增加复杂度的直观方式。它能拟合曲线,但也会提高过拟合风险。</p>
+<h2>10. 如何解决过拟合</h2>
+<p class="meta">约 09:30</p>
+<figure><img alt="如何解决过拟合" src="selected_frames/10-solve-overfit.jpg"/><figcaption>如何解决过拟合</figcaption></figure>
+<p class="">过拟合可以通过更多数据、减少复杂度、正则化、早停、Dropout 等方式缓解。机器学习阶段重点先理解复杂度和正则化。</p>
+<h2>11. 正则化: 惩罚过大的参数</h2>
+<p class="meta">约 12:00</p>
+<figure><img alt="正则化: 惩罚过大的参数" src="selected_frames/11-regularization.jpg"/><figcaption>正则化: 惩罚过大的参数</figcaption></figure>
+<p class="">正则化把模型复杂度写进损失函数,让模型在拟合数据和保持简单之间做权衡。</p>
+<h2>12. L1 与 L2 正则化</h2>
+<p class="meta">约 14:00</p>
+<figure><img alt="L1 与 L2 正则化" src="selected_frames/12-l1-l2.jpg"/><figcaption>L1 与 L2 正则化</figcaption></figure>
+<p class="">L1 倾向于让部分参数变成 0,带来特征选择效果;L2 倾向于让参数整体变小,让模型更平滑稳定。</p>
+<h2>13. 使用正则化解决过拟合</h2>
+<p class="meta">约 16:00</p>
+<figure><img alt="使用正则化解决过拟合" src="selected_frames/13-regularization-code.jpg"/><figcaption>使用正则化解决过拟合</figcaption></figure>
+<p class="">代码层面可以用 Ridge、Lasso、ElasticNet 等模型实验正则化效果。这里很适合设计一个本地 sklearn 小实验。</p>
+<h2>14. 正则化后的对比结果</h2>
+<p class="meta">约 17:00</p>
+<figure><img alt="正则化后的对比结果" src="selected_frames/14-regularization-result.jpg"/><figcaption>正则化后的对比结果</figcaption></figure>
+<p class="">如果正则化合适,测试集表现会改善,但训练集可能稍微下降。这正是“不要死记训练集”的体现。</p>
+<h2>15. 总结与展望</h2>
+<p class="meta">约 19:30</p>
+<figure><img alt="总结与展望" src="selected_frames/15-summary.jpg"/><figcaption>总结与展望</figcaption></figure>
+<p class="">欠拟合和过拟合是机器学习里贯穿始终的诊断框架。后续不管是树模型、集成学习还是神经网络,都会反复遇到。</p>
+<h2>16. 线性回归的重要性</h2>
+<p class="meta">约 20:30</p>
+<figure><img alt="线性回归的重要性" src="selected_frames/16-linear-regression-importance.jpg"/><figcaption>线性回归的重要性</figcaption></figure>
+<p class="">线性回归虽然简单,但它把数据、模型、损失、优化、评估和泛化问题都串起来了,非常适合作为机器学习主线起点。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>泛化: 欠拟合、过拟合与正则化</code>。</li>
+<li>正文最好把“训练集/测试集表现组合”做成诊断表。</li>
+<li>实验可用多项式回归 + Ridge/Lasso 展示复杂度和正则化的影响。</li>
+</ul></main></body></html>

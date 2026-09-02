@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 9 集: 逻辑回归</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 9 集: 逻辑回归</h1>
+<p class="meta">来源: 抖音视频《逻辑回归: 最常用的分类模型》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7625130953991621926" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep09">返回系列总览</a></p>
+
+<h2>1. 本集定位: 从回归走向分类</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="本集定位: 从回归走向分类" src="selected_frames/01-title-logistic-regression.jpg"/><figcaption>本集定位: 从回归走向分类</figcaption></figure>
+<p class="">逻辑回归名字里有“回归”,但主要用于分类。它是从线性模型过渡到概率分类模型的关键节点。</p>
+<h2>2. 什么是分类问题</h2>
+<p class="meta">约 00:30</p>
+<figure><img alt="什么是分类问题" src="selected_frames/02-classification-problem.jpg"/><figcaption>什么是分类问题</figcaption></figure>
+<p class="">分类任务预测的是离散类别,例如是否患病、是否垃圾邮件、图片属于哪一类。它和线性回归预测连续数值不同。</p>
+<h2>3. 为什么需要逻辑回归</h2>
+<p class="meta">约 01:30</p>
+<figure><img alt="为什么需要逻辑回归" src="selected_frames/03-why-logistic-regression.jpg"/><figcaption>为什么需要逻辑回归</figcaption></figure>
+<p class="">线性回归输出可以是任意实数,不适合直接表示概率。逻辑回归用 sigmoid 把线性输出压到 0 到 1。</p>
+<h2>4. Sigmoid 函数</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="Sigmoid 函数" src="selected_frames/04-sigmoid.jpg"/><figcaption>Sigmoid 函数</figcaption></figure>
+<p class="">Sigmoid 把 <code>z = wx + b</code> 映射成概率 <code>p</code>。这一步让线性模型可以表达“属于正类的概率”。</p>
+<h2>5. 为什么需要 Sigmoid</h2>
+<p class="meta">约 03:30</p>
+<figure><img alt="为什么需要 Sigmoid" src="selected_frames/05-why-sigmoid.jpg"/><figcaption>为什么需要 Sigmoid</figcaption></figure>
+<p class="">Sigmoid 的输出区间、单调性和可导性都适合二分类。它把“分数”变成“概率解释”。</p>
+<h2>6. 为什么不使用 MSE</h2>
+<p class="meta">约 05:30</p>
+<figure><img alt="为什么不使用 MSE" src="selected_frames/06-why-not-mse.jpg"/><figcaption>为什么不使用 MSE</figcaption></figure>
+<p class="">分类里用 MSE 会让优化曲面不够理想,而且概率解释不自然。逻辑回归通常搭配交叉熵损失。</p>
+<h2>7. 分类问题损失的特征</h2>
+<p class="meta">约 07:30</p>
+<figure><img alt="分类问题损失的特征" src="selected_frames/07-classification-loss.jpg"/><figcaption>分类问题损失的特征</figcaption></figure>
+<p class="">分类损失要惩罚“自信但错误”的预测。如果真实标签是 1,预测概率越接近 0,惩罚应该越大。</p>
+<h2>8. 基础工具: 对数函数</h2>
+<p class="meta">约 09:00</p>
+<figure><img alt="基础工具: 对数函数" src="selected_frames/08-logarithm.jpg"/><figcaption>基础工具: 对数函数</figcaption></figure>
+<p class="">对数函数把概率接近 0 的错误预测放大惩罚,这正好符合分类任务的需求。</p>
+<h2>9. 伯努利分布</h2>
+<p class="meta">约 11:00</p>
+<figure><img alt="伯努利分布" src="selected_frames/09-bernoulli.jpg"/><figcaption>伯努利分布</figcaption></figure>
+<p class="">二分类标签可以看成伯努利随机变量。这个视角把逻辑回归和概率建模连接起来。</p>
+<h2>10. 最大似然估计</h2>
+<p class="meta">约 13:00</p>
+<figure><img alt="最大似然估计" src="selected_frames/10-mle.jpg"/><figcaption>最大似然估计</figcaption></figure>
+<p class="">最大似然的思想是: 找到一组参数,让已观察到的标签数据出现的概率最大。交叉熵可以从这个思路推出。</p>
+<h2>11. 交叉熵损失</h2>
+<p class="meta">约 15:30</p>
+<figure><img alt="交叉熵损失" src="selected_frames/11-cross-entropy.jpg"/><figcaption>交叉熵损失</figcaption></figure>
+<p class="">交叉熵衡量真实标签分布和预测概率分布之间的差异。分类越自信且越正确,损失越小。</p>
+<h2>12. 梯度下降更新参数</h2>
+<p class="meta">约 16:30</p>
+<figure><img alt="梯度下降更新参数" src="selected_frames/12-gradient-descent.jpg"/><figcaption>梯度下降更新参数</figcaption></figure>
+<p class="">逻辑回归依然遵循“预测 -&gt; 损失 -&gt; 梯度 -&gt; 更新”的训练循环,只是模型输出和损失函数换成分类形式。</p>
+<h2>13. 乳腺癌数据集实战</h2>
+<p class="meta">约 17:30</p>
+<figure><img alt="乳腺癌数据集实战" src="selected_frames/13-breast-cancer-code.jpg"/><figcaption>乳腺癌数据集实战</figcaption></figure>
+<p class="">视频用二分类数据集演示逻辑回归训练。这个例子适合作为 sklearn 分类实验的第一个案例。</p>
+<h2>14. 预测概率分布可视化</h2>
+<p class="meta">约 18:30</p>
+<figure><img alt="预测概率分布可视化" src="selected_frames/14-probability-visualization.jpg"/><figcaption>预测概率分布可视化</figcaption></figure>
+<p class="">分类模型不只输出类别,还可以输出概率。概率分布能帮助理解模型信心和阈值选择。</p>
+<h2>15. 混淆矩阵</h2>
+<p class="meta">约 19:30</p>
+<figure><img alt="混淆矩阵" src="selected_frames/15-confusion-matrix.jpg"/><figcaption>混淆矩阵</figcaption></figure>
+<p class="">混淆矩阵把 TP、FP、TN、FN 展开,比单一准确率更能说明模型错在哪里。</p>
+<h2>16. Precision、Recall、F1</h2>
+<p class="meta">约 22:30</p>
+<figure><img alt="Precision、Recall、F1" src="selected_frames/16-precision-recall-f1.jpg"/><figcaption>Precision、Recall、F1</figcaption></figure>
+<p class="">Precision 关注“预测为正的有多少是真的”,Recall 关注“真实为正的找回了多少”,F1 在两者之间折中。</p>
+<h2>17. ROC 曲线与 AUC</h2>
+<p class="meta">约 23:00</p>
+<figure><img alt="ROC 曲线与 AUC" src="selected_frames/17-roc-auc.jpg"/><figcaption>ROC 曲线与 AUC</figcaption></figure>
+<p class="">ROC/AUC 用于观察不同阈值下的分类表现。它把阈值选择从一个点扩展成一条曲线。</p>
+<h2>18. 多分类与 Softmax</h2>
+<p class="meta">约 26:30</p>
+<figure><img alt="多分类与 Softmax" src="selected_frames/18-softmax.jpg"/><figcaption>多分类与 Softmax</figcaption></figure>
+<p class="">多分类时通常用 Softmax 把多个类别分数转成概率分布。这里正好连接深度学习分类输出层。</p>
+<h2>19. 本集总结</h2>
+<p class="meta">约 28:00</p>
+<figure><img alt="本集总结" src="selected_frames/19-summary.jpg"/><figcaption>本集总结</figcaption></figure>
+<p class="">逻辑回归是理解分类模型的核心入口: 线性打分、概率映射、交叉熵损失、梯度下降、分类指标都在这里汇合。</p>
+<h2>入库建议</h2>
+<ul>
+<li>建议建立主节点 <code>逻辑回归: 从线性打分到概率分类</code>。</li>
+<li>数学细节可链接到概率基础、对数函数、最大似然、交叉熵。</li>
+<li>实验建议使用乳腺癌二分类数据,同时展示混淆矩阵、PR/F1、ROC/AUC。</li>
+</ul></main></body></html>

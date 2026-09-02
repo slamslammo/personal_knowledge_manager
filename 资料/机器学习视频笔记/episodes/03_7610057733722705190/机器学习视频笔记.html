@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>第 3 集: 机器学习类型</title><style>:root{color-scheme:dark;--bg:#15130f;--panel:#1f1c17;--ink:#eee9df;--muted:#aaa197;--line:#342f27;--accent:#49c783;--blue:#4c93ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;font-size:18px;}
+a{color:#62a8ff;text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#17140f;padding:24px 18px}.sidebar h2{font-size:20px;margin:0 0 14px}.sidebar a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted)}.sidebar a:hover,.sidebar a.active{background:#27231d;color:var(--ink);text-decoration:none}.content{max-width:1120px;padding:52px 64px 96px}.episode{margin-bottom:84px}.episode+.episode{border-top:1px solid var(--line);padding-top:56px}h1{font-size:42px;line-height:1.25;margin:0 0 22px}h2{font-size:28px;line-height:1.35;margin:48px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:22px;margin:28px 0 8px}p{margin:14px 0;color:#ddd7ce}.meta{color:var(--muted);font-size:16px}.note{border-left:5px solid var(--blue);background:#1d1b17;padding:16px 20px;margin:22px 0;color:#cfc8bd}figure{margin:18px 0 26px;background:#f8f8f5;border-radius:8px;padding:10px;max-width:960px}figure img{display:block;width:100%;height:auto;border-radius:4px}figcaption{color:#5f5a50;font-size:14px;text-align:center;margin-top:8px}ul{padding-left:1.4em}li{margin:6px 0}code{font-family:Menlo,Consolas,monospace;background:#2a261f;border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:#211e19;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto}.topbar{position:sticky;top:0;z-index:2;background:rgba(21,19,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 64px;color:var(--muted)}@media(max-width:900px){.layout{display:block}.sidebar{position:relative;height:auto}.content{padding:32px 20px}.topbar{padding:10px 20px}h1{font-size:32px}}</style></head><body><main class="content episode"><h1>第 3 集: 机器学习类型</h1>
+<p class="meta">来源: 抖音视频《机器学习类型: 监督学习、非监督学习、强化学习》</p>
+<p class="meta">作者: 谦行AIing</p><p class="meta">视频链接: <a href="https://www.iesdouyin.com/share/video/7610057733722705190" rel="noopener" target="_blank">抖音原视频</a></p><p class="meta">说明: 本文由 AI 基于视频画面与 ASR 底稿进行术语校正和结构化整理,用于机器学习知识梳理参考。</p><p class="meta"><a href="../../机器学习视频笔记.html#ep03">返回系列总览</a></p>
+
+<h2>1. 本集定位: 先建立任务地图</h2>
+<p class="meta">约 00:00</p>
+<figure><img alt="机器学习类型" src="selected_frames/01-title-ml-types.jpg"/><figcaption>机器学习类型</figcaption></figure>
+<p class="">机器学习应用很多,但问题类型可以先粗分。这个分类不是为了背概念,而是为了回答:</p>
+<p class="">面对一个数据问题时,我们到底是在做预测、找结构,还是在动态环境里学策略?</p>
+<h2>2. 数据、特征与标签</h2>
+<p class="meta">约 02:30</p>
+<figure><img alt="数据特征标签" src="selected_frames/02-data-feature-label.jpg"/><figcaption>数据特征标签</figcaption></figure>
+<p class="">视频先用结构化表格解释基本概念:</p>
+<ul>
+<li>数据集: 一整张训练/测试用的数据表。</li>
+<li>样本/数据点: 表格中的一行。</li>
+<li>特征: 用于描述样本的输入变量。</li>
+<li>标签: 模型要预测的目标。</li>
+</ul>
+<p class="">这一段很适合放在机器学习基础的开头,因为后面回归、分类、聚类、降维都会反复使用这些词。</p>
+<h2>3. 三大分支: 监督、无监督、强化学习</h2>
+<p class="meta">约 03:30</p>
+<figure><img alt="三大分支" src="selected_frames/03-three-branches.jpg"/><figcaption>三大分支</figcaption></figure>
+<p class="">按数据和学习方式可以先分为:</p>
+<ul>
+<li>监督学习: 有标签,学习输入到标签的映射。</li>
+<li>无监督学习: 无标签,发现数据内部结构。</li>
+<li>强化学习: 在环境中试错,根据奖励学习策略。</li>
+</ul>
+<p class="">这张图可以作为机器学习知识地图的一级分叉。</p>
+<h2>4. 监督学习: 处理带标签数据</h2>
+<p class="meta">约 04:30</p>
+<figure><img alt="监督学习" src="selected_frames/04-supervised-learning.jpg"/><figcaption>监督学习</figcaption></figure>
+<p class="">监督学习的关键是“训练样本带有正确答案”。模型通过比较预测值和真实标签,调整参数。</p>
+<p class="">典型任务:</p>
+<ul>
+<li>根据面积、房龄、地段预测房价。</li>
+<li>根据邮件内容判断是否垃圾邮件。</li>
+<li>根据图片判断类别。</li>
+</ul>
+<h2>5. 监督学习的两类核心模型: 回归与分类</h2>
+<p class="meta">约 05:30</p>
+<figure><img alt="回归与分类" src="selected_frames/05-regression-classification.jpg"/><figcaption>回归与分类</figcaption></figure>
+<p class="">监督学习里最基础的两类:</p>
+<ul>
+<li>回归: 预测连续数值,例如房价、销量、温度。</li>
+<li>分类: 预测离散类别,例如是否违约、邮件类别、图片类别。</li>
+</ul>
+<p class="">后续课程顺序也对应这里: 线性回归先解决连续预测,逻辑回归再进入分类。</p>
+<h2>6. 无监督学习: 处理无标签数据</h2>
+<p class="meta">约 07:00</p>
+<figure><img alt="无监督学习" src="selected_frames/06-unsupervised-learning.jpg"/><figcaption>无监督学习</figcaption></figure>
+<p class="">无监督学习没有明确标签,目标不是预测一个已知答案,而是探索数据内部结构。</p>
+<p class="">它适合回答的问题包括:</p>
+<ul>
+<li>数据能否自然分成几类?</li>
+<li>哪些样本彼此相似?</li>
+<li>能否压缩维度,保留主要信息?</li>
+<li>能否从数据分布中生成新样本?</li>
+</ul>
+<h2>7. 聚类: 让数据自动分组</h2>
+<p class="meta">约 08:30</p>
+<figure><img alt="聚类算法" src="selected_frames/07-clustering.jpg"/><figcaption>聚类算法</figcaption></figure>
+<p class="">聚类是无监督学习的典型任务。它不是根据人工标签分类,而是根据样本之间的相似性自动分组。</p>
+<p class="">后续可以对应第 13 集 K-Means:</p>
+<ul>
+<li>先选中心。</li>
+<li>根据距离分配样本。</li>
+<li>更新中心。</li>
+<li>迭代到分组稳定。</li>
+</ul>
+<h2>8. 降维: 压缩特征但尽量保留信息</h2>
+<p class="meta">约 10:00</p>
+<figure><img alt="降维算法" src="selected_frames/08-dimensionality-reduction.jpg"/><figcaption>降维算法</figcaption></figure>
+<p class="">降维的目标是把高维数据压缩到低维空间,同时尽量保留主要结构或信息。</p>
+<p class="">这可以连接到第 14 集 PCA。对于知识库来说,PCA 应该同时挂在:</p>
+<ul>
+<li>机器学习: 无监督学习/降维。</li>
+<li>数学基础: 线性代数中的特征值、特征向量、投影。</li>
+</ul>
+<h2>9. 生成算法: 从数据分布中生成新内容</h2>
+<p class="meta">约 11:30</p>
+<figure><img alt="生成算法" src="selected_frames/09-generative-learning.jpg"/><figcaption>生成算法</figcaption></figure>
+<p class="">生成式学习关注的是学习数据分布,再从分布中生成新的样本。它和后续 AIGC、语言模型有关系,但在机器学习入门阶段不宜展开太深。</p>
+<p class="">这一节可作为通往深度学习/生成模型的桥。</p>
+<h2>10. 强化学习: 在动态环境中试错</h2>
+<p class="meta">约 13:00</p>
+<figure><img alt="强化学习" src="selected_frames/10-reinforcement-learning.jpg"/><figcaption>强化学习</figcaption></figure>
+<p class="">强化学习的核心不是静态数据表,而是智能体和环境交互:</p>
+<ul>
+<li>智能体选择动作。</li>
+<li>环境返回状态和奖励。</li>
+<li>智能体根据长期奖励优化策略。</li>
+</ul>
+<p class="">这与监督学习不同: 它不是每一步都有标准答案,而是在试错中学习更优决策。</p>
+<h2>11. 本集总结</h2>
+<p class="meta">约 16:00</p>
+<figure><img alt="本集总结" src="selected_frames/11-summary.jpg"/><figcaption>本集总结</figcaption></figure>
+<p class="">本集适合沉淀为机器学习总览图:</p>
+<ul>
+<li>监督学习: 回归、分类。</li>
+<li>无监督学习: 聚类、降维、生成。</li>
+<li>强化学习: 策略、奖励、环境交互。</li>
+</ul>
+<h2>入库建议</h2>
+<p class="">建议拆成主节点:</p>
+<p class=""><code>机器学习任务类型: 监督、无监督与强化学习</code></p>
+<p class="">正文重点保留:</p>
+<ul>
+<li>先解释数据集、样本、特征、标签。</li>
+<li>再用“是否有标签”和“是否与环境交互”区分任务类型。</li>
+<li>把后续模型挂到对应分支: 线性回归、逻辑回归、决策树、K-Means、PCA。</li>
+</ul></main></body></html>
