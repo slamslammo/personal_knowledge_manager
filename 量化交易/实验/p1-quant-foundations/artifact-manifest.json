@@ -6,7 +6,7 @@
   ],
   "environment": "pkm-quant",
   "dataDefault": "offline-synthetic-fixtures",
-  "singleBrowserEntry": "/Users/mojiawen/Documents/学习资料归档/_暂存/pam-video-captures/365-days-quant-finance/knowledge-map.html",
+  "singleBrowserEntry": "/Users/mojiawen/Documents/pam-video-captures/365-days-quant-finance/knowledge-map.html",
   "modules": [
     {
       "id": "M1",

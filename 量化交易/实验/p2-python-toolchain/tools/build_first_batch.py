@@ -19,7 +19,7 @@ FIXTURES = ROOT / "data" / "fixtures"
 OUTPUTS = ROOT / "outputs"
 RANDOM_SEED = 365
 COURSE_ROOT = Path(
-    "/Users/mojiawen/Documents/学习资料归档/_暂存/"
+    "/Users/mojiawen/Documents/"
     "pam-video-captures/365-days-quant-finance"
 )
 

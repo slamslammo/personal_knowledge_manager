@@ -66,7 +66,7 @@ P2 课程只保留一个浏览器入口：
 
 ```bash
 conda activate pkm-quant
-cd "/Users/mojiawen/Documents/学习资料归档/_暂存/personal_knowledge_manager/量化交易/实验/p2-python-toolchain"
+cd "/Users/mojiawen/Documents/personal_knowledge_manager/量化交易/实验/p2-python-toolchain"
 jupyter lab
 ```
 

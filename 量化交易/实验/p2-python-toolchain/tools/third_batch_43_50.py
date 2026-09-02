@@ -24,7 +24,7 @@ def source_note(number: int, title: str, data_note: str) -> str:
 
 本 Notebook 对应「365 天量化金融」第 {number} 课。课程方法来自本地完整视频、课件截图和本地 Whisper 口播整理；这里把它重建为默认离线、可核对、可重复执行的量化教学实现。
 
-- 图文口播：`/Users/mojiawen/Documents/学习资料归档/_暂存/pam-video-captures/365-days-quant-finance/{PACKAGES[number]}/index.html`
+- 图文口播：`/Users/mojiawen/Documents/pam-video-captures/365-days-quant-finance/{PACKAGES[number]}/index.html`
 - 环境：`pkm-quant`
 - 数据：{data_note}
 - 状态：可运行学习稿；不代表策略收益承诺
