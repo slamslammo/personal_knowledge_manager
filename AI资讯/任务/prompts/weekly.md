@@ -50,8 +50,8 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
      {"non_ai": ["owner/repo"], "exclude": {"owner/repo": "awesome 类合集"}, "hn_ai_repos": ["owner/repo"]}
      ```
    - 运行 `python3 $S/rank_github.py --week $WEEK`。脚本负责 OSS Insight 补充、归档 / fork / 疑似刷星的排除、Top 5、新晋项目和 HN 热议项目，写入 `$DATA_PATH`，并打印"周报元数据 repos"。排名以脚本结果为准，不要手工调整。
-5. **联网搜索**，整次运行最多 40 次，分配如下：
-   - 发现本周发布 12 次，可以用 `site:a OR site:b` 合并多个域名；
+5. **联网搜索**，整次运行最多 40 次。先从第 2、3 项的输出里找本周发布的线索：HN 高分帖的标题常常就是发布本身，链接往往就是官方原文，可以直接作为原文链接。搜索时用具体的产品名、模型名或事件名；泛泛的 `site:` 组合查询很难命中当周内容，只在线索不足时使用。分配如下：
+   - 发现本周发布 12 次（补充 HN 和 Hugging Face 没有覆盖的发布）；
    - ② 核实官方原文 10 次；
    - ③ 传播分析，Top 5 每个项目 2 次（网页 1 次、YouTube 1 次），共 10 次；
    - ⑤ 和"值得细读" 5 次；
