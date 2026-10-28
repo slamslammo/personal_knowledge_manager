@@ -25,13 +25,18 @@ repository:
   name: slamslammo/personal_knowledge_manager
   branch: main
   fallback_branch: claude/ai-weekly-archive   # 无法推送到 main 时使用
+  requires_unrestricted_push: true             # 需要允许推送 main；Claude 云端是否需要额外开启待实测
   write_paths:                                 # 任务只能写入这些路径
     - AI资讯/周报/
-    - AI资讯/月报/
-    - AI资讯/季报/
+    - AI资讯/月报/                             # 仅正式手册、月报到期时
+    - AI资讯/季报/                             # 仅正式手册、季报到期时
     - AI资讯/数据/github-weekly/
   readonly_paths:
     - AI资讯/任务/
+    - AI资讯/README.md
+
+runtime:
+  requires: [git, curl, GNU date, python3, PyYAML]
 
 network:
   allow:

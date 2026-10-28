@@ -1,5 +1,6 @@
-# 周报各榜单的规则参数，算法说明见 ../方案.md 第 3、5 节。
+# 周报各榜单的规则参数，算法说明见 ../方案.md 第 3、6 节。
 # v0.0 过渡提示词中的同名参数为硬编码，v0.1 起由手册与脚本读取本文件。
+# 分数、天数等门槛均含边界（>=）。
 
 github:
   candidates: trendshift_weekly     # 候选来源：Trendshift 报告周周榜（约 25 项）
@@ -17,15 +18,23 @@ github:
     - archived
     - fork
   star_farming:                     # 两个条件同时满足视为疑似刷星，不进榜
-    max_fork_to_star_ratio: 0.01    # 本周新增 fork ÷ 本周新增 star
-    max_open_issues: 4
-  ossinsight_enrich_top: 12         # 只对增量前 12 的仓库请求补充信息
+    max_fork_to_star_ratio: 0.01    # 本周新增 fork ÷ 本周新增 star，低于此值
+    max_open_issues: 4              # 未关闭 issue 不超过此值
+  ossinsight_enrich:                # 请求 OSS Insight 补充信息的范围
+    top: 12
+    plus: [new_entrant_candidates, hn_discussed]
+  weekly_not_ready:                 # 周榜未就绪时的重试
+    retries: 2
+    interval_minutes: 30
 
 articles:
   source: hn
   min_points: 100
   top_n: 5
   sort_by: [points, num_comments]
+
+hn_query:
+  min_points: 50                    # 一次取回本周分数不低于 50 的 story
 
 releases:
   max_items: 8
@@ -42,3 +51,10 @@ hf_papers:
   candidates_top: 10
 
 section_priority: [releases, github, articles, topics]   # 同一事件只在优先级最高的板块详细写
+
+monthly:
+  github_top_n: 10                  # 各周 week_stars 相加
+  must_read: 5
+
+quarterly:
+  retrospective_github: trendshift_weekly_appearances   # 回顾版按历史周榜上榜次数与名次

@@ -1,18 +1,21 @@
 # AI 资讯任务
 
-本目录是生成 `AI资讯/` 内容的定时任务工程：方案、配置、提示词、脚本与版本记录都在这里，任务的执行规则不依赖平台设置或聊天记录。
+本目录是生成 `AI资讯/` 内容的定时任务工程：方案、配置、提示词、脚本与版本记录都放在这里，任务的执行规则以仓库文件为准，不依赖聊天记录。
 
 ## 文件
 
-| 文件 | 内容 |
-| --- | --- |
-| [方案.md](方案.md) | 板块规划、内容规则、数据源、GitHub 榜单算法、运行架构、存储与迁移设计 |
-| [版本规划.md](版本规划.md) | 版本路线、当前状态、迭代记录 |
-| [部署指南.md](部署指南.md) | 在 Claude Code 云端或其他平台部署的步骤与上线检查 |
-| [config/task.yaml](config/task.yaml) | 部署清单：定时、能力、网络、写入路径 |
-| [config/sources.yaml](config/sources.yaml) | 信息源与数据接口 |
-| [config/ranking.yaml](config/ranking.yaml) | 各榜单的规则参数 |
-| [prompts/routine-prompt.md](prompts/routine-prompt.md) | 当前贴在定时任务中的提示词（过渡版 v0.0） |
+| 文件 | 内容 | 状态 |
+| --- | --- | --- |
+| [方案.md](方案.md) | 板块规划、内容规则、数据源、GitHub 榜单算法、运行架构、存储与迁移设计 | 已完成 |
+| [版本规划.md](版本规划.md) | 版本路线、当前状态、迭代记录 | 已完成 |
+| [部署指南.md](部署指南.md) | 在 Claude Code 云端或其他平台部署的步骤与上线检查 | 已完成 |
+| [config/task.yaml](config/task.yaml) | 部署清单：定时、能力、网络、写入路径 | 已完成 |
+| [config/sources.yaml](config/sources.yaml) | 信息源与数据接口 | 已完成 |
+| [config/ranking.yaml](config/ranking.yaml) | 各榜单的规则参数 | 已完成 |
+| [prompts/routine-prompt.md](prompts/routine-prompt.md) | 待贴入定时任务的过渡提示词（v0.0） | 已完成 |
+| `prompts/weekly.md` 等正式手册 | 周报、月报、季报的执行手册 | v0.1 计划 |
+| `templates/` | 周报、月报、季报模板 | v0.1 计划 |
+| `scripts/` | 采集与校验脚本 | v0.1 计划 |
 
 ## 快速部署
 
@@ -23,5 +26,6 @@
 ## 维护约定
 
 - 修改规则时，先改 `方案.md`，再同步提示词和配置，并在 `版本规划.md` 记录原因。
+- v0.0 期间，修改 `prompts/routine-prompt.md` 后必须重新粘贴到定时任务。
 - 定时任务运行时只读本目录，不会修改这里的文件。
-- 本目录的改动走 PR；周报等产出由定时任务直接提交到 `main`。
+- 本目录的改动走 PR；周报等产出由定时任务直接提交到 `main`（待确认，见 `方案.md` 第 12 节）。

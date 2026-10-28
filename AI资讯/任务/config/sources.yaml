@@ -20,10 +20,13 @@ media:                        # 英文科技媒体
   - domain: theinformation.com
     note: 付费墙，只能标注"仅媒体报道"
 
+papers:                       # 论文与技术报告
+  - arxiv.org
+  - huggingface.co/papers
+
 community:                    # 可以引用，但不作为发布类资讯的唯一来源
   - news.ycombinator.com
   - huggingface.co
-  - arxiv.org
   - youtube.com
   - 个人技术博客与项目官方博客
 
