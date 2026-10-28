@@ -1,5 +1,5 @@
 # 周报各榜单的规则参数，算法说明见 ../方案.md 第 3、6 节。
-# v0.0 过渡提示词中的同名参数为硬编码，v0.1 起由手册与脚本读取本文件。
+# rank_github.py、collect_hn.py、collect_hf.py 读取本文件；执行手册中的文字规则与本文件保持一致。
 # 分数、天数等门槛均含边界（>=）。
 
 github:
@@ -23,9 +23,8 @@ github:
   ossinsight_enrich:                # 请求 OSS Insight 补充信息的范围
     top: 12
     plus: [new_entrant_candidates, hn_discussed]
-  weekly_not_ready:                 # 周榜未就绪时的重试
+  weekly_not_ready:                 # 周榜未就绪时的重试：先做其他采集和写作，之后再试，不空等
     retries: 2
-    interval_minutes: 30
 
 articles:
   source: hn

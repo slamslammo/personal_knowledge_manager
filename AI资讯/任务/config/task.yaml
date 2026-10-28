@@ -2,7 +2,7 @@
 # 说明见 ../部署指南.md。
 
 task: ai-weekly
-version: v0.0
+version: v0.1
 
 schedule:
   cron: "0 10 * * 1"          # 每周一 10:00
@@ -10,12 +10,12 @@ schedule:
   report_period: 上一周（周一 00:00 至周日 24:00，北京时间）
 
 agent:
-  prompt: AI资讯/任务/prompts/routine-prompt.md   # 过渡版；v0.1 起由 prompts/weekly.md 接管
+  prompt: AI资讯/任务/prompts/routine-prompt.md   # 入口提示词，贴进定时任务
+  manual: AI资讯/任务/prompts/weekly.md           # 执行手册，运行时从仓库读取
   model_tier: 中档通用模型                         # 不写具体型号，在平台设置中选择
   capabilities:
     - shell
     - python3
-    - curl
     - git_push
     - web_search
     - notify
@@ -28,15 +28,16 @@ repository:
   requires_unrestricted_push: true             # 需要允许推送 main；Claude 云端是否需要额外开启待实测
   write_paths:                                 # 任务只能写入这些路径
     - AI资讯/周报/
-    - AI资讯/月报/                             # 仅正式手册、月报到期时
-    - AI资讯/季报/                             # 仅正式手册、季报到期时
+    - AI资讯/月报/                             # 仅月报到期且手册要求生成时
+    - AI资讯/季报/                             # 仅季报到期且手册要求生成时
     - AI资讯/数据/github-weekly/
   readonly_paths:
     - AI资讯/任务/
     - AI资讯/README.md
 
 runtime:
-  requires: [git, curl, GNU date, python3, PyYAML]
+  requires: [git, python3, PyYAML]
+  tests: python3 -m unittest discover -s AI资讯/任务/scripts/tests -t AI资讯/任务/scripts/tests
 
 network:
   allow:
