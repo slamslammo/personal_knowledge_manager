@@ -46,7 +46,7 @@ releases:
 topics:
   target: 5                         # ⑤ 热点话题，表格呈现
 
-insights:                           # "值得细读"：交叉各板块后的洞察
+insights:                           # 洞察：交叉各板块后的关键信息或趋势
   min: 2
   max: 3
   reads_per_insight: [1, 2]
@@ -58,7 +58,7 @@ section_priority: [releases, github, articles, topics]   # 同一事件只在优
 
 monthly:
   github_top_n: 10                  # 各周 week_stars 相加
-  must_read: 5                      # 从各期周报"值得细读"的必读材料中精选
+  must_read: 5                      # 从各期周报"洞察"的必读材料中精选
 
 quarterly:
   retrospective_github: trendshift_weekly_appearances   # 回顾版按历史周榜上榜次数与名次

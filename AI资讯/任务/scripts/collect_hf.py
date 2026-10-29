@@ -1,4 +1,4 @@
-"""采集 Hugging Face 报告周的高赞论文，作为 ② 关键发布与"值得细读"的候选。
+"""采集 Hugging Face 报告周的高赞论文，作为 ② 新发布与技术和"洞察"必读材料的候选。
 
 接口 https://huggingface.co/api/daily_papers?week={WEEK}&limit=100，按 upvotes 降序取前 N 篇
 （N 见 config/ranking.yaml 的 hf_papers.candidates_top）。结果写入 --out（默认 /tmp/ai-weekly/hf.json）。

@@ -6,7 +6,7 @@
 - 标题：`# AI 周报 · {WEEK}（{M/D}–{M/D}）`，回溯模式下以"（回溯版）"结尾。
 - 板块：七个二级标题齐全且顺序正确；各板块条目数在 config/ranking.yaml 规定的范围内。
 - ④⑤ 是表格：④ 每行都有 HN 讨论链接，且不收 ②③ 已写的发布；⑤ 每行都有代表链接。
-- 值得细读：每条洞察（### 洞察 N：）都写了依据和必读。
+- 洞察：每条（### 洞察 N：）都写了依据和必读。
 - 链接：Markdown 链接目标都是 http(s) 地址；没有残留的模板占位符。
 - 与数据文件一致：③ 的 `### N. [owner/repo]` 依次对应数据文件 rank 1..N；
   元数据 repos 等于数据文件中 top5 与 new 的集合。
@@ -30,11 +30,11 @@ from weeks import Week, weekly_data_path, weekly_report_path
 
 SECTIONS = [
     "## ① 本周概览",
-    "## ② 关键发布与新技术",
+    "## ② 新发布与技术 Top 5",
     "## ③ GitHub AI 项目热度 Top 5",
-    "## ④ 传播最广的文章 Top 5",
-    "## ⑤ 热点话题",
-    "## 值得细读",
+    "## ④ 传播文章 Top 5",
+    "## ⑤ 热点话题 Top 5",
+    "## 洞察",
     "## 数据说明",
 ]
 STATUSES = {"top5", "new", "candidate", "hn", "excluded", "non_ai"}
@@ -240,7 +240,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     if len(releases) > lim["releases"][1]:
         rep.error(f"② 有 {len(releases)} 条，上限 {lim['releases'][1]}")
     else:
-        count_in_range(rep, "② 关键发布", len(releases), *lim["releases"])
+        count_in_range(rep, "② 新发布与技术", len(releases), *lim["releases"])
 
     s3 = sec.get(SECTIONS[2], "")
     numbered = NUMBERED_RE.findall(s3)
@@ -279,7 +279,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
             rep.warn(f"⑤「{r[0]}」只有 {n_links} 个代表链接，规则为 2–3 个")
 
     insights = re.split(r"^### 洞察 \d+[：:]", sec.get(SECTIONS[5], ""), flags=re.M)[1:]
-    count_in_range(rep, "值得细读的洞察", len(insights), *lim["insights"])
+    count_in_range(rep, "洞察", len(insights), *lim["insights"])
     for i, block in enumerate(insights, 1):
         if "**依据**" not in block:
             rep.error(f"洞察 {i} 没有写依据")
