@@ -5,7 +5,7 @@
   topics 3–6 个且都在 config/topics.yaml 词表内；repos 都是 owner/repo。
 - 标题：`# AI 周报 · {WEEK}（{M/D}–{M/D}）`，回溯模式下以"（回溯版）"结尾。
 - 板块：七个二级标题齐全且顺序正确（洞察紧跟在 ① 之后）；各板块条目数在 config/ranking.yaml 规定的范围内。
-- ④⑤ 是表格：④ 每行都有 HN 讨论链接，且不收 ②③ 已写的发布；⑤ 每行都有代表链接。
+- ④⑤ 是表格：④ 每行都有 HN 讨论链接，且不收 ②③ 已写的发布；⑤ 每行都有代表链接；单元格超长时给出警告。
 - 洞察：每条（### 洞察 N：）都写了依据和必读。
 - 链接：Markdown 链接目标都是 http(s) 地址；没有残留的模板占位符。
 - 与数据文件一致：③ 的 `### N. [owner/repo]` 依次对应数据文件 rank 1..N；
@@ -151,6 +151,29 @@ def table_rows(text: str) -> list[list[str]]:
     return [c for c in cells if not all(re.fullmatch(r":?-{3,}:?", x) for x in c)]
 
 
+def cell_text_len(cell: str) -> int:
+    """单元格的可见字数：Markdown 链接只计链接文字，不计地址。"""
+    return len(re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", cell).strip())
+
+
+def warn_long_cells(rep: Report, section: str, header: list[str], rows: list[list[str]], limit: int) -> None:
+    for row in rows:
+        for i, cell in enumerate(row):
+            n = cell_text_len(cell)
+            if n > limit:
+                col = header[i] if i < len(header) else f"第 {i + 1} 列"
+                where = f" 第 {row[0]} 行" if row[0].isdigit() else f"「{row[0]}」"
+                rep.warn(f"{section}{where}的{col}有 {n} 字，建议不超过 {limit} 字")
+
+
+def table_header(text: str) -> list[str]:
+    """板块里第一张 Markdown 表格的表头。"""
+    for line in text.splitlines():
+        if line.startswith("|"):
+            return [c.strip() for c in line.strip().strip("|").split("|")]
+    return []
+
+
 def section_limits() -> dict:
     """各板块条目数，取自 config/ranking.yaml。"""
     cfg = load_config("ranking")
@@ -161,6 +184,7 @@ def section_limits() -> dict:
         "topics": cfg["topics"]["target"],
         "insights": (cfg["insights"]["min"], cfg["insights"]["max"]),
         "reads": tuple(cfg["insights"]["reads_per_insight"]),
+        "cell_chars": cfg["tables"]["cell_max_chars"],
     }
 
 
@@ -254,6 +278,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     covered = {normalize_url(u) for u in LINK_RE.findall(s2)}
     covered |= {normalize_url(f"https://github.com/{name}") for _, name in numbered}
     articles = table_rows(sec.get(ARTICLES, ""))
+    warn_long_cells(rep, "④", table_header(sec.get(ARTICLES, "")), articles, lim["cell_chars"])
     if len(articles) > lim["articles"]:
         rep.error(f"④ 有 {len(articles)} 篇，上限 {lim['articles']}")
     else:
@@ -269,6 +294,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
             rep.error(f"④ 第 {r[0]} 行是 ②③ 已写的发布，④ 只收文章与讨论：{first.group(1)}")
 
     topics = table_rows(sec.get(TOPICS, ""))
+    warn_long_cells(rep, "⑤", table_header(sec.get(TOPICS, "")), topics, lim["cell_chars"])
     if len(topics) > lim["topics"]:
         rep.error(f"⑤ 有 {len(topics)} 个话题，上限 {lim['topics']}")
     else:

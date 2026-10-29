@@ -46,6 +46,9 @@ releases:
 topics:
   target: 5                         # ⑤ 热点话题，表格呈现
 
+tables:
+  cell_max_chars: 80                # ④⑤ 表格单元格的建议上限（不计链接地址），超出时 validate.py 给出警告
+
 insights:                           # 洞察：交叉各板块后的关键信息或趋势
   min: 2
   max: 3

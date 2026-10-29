@@ -6,7 +6,8 @@
   Trendshift 的日期按 UTC 划分，与北京时间的报告周相差 8 小时，不做换算。
 
 周榜全部条目都会采集（AI 判定由智能体在之后完成）。结果写入 --out（默认 /tmp/ai-weekly/trendshift.json），
-并在标准输出打印每项一行的摘要。
+并在标准输出打印每项一行的摘要。仓库在往期数据文件里出现过时，附上最近一次的判定（AI / 非 AI / 排除），
+帮助智能体保持各周判定一致。
 
 退出码：0 成功；3 周榜未就绪；1 其他错误。
 
@@ -18,14 +19,17 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import pathlib
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
-from common import WORK_DIR, fetch, truncate, write_json
+from common import BOARD_DIR, WORK_DIR, fetch, read_json, truncate, write_json
+from rank_github import auto_exclusion_kind
 from weeks import Week
 
 EXIT_NOT_READY = 3
+DATA_DIR = BOARD_DIR / "数据" / "github-weekly"
 
 _LD_JSON = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
 # 仓库页里 dailyActivities 以转义 JSON 字符串内嵌在 Next.js 数据中
@@ -113,6 +117,43 @@ def collect_repo(entry: dict, week: Week) -> dict:
     return rec
 
 
+def prior_judgments(week: Week, data_dir=DATA_DIR) -> dict[str, dict]:
+    """往期数据文件里每个仓库最近一次的判定：{full_name: {"week", "verdict", "reason"}}。
+
+    verdict 取值：AI（top5/new/candidate/hn）、非 AI（non_ai）、排除（excluded，reason 为排除原因）。
+    脚本按当周数据做的排除（归档、fork、疑似刷星等）记为 AI：它们由 rank_github.py 每周重算，不能沿用。
+    只看早于报告周的数据文件；ISO 周编号按字符串排序即为时间顺序。
+    """
+    prior: dict[str, dict] = {}
+    for path in sorted(pathlib.Path(data_dir).glob("*.json")):
+        if path.stem >= week.label:
+            continue
+        try:
+            repos = read_json(path).get("repos", [])
+        except (ValueError, OSError, AttributeError):
+            continue
+        for r in repos:
+            status = r.get("status")
+            if status == "non_ai":
+                verdict, reason = "非 AI", ""
+            elif status == "excluded":
+                verdict, reason = "排除", (r.get("note") or "").split("；")[0]
+                kind = auto_exclusion_kind(reason)
+                if kind:
+                    verdict, reason = "AI", f"脚本曾自动排除（{kind}），本周重新计算"
+            else:
+                verdict, reason = "AI", ""
+            prior[r.get("full_name")] = {"week": path.stem, "verdict": verdict, "reason": reason}
+    return prior
+
+
+def describe_prior(p: dict | None) -> str:
+    if not p:
+        return ""
+    reason = f"：{p['reason']}" if p["reason"] else ""
+    return f"往期：{p['verdict']}{reason}（{p['week']}）"
+
+
 def collect(week: Week, workers: int = 5) -> dict:
     url = f"https://trendshift.io/weekly/{week.iso_year}/{week.number}"
     out = {
@@ -141,6 +182,9 @@ def collect(week: Week, workers: int = 5) -> dict:
         return out
     with ThreadPoolExecutor(max_workers=workers) as pool:
         out["items"] = list(pool.map(lambda e: collect_repo(e, week), entries))
+    prior = prior_judgments(week)
+    for item in out["items"]:
+        item["prior"] = prior.get(item["full_name"])
     return out
 
 
@@ -148,13 +192,14 @@ def print_summary(result: dict) -> None:
     print(f"# Trendshift {result['week']} {result['status']} {result['status_detail']}".rstrip())
     if result["list_name"]:
         print(f"# {result['list_name']}")
-    print("# 名次 | 仓库 | 本周 +star / +fork（天数）| 创建 | 语言 | 描述")
+    print("# 名次 | 仓库 | 本周 +star / +fork（天数）| 创建 | 语言 | 描述 | 往期判定")
     for r in result["items"]:
         stars = "?" if r["week_stars"] is None else f"+{r['week_stars']}"
         forks = "?" if r["week_forks"] is None else f"+{r['week_forks']}"
         print(
             f"{r['trendshift_position']} | {r['full_name']} | {stars} / {forks} ({r['days_covered']}d)"
             f" | {(r['created_at'] or '')[:10]} | {r['language'] or '-'} | {truncate(r['description'], 90)}"
+            + (f" | {describe_prior(r.get('prior'))}" if r.get("prior") else "")
             + (f" | 错误：{r['error']}" if r["error"] else "")
         )
 

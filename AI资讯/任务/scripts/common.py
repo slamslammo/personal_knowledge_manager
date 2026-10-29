@@ -1,6 +1,6 @@
 """AI 资讯任务脚本的公共部分：路径、配置读取、HTTP 请求、链接规范化。
 
-只依赖 Python 标准库和 PyYAML，保证在 Claude Code 云端、Codex 或本地 cron 上都能直接运行。
+只依赖 Python 标准库和 PyYAML，保证在任何能运行 python3 的平台上都能直接运行。
 """
 from __future__ import annotations
 

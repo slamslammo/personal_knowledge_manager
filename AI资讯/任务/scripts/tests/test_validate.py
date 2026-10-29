@@ -195,6 +195,21 @@ class ValidateTest(unittest.TestCase):
         moved = moved.replace("## 数据说明", block + "## 数据说明")
         self.assertTrue(any("顺序不对" in e for e in check(moved).errors))
 
+    def test_long_table_cells_warn(self):
+        long_text = "很长的说明" * 20  # 100 字
+        report = REPORT.replace("| 话题1 | 起因。 |", f"| 话题1 | {long_text} |")
+        report = report.replace("[文章2](https://example.com/a2) | 摘要。", f"[文章2](https://example.com/a2) | {long_text}")
+        rep = check(report)
+        self.assertEqual(rep.errors, [])
+        warnings = "\n".join(rep.warnings)
+        self.assertIn("⑤「话题1」的起因有 100 字", warnings)
+        self.assertIn("④ 第 2 行的摘要有 100 字", warnings)
+
+    def test_link_urls_do_not_count_toward_cell_length(self):
+        link = "[短](https://example.com/" + "x" * 200 + ")"
+        rep = check(REPORT.replace("[链接](https://example.com/t1)", link))
+        self.assertEqual(rep.warnings, [])
+
     def test_table_rows(self):
         rows = table_rows("说明\n| a | b |\n| --- | :---: |\n| 1 | x |\n| 2 | y |\n\n| z |\n")
         self.assertEqual(rows, [["1", "x"], ["2", "y"]])

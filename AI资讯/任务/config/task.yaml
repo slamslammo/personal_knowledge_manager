@@ -1,5 +1,5 @@
 # AI 资讯任务的部署清单。重新部署到任何平台时，按本文件配置定时、能力、网络与权限。
-# 说明见 ../部署指南.md。
+# 本文件与执行手册只写平台无关的要求；各平台的对应做法见 ../部署指南.md 第 4 节。
 
 task: ai-weekly
 version: v0.1
@@ -13,19 +13,21 @@ agent:
   prompt: AI资讯/任务/prompts/routine-prompt.md   # 入口提示词，贴进定时任务
   manual: AI资讯/任务/prompts/weekly.md           # 执行手册，运行时从仓库读取
   model_tier: 中档通用模型                         # 不写具体型号，在平台设置中选择
-  capabilities:
-    - shell
-    - python3
-    - git_push
-    - github_pr                 # 建 PR 并合并到 main（Claude 云端用 GitHub MCP 工具）
-    - web_search
-    - notify
+  capabilities:                                    # 平台必须提供的能力
+    - shell                     # 运行 bash 命令
+    - python3                   # 带 PyYAML
+    - network                   # 脚本访问 network.allow 中的站点，git 推送
+    - git_push                  # 推送本仓库的 main（或平台指定的工作分支）
+    - web_search                # 联网搜索
+  optional_capabilities:                           # 没有时有降级办法，见执行手册第 5、6 步
+    - github_pr                 # 推送 main 被拒时，经工作分支建 PR 合并
+    - notify                    # 没有时把通知作为运行的最后输出，由调度方转发
   web_search_budget: 40       # 每次运行的联网搜索上限
 
 repository:
   name: slamslammo/personal_knowledge_manager
-  branch: main                                 # 周报最终合并到这里
-  work_branch: claude/ai-weekly-{WEEK}         # 会话指定了 claude/ 开发分支时用它；周报先推到这里，建 PR 后自动合并
+  branch: main                                 # 周报直接推送到这里
+  fallback_branch: ai-weekly/{WEEK}            # 推送 main 被拒时使用；平台为本次运行指定了工作分支时改用它
   write_paths:                                 # 任务只能写入这些路径
     - AI资讯/周报/
     - AI资讯/月报/                             # 仅月报到期且手册要求生成时
@@ -45,12 +47,15 @@ network:
     - api.ossinsight.io
     - hn.algolia.com
     - huggingface.co
-    - github.com              # 仅用于推送本仓库、建 PR 和合并
+    - github.com              # 推送本仓库
+  optional:
+    - api.github.com          # 只用于备用的建 PR 与合并；不使用它的搜索接口（部分托管环境不可用）
   known_blocked:
-    - api.github.com          # Claude 云端只允许已挂载仓库的接口
     - www.reddit.com          # 需要 OAuth 凭证
 
-secrets: []                   # 当前不需要额外密钥
+secrets:                      # 托管平台通常自动注入；自建调度时自行配置
+  - name: git 推送凭证
+    scope: 只对本仓库有内容写权限（细粒度 token 或部署密钥）
 
 notify:
   banner_format: "【AI周报 W{WNUM}】<本周最重要的一件事>。"
