@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from validate import Report, load_vocabulary, validate_data, validate_report  # noqa: E402
+from validate import Report, load_vocabulary, table_rows, validate_data, validate_report  # noqa: E402
 from weeks import Week  # noqa: E402
 
 WEEK = Week.parse("2026-W43")
@@ -26,7 +26,17 @@ DATA = {
               repo("a/c", "candidate", pos=4), repo("x/y", "non_ai", pos=5)],
 }
 
-REPORT = """---
+ARTICLE_ROWS = "\n".join(
+    f"| {i} | [文章{i}](https://example.com/a{i}) | 摘要。 | 原因。 | {900 - i} | 10 | "
+    f"[HN](https://news.ycombinator.com/item?id={i}) |"
+    for i in range(1, 6)
+)
+TOPIC_ROWS = "\n".join(
+    f"| 话题{i} | 起因。 | 争议。 | [链接](https://example.com/t{i})、[链接](https://example.com/u{i}) |"
+    for i in range(1, 6)
+)
+
+REPORT = f"""---
 week: 2026-W43
 range: 2026-10-19/2026-10-25
 topics: [智能体, 开源模型, 推理部署]
@@ -38,7 +48,9 @@ repos: [a/one, a/two, a/new]
 
 ## ① 本周概览
 
-概览。
+- **一**：第一条。
+- **二**：第二条。
+- **三**：第三条。
 
 ## ② 关键发布与新技术
 
@@ -62,23 +74,27 @@ repos: [a/one, a/two, a/new]
 
 ## ④ 传播最广的文章 Top 5
 
-### 1. [文章](https://example.com/a)
-
-HN 300 分 · 10 条评论 · [HN 讨论](https://news.ycombinator.com/item?id=1)
+| # | 文章 | 摘要 | 传播原因 | 分数 | 评论 | 讨论 |
+| --- | --- | --- | --- | --- | --- | --- |
+{ARTICLE_ROWS}
 
 ## ⑤ 热点话题
 
-### 话题一
-
-### 话题二
-
-### 话题三
+| 话题 | 起因 | 发展与争议 | 代表链接 |
+| --- | --- | --- | --- |
+{TOPIC_ROWS}
 
 ## 值得细读
 
-- [论文一](https://arxiv.org/abs/1)：收获。
-- [论文二](https://arxiv.org/abs/2)：收获。
-- [论文三](https://arxiv.org/abs/3)：收获。
+### 洞察 1：结论一
+
+- **依据**：② 某发布；⑤ 话题1。
+- **必读**：[论文一](https://arxiv.org/abs/1)：收获。
+
+### 洞察 2：结论二
+
+- **依据**：③ a/one。
+- **必读**：[论文二](https://arxiv.org/abs/2)：收获；[论文三](https://arxiv.org/abs/3)：收获。
 
 ## 数据说明
 
@@ -109,13 +125,13 @@ class ValidateTest(unittest.TestCase):
         self.assertTrue(any("词表" in e for e in rep.errors))
 
     def test_missing_section_and_bad_link(self):
-        report = REPORT.replace("## ⑤ 热点话题", "## 热点").replace("(https://example.com/a)", "(/relative)")
+        report = REPORT.replace("## ⑤ 热点话题", "## 热点").replace("(https://example.com/a1)", "(/relative)")
         errors = "\n".join(check(report).errors)
         self.assertIn("缺少板块", errors)
         self.assertIn("/relative", errors)
 
     def test_placeholder_left(self):
-        rep = check(REPORT.replace("概览。", "{{3–5 句话}}"))
+        rep = check(REPORT.replace("第一条。", "{{一句话}}"))
         self.assertTrue(any("占位符" in e for e in rep.errors))
 
     def test_order_mismatch_with_data(self):
@@ -142,9 +158,36 @@ class ValidateTest(unittest.TestCase):
         self.assertIn("week_stars 类型不对", errors)
         self.assertIn("status 不合法", errors)
 
-    def test_count_warnings(self):
-        rep = check(REPORT.replace("### 话题三\n", ""))
-        self.assertTrue(any("⑤" in w for w in rep.warnings))
+    def test_count_limits(self):
+        extra = "\n".join(f"### 发布{i}\n" for i in range(5))
+        errors = "\n".join(check(REPORT.replace("### 某发布\n", "### 某发布\n" + extra)).errors)
+        self.assertIn("② 有 6 条", errors)
+        rep = check(REPORT.replace(TOPIC_ROWS.splitlines()[-1] + "\n", ""))
+        self.assertTrue(any("⑤ 热点话题 有 4 项" in w for w in rep.warnings))
+        rep = check(REPORT.replace("- **三**：第三条。\n", "").replace("- **二**：第二条。\n", ""))
+        self.assertTrue(any("① 本周概览" in w for w in rep.warnings))
+
+    def test_articles_must_not_repeat_releases(self):
+        report = REPORT.replace("[文章1](https://example.com/a1)", "[发布](https://example.com/post/)")
+        report = report.replace("[文章2](https://example.com/a2)", "[项目](https://github.com/a/one)")
+        errors = "\n".join(check(report).errors)
+        self.assertIn("第 1 行是 ②③ 已写的发布", errors)
+        self.assertIn("第 2 行是 ②③ 已写的发布", errors)
+
+    def test_article_row_needs_hn_link(self):
+        report = REPORT.replace("[HN](https://news.ycombinator.com/item?id=3)", "无")
+        self.assertTrue(any("第 3 行缺少 HN 讨论链接" in e for e in check(report).errors))
+
+    def test_insight_needs_basis_and_reads(self):
+        report = REPORT.replace("- **依据**：③ a/one。\n", "")
+        report = report.replace("- **必读**：[论文一](https://arxiv.org/abs/1)：收获。", "- 没有必读。")
+        errors = "\n".join(check(report).errors)
+        self.assertIn("洞察 2 没有写依据", errors)
+        self.assertIn("洞察 1 没有写必读", errors)
+
+    def test_table_rows(self):
+        rows = table_rows("说明\n| a | b |\n| --- | :---: |\n| 1 | x |\n| 2 | y |\n\n| z |\n")
+        self.assertEqual(rows, [["1", "x"], ["2", "y"]])
 
 
 if __name__ == "__main__":

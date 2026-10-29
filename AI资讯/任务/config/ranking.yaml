@@ -26,25 +26,30 @@ github:
   weekly_not_ready:                 # 周榜未就绪时的重试：先做其他采集和写作，之后再试，不空等
     retries: 2
 
+overview:
+  min: 3                            # ① 本周概览：每条一行、一句话
+  max: 5
+
 articles:
   source: hn
   min_points: 100
   top_n: 5
   sort_by: [points, num_comments]
+  exclude_release_posts: true       # 只收文章与讨论；发布帖的热度写进 ② 或 ③
 
 hn_query:
   min_points: 50                    # 一次取回本周分数不低于 50 的 story
 
 releases:
-  max_items: 8
+  max_items: 5
 
 topics:
-  min: 3
-  max: 5
+  target: 5                         # ⑤ 热点话题，表格呈现
 
-must_read:
-  min: 3
-  max: 5
+insights:                           # "值得细读"：交叉各板块后的洞察
+  min: 2
+  max: 3
+  reads_per_insight: [1, 2]
 
 hf_papers:
   candidates_top: 10
@@ -53,7 +58,7 @@ section_priority: [releases, github, articles, topics]   # 同一事件只在优
 
 monthly:
   github_top_n: 10                  # 各周 week_stars 相加
-  must_read: 5
+  must_read: 5                      # 从各期周报"值得细读"的必读材料中精选
 
 quarterly:
   retrospective_github: trendshift_weekly_appearances   # 回顾版按历史周榜上榜次数与名次

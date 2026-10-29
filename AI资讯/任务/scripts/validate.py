@@ -4,7 +4,9 @@
 - 元数据：week、range、topics、orgs、repos 齐全；week 与 range 和报告周一致；
   topics 3–6 个且都在 config/topics.yaml 词表内；repos 都是 owner/repo。
 - 标题：`# AI 周报 · {WEEK}（{M/D}–{M/D}）`，回溯模式下以"（回溯版）"结尾。
-- 板块：七个二级标题齐全且顺序正确；各板块条目数在规则范围内。
+- 板块：七个二级标题齐全且顺序正确；各板块条目数在 config/ranking.yaml 规定的范围内。
+- ④⑤ 是表格：④ 每行都有 HN 讨论链接，且不收 ②③ 已写的发布；⑤ 每行都有代表链接。
+- 值得细读：每条洞察（### 洞察 N：）都写了依据和必读。
 - 链接：Markdown 链接目标都是 http(s) 地址；没有残留的模板占位符。
 - 与数据文件一致：③ 的 `### N. [owner/repo]` 依次对应数据文件 rank 1..N；
   元数据 repos 等于数据文件中 top5 与 new 的集合。
@@ -23,7 +25,7 @@ import datetime as dt
 import re
 import sys
 
-from common import REPO_DIR, load_config, read_json
+from common import REPO_DIR, load_config, normalize_url, read_json
 from weeks import Week, weekly_data_path, weekly_report_path
 
 SECTIONS = [
@@ -136,13 +138,40 @@ def section_bodies(body: str) -> dict[str, str]:
     return parts
 
 
+def table_rows(text: str) -> list[list[str]]:
+    """板块里第一张 Markdown 表格的数据行（去掉表头和分隔行），每行拆成单元格。"""
+    rows = []
+    in_table = False
+    for line in text.splitlines():
+        if line.startswith("|"):
+            in_table = True
+            rows.append(line)
+        elif in_table:
+            break
+    cells = [[c.strip() for c in r.strip().strip("|").split("|")] for r in rows[1:]]
+    return [c for c in cells if not all(re.fullmatch(r":?-{3,}:?", x) for x in c)]
+
+
+def section_limits() -> dict:
+    """各板块条目数，取自 config/ranking.yaml。"""
+    cfg = load_config("ranking")
+    return {
+        "overview": (cfg["overview"]["min"], cfg["overview"]["max"]),
+        "releases": (1, cfg["releases"]["max_items"]),
+        "articles": cfg["articles"]["top_n"],
+        "topics": cfg["topics"]["target"],
+        "insights": (cfg["insights"]["min"], cfg["insights"]["max"]),
+        "reads": tuple(cfg["insights"]["reads_per_insight"]),
+    }
+
+
 def count_in_range(rep, name, n, low, high):
     if not low <= n <= high:
         rep.warn(f"{name} 有 {n} 项，规则为 {low}–{high} 项")
 
 
 def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
-                    vocabulary: set[str], rep: Report) -> None:
+                    vocabulary: set[str], rep: Report, limits: dict | None = None) -> None:
     import yaml
 
     fm_text, body = split_front_matter(text)
@@ -201,23 +230,68 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
         line = text[: m.start()].count("\n") + 1
         rep.error(f"第 {line} 行残留占位符：{m.group(0)}")
 
+    lim = limits or section_limits()
     sec = section_bodies(body)
+    overview = re.findall(r"^- ", sec.get(SECTIONS[0], ""), re.M)
+    count_in_range(rep, "① 本周概览", len(overview), *lim["overview"])
+
     s2 = sec.get(SECTIONS[1], "")
-    count_in_range(rep, "② 关键发布", len(re.findall(r"^### ", s2, re.M)), 1, 8)
+    releases = re.findall(r"^### ", s2, re.M)
+    if len(releases) > lim["releases"][1]:
+        rep.error(f"② 有 {len(releases)} 条，上限 {lim['releases'][1]}")
+    else:
+        count_in_range(rep, "② 关键发布", len(releases), *lim["releases"])
+
     s3 = sec.get(SECTIONS[2], "")
     numbered = NUMBERED_RE.findall(s3)
     if [int(n) for n, _ in numbered] != list(range(1, len(numbered) + 1)):
         rep.error(f"③ 的项目编号应从 1 连续：{[n for n, _ in numbered]}")
     if len(numbered) > 5:
         rep.error(f"③ 有 {len(numbered)} 个编号项目，上限 5")
-    s4 = sec.get(SECTIONS[3], "")
-    articles = re.findall(r"^### (\d+)\. ", s4, re.M)
-    if len(articles) > 5:
-        rep.error(f"④ 有 {len(articles)} 篇，上限 5")
-    if "news.ycombinator.com/item?id=" not in s4 and articles:
-        rep.error("④ 的文章缺少 HN 讨论链接")
-    count_in_range(rep, "⑤ 热点话题", len(re.findall(r"^### ", sec.get(SECTIONS[4], ""), re.M)), 3, 5)
-    count_in_range(rep, "值得细读", len(re.findall(r"^- \[", sec.get(SECTIONS[5], ""), re.M)), 3, 5)
+
+    covered = {normalize_url(u) for u in LINK_RE.findall(s2)}
+    covered |= {normalize_url(f"https://github.com/{name}") for _, name in numbered}
+    articles = table_rows(sec.get(SECTIONS[3], ""))
+    if len(articles) > lim["articles"]:
+        rep.error(f"④ 有 {len(articles)} 篇，上限 {lim['articles']}")
+    else:
+        count_in_range(rep, "④ 文章", len(articles), lim["articles"], lim["articles"])
+    if [r[0] for r in articles] != [str(i) for i in range(1, len(articles) + 1)]:
+        rep.error(f"④ 的排名应从 1 连续：{[r[0] for r in articles]}")
+    for r in articles:
+        row = " | ".join(r)
+        if "news.ycombinator.com/item?id=" not in row:
+            rep.error(f"④ 第 {r[0]} 行缺少 HN 讨论链接")
+        first = LINK_RE.search(row)
+        if first and normalize_url(first.group(1)) in covered:
+            rep.error(f"④ 第 {r[0]} 行是 ②③ 已写的发布，④ 只收文章与讨论：{first.group(1)}")
+
+    topics = table_rows(sec.get(SECTIONS[4], ""))
+    if len(topics) > lim["topics"]:
+        rep.error(f"⑤ 有 {len(topics)} 个话题，上限 {lim['topics']}")
+    else:
+        count_in_range(rep, "⑤ 热点话题", len(topics), lim["topics"], lim["topics"])
+    for r in topics:
+        n_links = len(LINK_RE.findall(" | ".join(r)))
+        if n_links == 0:
+            rep.error(f"⑤「{r[0]}」没有代表链接")
+        elif n_links < 2:
+            rep.warn(f"⑤「{r[0]}」只有 {n_links} 个代表链接，规则为 2–3 个")
+
+    insights = re.split(r"^### 洞察 \d+[：:]", sec.get(SECTIONS[5], ""), flags=re.M)[1:]
+    count_in_range(rep, "值得细读的洞察", len(insights), *lim["insights"])
+    for i, block in enumerate(insights, 1):
+        if "**依据**" not in block:
+            rep.error(f"洞察 {i} 没有写依据")
+        if "**必读**" not in block:
+            rep.error(f"洞察 {i} 没有写必读")
+            continue
+        reads = len(LINK_RE.findall(block[block.index("**必读**"):]))
+        if reads == 0:
+            rep.error(f"洞察 {i} 的必读没有链接")
+        else:
+            count_in_range(rep, f"洞察 {i} 的必读", reads, *lim["reads"])
+
     notes = sec.get(SECTIONS[6], "")
     if "搜索" not in notes:
         rep.error("数据说明里没有写联网搜索次数")
