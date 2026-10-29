@@ -17,15 +17,15 @@ agent:
     - shell
     - python3
     - git_push
+    - github_pr                 # 建 PR 并合并到 main（Claude 云端用 GitHub MCP 工具）
     - web_search
     - notify
   web_search_budget: 40       # 每次运行的联网搜索上限
 
 repository:
   name: slamslammo/personal_knowledge_manager
-  branch: main
-  fallback_branch: claude/ai-weekly-archive   # 无法推送到 main 时使用
-  requires_unrestricted_push: true             # 需要允许推送 main；Claude 云端是否需要额外开启待实测
+  branch: main                                 # 周报最终合并到这里
+  work_branch: claude/ai-weekly-{WEEK}         # 会话指定了 claude/ 开发分支时用它；周报先推到这里，建 PR 后自动合并
   write_paths:                                 # 任务只能写入这些路径
     - AI资讯/周报/
     - AI资讯/月报/                             # 仅月报到期且手册要求生成时
@@ -45,7 +45,7 @@ network:
     - api.ossinsight.io
     - hn.algolia.com
     - huggingface.co
-    - github.com              # 仅用于推送本仓库
+    - github.com              # 仅用于推送本仓库、建 PR 和合并
   known_blocked:
     - api.github.com          # Claude 云端只允许已挂载仓库的接口
     - www.reddit.com          # 需要 OAuth 凭证

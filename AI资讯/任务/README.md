@@ -31,6 +31,7 @@ python3 $S/collect_hn.py --week 2026-W43
 python3 $S/collect_hf.py --week 2026-W43
 python3 $S/rank_github.py --week 2026-W43       # 需要先写 /tmp/ai-weekly/judgments.json
 python3 $S/validate.py --week 2026-W43 [--backfill]
+python3 $S/check_run.py --week 2026-W43       # 运行完整性检查：各步是否在本次运行中做完
 python3 -m unittest discover -s $S/tests -t $S/tests
 ```
 
@@ -47,4 +48,4 @@ python3 -m unittest discover -s $S/tests -t $S/tests
 - 改脚本要同步改测试，提交前运行单元测试。
 - 执行手册、脚本和配置合并到 `main` 后下一次运行即生效；只有 `prompts/routine-prompt.md` 变化时才需要重新粘贴到定时任务。
 - 定时任务运行时只读本目录，不会修改这里的文件。
-- 本目录的改动走 PR；周报等产出由定时任务直接提交到 `main`。
+- 本目录的改动走 PR；周报等产出由定时任务提交到工作分支，建 PR 后自动合并到 `main`。

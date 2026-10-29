@@ -9,32 +9,33 @@
 
 | 参数 | 模式 | 与正式运行的区别 |
 | --- | --- | --- |
-| 无 | 正式 | 报告周为上一周；提交推送到 `main`；发送通知 |
+| 无 | 正式 | 报告周为上一周；提交到工作分支，经 PR 合并到 `main`；发送通知 |
 | `TARGET_START=YYYY-MM-DD`（某个周一）或 `TARGET_WEEK=YYYY-Www` | 回溯 | 报告周由参数指定；标题后加"（回溯版）"；提交信息为 `AI 周报 {WEEK}（回溯）`；已有榜单数据文件时直接复用 |
-| `TEST_RUN=1` | 测试 | 开发会话验收用：不切换分支、不推送、不发通知；照常提交到当前分支；通知内容写入 `/tmp/ai-weekly/notification.txt` 并在最后原样输出 |
+| `TEST_RUN=1` | 测试 | 开发会话验收用：不切换分支、不推送、不建 PR、不发通知；照常提交到当前分支；通知内容写入 `/tmp/ai-weekly/notification.txt` 并在最后原样输出 |
 
 ## 第 0 步：准备
 
 在仓库根目录执行，后文的 `$S` 指脚本目录：
 
 ```
-mkdir -p /tmp/ai-weekly && S=AI资讯/任务/scripts
+rm -rf /tmp/ai-weekly && mkdir -p /tmp/ai-weekly && S=AI资讯/任务/scripts
 python3 $S/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > /tmp/ai-weekly/week.json
 eval "$(python3 $S/weeks.py [同上参数] --format env)"
 echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
 ```
 
+- 先清空 `/tmp/ai-weekly/`：`week.json` 的生成时间就是本次运行的开始时间，第 4 步的完整性检查据此判断各步是否在本次运行中做过。
 - 回溯模式把参数原样传给 `weeks.py`；正式模式不带参数，脚本按北京时间推算上一周。不要自己另算日期。
 - `week.json` 里还有 `trendshift_daily_available`、`data_exists`，以及月报、季报的到期判定 `monthly`、`quarterly`，后面会用到。
 - 读一遍 `AI资讯/任务/templates/weekly.md`（周报结构）和 `AI资讯/任务/config/sources.yaml`（信息源）。
 
 **重跑检查**：如果 `$REPORT_PATH` 已经存在，运行 `git log -1 --format=%s -- "$REPORT_PATH"`：
-- 提交信息以 `AI 周报 ` 开头，说明是本任务生成的，按"重跑"处理，可以重写。
+- 提交信息以 `AI 周报 ` 开头，说明是本任务生成的，按"重跑"处理：第 1–4 步全部照常重做，周报从头重写，不能在旧周报上局部修改。
 - 否则说明我手工改过：不要覆盖这份周报，只更新数据文件，并在通知里说明。
 
 ## 第 1 步：采集数据
 
-每个脚本把完整结果写到 `/tmp/ai-weekly/`，只在标准输出打印精简摘要。脚本自带超时和重试，失败时如实记下，在"数据说明"里写明，用剩下的数据继续。不要使用 api.github.com 和 github.com/trending（本环境只能访问已挂载的仓库）。
+第 1 步的五项都要做完，不能因为已有周报或数据文件就跳过；第 4 步的完整性检查会逐项核对。每个脚本把完整结果写到 `/tmp/ai-weekly/`，只在标准输出打印精简摘要。脚本自带超时和重试，失败时如实记下，在"数据说明"里写明，用剩下的数据继续。不要使用 api.github.com 和 github.com/trending（本环境只能访问已挂载的仓库）。
 
 1. **Trendshift 周榜与本周新增 star**：`python3 $S/collect_trendshift.py --week $WEEK`
    - 回溯模式下，如果 `data_exists` 为 true，跳过本项和第 4 项，直接用已有的 `$DATA_PATH`（Trendshift 每日数据 61 天后取不到，已存的数据文件是唯一来源）。
@@ -56,7 +57,8 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
    - ③ 传播分析，Top 5 每个项目 2 次（网页 1 次、YouTube 1 次），共 10 次；
    - ⑤ 和"洞察" 5 次；
    - 机动 3 次。
-   - 预算用完，剩下的写"未检索（搜索预算用尽）"，不得超出。自己记录次数，写进数据说明。
+   - 预算用完，剩下的写"未检索（搜索预算用尽）"，不得超出。
+   - 每搜索一次，就往 `/tmp/ai-weekly/searches.txt` 追加一行"用途<Tab>查询词"，例如 `printf '%s\t%s\n' "② 核实" "Kimi K3.1 Pro release" >> /tmp/ai-weekly/searches.txt`。数据说明里写"联网搜索：N 次（上限 40）"，N 必须等于这个文件的行数。
    - 优先使用 `config/sources.yaml` 里的来源；不使用中文媒体和 Newsletter。
    - 不要启动子任务做逐条核实。
 
@@ -124,23 +126,36 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
 - `generate` 为 true 时，如果 `AI资讯/任务/prompts/monthly.md`（季报为 `quarterly.md`）存在且第一行是对应的任务标记，就按它生成；手册还不存在，就跳过，在数据说明里写"{期间} 月报到期，月报手册尚未就绪"。
 - `due` 为 true 但 `missing_weeks` 不为空时，不生成，在数据说明里写"{期间} 月报到期，缺少周报 {missing_weeks}，暂不生成"。
 
-## 第 4 步：校验
+## 第 4 步：校验与完整性检查
 
-运行 `python3 $S/validate.py --week $WEEK`，回溯模式加 `--backfill`。有错误就改周报或判定文件后重跑脚本，最多改 3 轮。仍有错误也继续提交，把剩余错误写进数据说明，并在通知里说明。警告不阻止提交，但要看一眼是否合理。
+两项检查都在提交前完成，回溯模式加 `--backfill`，回溯复用已有数据文件时再加 `--reuse-data`：
 
-## 第 5 步：提交到仓库
+1. `python3 $S/validate.py --week $WEEK`：检查周报结构、元数据、链接和与数据文件的一致性。
+2. `python3 $S/check_run.py --week $WEEK`：检查第 0–4 步是否都在本次运行中实际做过，逐项打印"完成 / 未完成"。它会核对：三份采集结果是本次生成的；`judgments.json` 存在，数据文件是本次 `rank_github.py` 写的；`searches.txt` 有 1–40 条记录，且与数据说明的次数一致；周报是本次写的；`validate.py` 通过。
 
-测试模式：只做下面第 1、2、3 项（提交到当前分支），不推送。
+处理方式：
+- `check_run.py` 报"未完成"的步骤，回到那一步补做，不能只改周报的文字去迎合检查。补做后两项检查都重跑。
+- `validate.py` 的错误就改周报或判定文件后重跑。
+- 最多改 3 轮。仍未通过也继续提交和合并，把剩余问题写进数据说明，通知首句标明"检查未通过"。
+- 警告不阻止提交，但要看一眼是否合理。
+- 把两个脚本最后一次的输出保存到 `/tmp/ai-weekly/checks.txt`，第 6 步的通知要用。
 
-1. 只逐个添加写入白名单内的文件：`git add -- "$REPORT_PATH" "$DATA_PATH"`，有月报、季报时一并添加。禁止 `git add -A`、`git add .`、`git commit -a`。
-2. 提交前运行 `git diff --cached --name-only`，出现白名单以外的文件就用 `git restore --staged` 撤下。
-3. 提交信息：`AI 周报 {WEEK}`，重跑时为 `AI 周报 {WEEK}（重跑）`，回溯时为 `AI 周报 {WEEK}（回溯）`。
-4. 推送：`git push origin HEAD:main`。
-   - 因为远端有新提交被拒（non-fast-forward）时，执行 `git pull --rebase origin main` 后再推，最多 2 次。出现冲突就 `git rebase --abort`，停止推送。
-   - 网络错误按 2、4、8、16 秒的间隔重试。
-   - 如果因权限被拒绝推送到 main，改为推送到固定的备用分支 `claude/ai-weekly-archive`（每周都用这一个，不另建），并在通知首句标明"未存档"：
-     - 先 `git fetch origin claude/ai-weekly-archive`。远端已有该分支时，先 `git rebase --onto origin/claude/ai-weekly-archive origin/main HEAD`，再 `git push origin HEAD:claude/ai-weekly-archive`；远端还没有该分支时，直接推送创建。
-     - rebase 出现冲突就 `git rebase --abort`，按推送完全失败处理。
+## 第 5 步：提交到工作分支并合并到 `main`
+
+这一步的提交、推送、建 PR、合并都是本任务的授权动作，自动完成，不等待确认。测试模式只做第 1、2 项（提交到当前分支），不推送、不建 PR、不合并。
+
+1. **提交**：只逐个添加写入白名单内的文件：`git add -- "$REPORT_PATH" "$DATA_PATH"`，有月报、季报时一并添加。禁止 `git add -A`、`git add .`、`git commit -a`。提交前运行 `git diff --cached --name-only`，出现白名单以外的文件就用 `git restore --staged` 撤下。
+2. **提交信息**：`AI 周报 {WEEK}`，重跑时为 `AI 周报 {WEEK}（重跑）`，回溯时为 `AI 周报 {WEEK}（回溯）`。
+3. **推送工作分支**：
+   - 工作分支：会话指定了开发分支（`claude/` 开头）时用它，否则用 `claude/ai-weekly-{WEEK}`，记为 `$BRANCH`。
+   - `git fetch origin "$BRANCH"`。远端已有该分支、且它不是 `HEAD` 的祖先时（带有未合并的其他提交），改用 `claude/ai-weekly-{WEEK}-{MMDDHHmm}`（北京时间）。
+   - `git push -u origin HEAD:"$BRANCH"`。网络错误按 2、4、8、16 秒的间隔重试。
+4. **建 PR**：用 GitHub MCP 工具 `create_pull_request`，base 为 `main`，head 为 `$BRANCH`，标题与提交信息相同，正文写周报路径和两项检查的结果；不建成草稿，因为随即合并。该分支已有打开的 PR 时直接用它。
+5. **合并**：用 `merge_pull_request` 合并，合并方式 `merge`（保留提交，重跑时同名分支仍能快进推送）。
+   - 因为 `main` 有新提交而无法合并时：`git fetch origin main && git merge --no-edit origin/main`，推送工作分支后再合并一次。合并出现冲突就 `git merge --abort`，按合并失败处理。
+   - GitHub MCP 工具不可用或合并被拒时，改为直接快进推送：`git fetch origin main && git merge --ff-only origin/main`（失败就跳过），再 `git push origin HEAD:main`。
+6. **确认**：`git fetch origin main && git merge-base --is-ancestor HEAD origin/main`，退出码为 0 才算合并成功。记下 PR 编号和合并结果，第 6 步的通知要用。
+7. 合并失败时，周报留在工作分支上，通知首句标明"未合并"，正文写明分支名和失败原因。
 
 ## 第 6 步：推送通知
 
@@ -148,9 +163,13 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
 
 用 PushNotification 发送，内容放在 `<routine_summary>` 标签里，全部用纯文本（不用表格和 Markdown 链接语法，URL 直接写完整）：
 - **首句**：格式固定为 `【AI周报 W{WNUM}】<本周最重要的一件事>。`，不超过 40 个汉字。
-  - 未存档到 main 时，开头改为 `【AI周报 W{WNUM}｜未存档】`；
+  - 未合并到 main 时，开头改为 `【AI周报 W{WNUM}｜未合并】`；检查未通过时改为 `【AI周报 W{WNUM}｜检查未通过】`，两者都有时写 `｜检查未通过｜未合并`；
   - 重跑时改为 `【AI周报 W{WNUM}｜重跑】`；回溯时改为 `【AI周报 W{WNUM}｜回溯】`；
   - 无法生成周报时，写 `【AI周报 W{WNUM}｜失败】<原因>。`
-- **正文**：①–⑤ 和洞察的精简版，每个板块 2 到 3 行；GitHub Top 5 列出项目名和本周新增 star。周榜未就绪、校验未通过、月报到期未生成等情况各用一行说明。
-- **结尾**：周报全文链接，路径中的中文要做百分号编码。可以用 `python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"` 生成，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面；推到备用分支时，把 `main` 换成分支名。
-- 如果第 5 步完全失败，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。如果 PushNotification 报错，去掉全文，只发精简版重试一次。
+- **正文**：①–⑤ 和洞察的精简版，每个板块 2 到 3 行；GitHub Top 5 列出项目名和本周新增 star。周榜未就绪、月报到期未生成等情况各用一行说明。
+- **运行结果**：固定三行，取自 `/tmp/ai-weekly/checks.txt` 和第 5 步的记录：
+  - `校验：validate.py 通过（N 个警告）` 或列出剩余错误；
+  - `完整性：第 0–4 步全部完成，联网搜索 N 次` 或列出未完成的步骤；
+  - `合并：PR #N 已合并到 main` 或写明分支名和失败原因。
+- **结尾**：周报全文链接，路径中的中文要做百分号编码。可以用 `python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"` 生成，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面；未合并时，把 `main` 换成工作分支名。
+- 如果第 5 步连工作分支都没推送成功，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。如果 PushNotification 报错，去掉全文，只发精简版重试一次。

@@ -317,6 +317,31 @@ def load_vocabulary() -> set[str]:
     return {t["name"] for t in load_config("topics")["topics"]}
 
 
+def run_checks(week: Week, backfill: bool = False, report_path=None, data_path=None,
+               data_only: bool = False) -> Report:
+    """校验仓库里（或指定路径）的周报与数据文件，返回 Report。check_run.py 也调用它。"""
+    rep = Report()
+    data_path = data_path or REPO_DIR / weekly_data_path(week)
+    data = None
+    try:
+        data = read_json(data_path)
+        validate_data(data, week, rep)
+    except FileNotFoundError:
+        (rep.error if data_only else rep.warn)(f"没有数据文件：{data_path}")
+    except ValueError as e:
+        rep.error(f"数据文件不是合法 JSON：{e}")
+
+    if not data_only:
+        report_path = report_path or REPO_DIR / weekly_report_path(week)
+        try:
+            with open(report_path, encoding="utf-8") as f:
+                text = f.read()
+            validate_report(text, week, backfill, data, load_vocabulary(), rep)
+        except FileNotFoundError:
+            rep.error(f"没有周报文件：{report_path}")
+    return rep
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--week", required=True, help="报告周编号，YYYY-Www")
@@ -326,27 +351,7 @@ def main(argv=None) -> int:
     ap.add_argument("--data-only", action="store_true", help="只校验数据文件")
     args = ap.parse_args(argv)
 
-    week = Week.parse(args.week)
-    rep = Report()
-    data_path = args.data or REPO_DIR / weekly_data_path(week)
-    data = None
-    try:
-        data = read_json(data_path)
-        validate_data(data, week, rep)
-    except FileNotFoundError:
-        (rep.error if args.data_only else rep.warn)(f"没有数据文件：{data_path}")
-    except ValueError as e:
-        rep.error(f"数据文件不是合法 JSON：{e}")
-
-    if not args.data_only:
-        report_path = args.report or REPO_DIR / weekly_report_path(week)
-        try:
-            with open(report_path, encoding="utf-8") as f:
-                text = f.read()
-            validate_report(text, week, args.backfill, data, load_vocabulary(), rep)
-        except FileNotFoundError:
-            rep.error(f"没有周报文件：{report_path}")
-
+    rep = run_checks(Week.parse(args.week), args.backfill, args.report, args.data, args.data_only)
     for w in rep.warnings:
         print(f"警告：{w}")
     for e in rep.errors:
