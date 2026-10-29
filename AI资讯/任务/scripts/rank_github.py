@@ -11,7 +11,8 @@
     }
 
 脚本负责：OSS Insight 补充总 star、归档、fork、open issue；归档、fork、疑似刷星的排除；
-按本周新增 star 排名取 Top 5；新晋项目；HN 热议项目。参数见 config/ranking.yaml 的 github 段。
+按本周新增 star 排名取 Top 5；新晋项目与 HN 热议项目（只写入数据文件，周报不展示）。
+参数见 config/ranking.yaml 的 github 段。
 
 退出码：0 成功；3 周榜未就绪（不写数据文件）；1 其他错误。
 
@@ -236,7 +237,7 @@ def print_summary(rows: list[dict], info: dict) -> None:
             print(prefix + line(r))
     print(f"# OSS Insight 请求 {info['ossinsight_requested']} 个，失败 {len(info['ossinsight_failed'])} 个"
           + ("：" + "、".join(info["ossinsight_failed"]) if info["ossinsight_failed"] else ""))
-    meta = [r["full_name"] for r in rows if r["status"] in ("top5", "new")]
+    meta = [r["full_name"] for r in sorted(rows, key=lambda r: r["rank"] or 99) if r["status"] == "top5"]
     print("# 周报元数据 repos：" + json.dumps(meta, ensure_ascii=False))
 
 

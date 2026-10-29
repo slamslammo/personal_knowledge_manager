@@ -44,7 +44,7 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
 4. **AI 判定与 GitHub 排名**：
    - 逐个判断周榜仓库是否与 AI 相关：涉及大模型、智能体、模型训练或推理、RAG、MCP、AI 编程工具、多模态生成等。**拿不准的保留**，必要时参考 OSS Insight 的 topics。
    - 按名称和描述就能判断的排除项：awesome 类或纯链接合集、越狱提示词合集。
-   - 从第 2 项的输出里找出与 AI 相关的 GitHub 仓库（用于"HN 热议项目"）。
+   - 从第 2 项的输出里找出与 AI 相关的 GitHub 仓库（数据文件里的"HN 热议项目"）。
    - 把判断写进 `/tmp/ai-weekly/judgments.json`：
      ```json
      {"non_ai": ["owner/repo"], "exclude": {"owner/repo": "awesome 类合集"}, "hn_ai_repos": ["owner/repo"]}
@@ -74,7 +74,7 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
 ### 元数据
 - `topics`：3 到 6 个，只能从 `config/topics.yaml` 的 name 中选。
 - `orgs`：本周涉及的主要公司和机构，写法参照 `config/topics.yaml` 的 `org_names`。
-- `repos`：照抄 `rank_github.py` 打印的"周报元数据 repos"。
+- `repos`：照抄 `rank_github.py` 打印的"周报元数据 repos"（Top 5）。
 
 ### ① 本周概览
 3 到 5 条，每条一行、一句话，开头用粗体短标签（如"**中国厂商**："），写本周最重要的变化。
@@ -93,8 +93,7 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
   - 本周为什么火：触发事件，比如发版、上了 HN、爆款推文。优先用数据文件 note 里的 HN 分数和 HN 数据作为线索；
   - 传播分析：用联网搜索找相关文章和 YouTube 视频，总结大家在讨论什么，附链接。找不到就如实写；
   - 我们的判断：适合谁用、成熟度、有什么风险。
-- 新晋项目、HN 热议项目：数据文件里 status 为 new、hn 的项目，每个一句话。
-- 未入榜说明：status 为 excluded 的项目，写名称和原因（疑似刷星要写出数据）。
+- 只写 Top 5。数据文件里的新晋（new）、HN 热议（hn）和排除（excluded）项目不写进周报。
 
 ### ④ 传播文章 Top 5
 - 从第 1 步第 2 项分数不低于 100 的 story 里，挑出与 AI 相关的文章和讨论帖（发布帖不计入），按输出顺序（points 降序，同分按评论数降序，已按链接去重）取前 5。

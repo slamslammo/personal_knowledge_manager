@@ -41,7 +41,7 @@ week: 2026-W43
 range: 2026-10-19/2026-10-25
 topics: [智能体, 开源模型, 推理部署]
 orgs: [DeepSeek]
-repos: [a/one, a/two, a/new]
+repos: [a/one, a/two]
 ---
 
 # AI 周报 · 2026-W43（10/19–10/25）
@@ -67,10 +67,6 @@ repos: [a/one, a/two, a/new]
 ### 2. [a/two](https://github.com/a/two)
 
 总 star 1,000（本周 +100），详见 ②。
-
-### 新晋项目
-
-- [a/new](https://github.com/a/new)：介绍。
 
 ## ④ 传播文章 Top 5
 
@@ -139,8 +135,14 @@ class ValidateTest(unittest.TestCase):
         self.assertTrue(any("不一致" in e for e in check(report).errors))
 
     def test_front_matter_repos_must_match(self):
-        report = REPORT.replace("repos: [a/one, a/two, a/new]", "repos: [a/one, a/two]")
-        self.assertTrue(any("元数据 repos" in e for e in check(report).errors))
+        report = REPORT.replace("repos: [a/one, a/two]", "repos: [a/one, a/new]")
+        errors = "\n".join(check(report).errors)
+        self.assertIn("元数据 repos 应为数据文件中的 Top 5", errors)
+
+    def test_section3_only_top5(self):
+        report = REPORT.replace("总 star 1,000（本周 +100），详见 ②。\n",
+                                "总 star 1,000（本周 +100），详见 ②。\n\n### 新晋项目\n\n- [a/new](https://github.com/a/new)：介绍。\n")
+        self.assertTrue(any("③ 只写 Top 5" in e for e in check(report).errors))
 
     def test_data_rank_rules(self):
         data = copy.deepcopy(DATA)

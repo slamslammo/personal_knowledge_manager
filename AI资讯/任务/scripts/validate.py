@@ -9,7 +9,7 @@
 - 洞察：每条（### 洞察 N：）都写了依据和必读。
 - 链接：Markdown 链接目标都是 http(s) 地址；没有残留的模板占位符。
 - 与数据文件一致：③ 的 `### N. [owner/repo]` 依次对应数据文件 rank 1..N；
-  元数据 repos 等于数据文件中 top5 与 new 的集合。
+  元数据 repos 等于数据文件中 Top 5 的集合；③ 只有编号项目，不写新晋、HN 热议等附加小节。
 
 数据文件（格式见 ../方案.md 6.3 节）：字段齐全、类型正确、status 合法、rank 只给 top5 且从 1 连续编号。
 
@@ -248,6 +248,9 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
         rep.error(f"③ 的项目编号应从 1 连续：{[n for n, _ in numbered]}")
     if len(numbered) > 5:
         rep.error(f"③ 有 {len(numbered)} 个编号项目，上限 5")
+    extra_subsections = [h for h in re.findall(r"^### (.+)$", s3, re.M) if not re.match(r"\d+\. \[", h)]
+    if extra_subsections:
+        rep.error(f"③ 只写 Top 5，多出的小节：{extra_subsections}")
 
     covered = {normalize_url(u) for u in LINK_RE.findall(s2)}
     covered |= {normalize_url(f"https://github.com/{name}") for _, name in numbered}
@@ -305,9 +308,9 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     expected_top = [r["full_name"] for r in top]
     if listed != expected_top:
         rep.error(f"③ 的项目顺序 {listed} 与数据文件 Top 5 {expected_top} 不一致")
-    meta = {r["full_name"] for r in data.get("repos", []) if r.get("status") in ("top5", "new")}
+    meta = {r["full_name"] for r in data.get("repos", []) if r.get("status") == "top5"}
     if set(repos) != meta:
-        rep.error(f"元数据 repos 应为数据文件中 Top 5 与新晋项目：缺 {sorted(meta - set(repos))}，"
+        rep.error(f"元数据 repos 应为数据文件中的 Top 5：缺 {sorted(meta - set(repos))}，"
                   f"多 {sorted(set(repos) - meta)}")
 
 

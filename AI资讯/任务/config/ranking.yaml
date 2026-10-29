@@ -6,7 +6,7 @@ github:
   candidates: trendshift_weekly     # 候选来源：Trendshift 报告周周榜（约 25 项）
   sort_by: week_stars               # 报告周 7 天每日新增 star 之和
   top_n: 5
-  new_entrants:
+  new_entrants:                     # 新晋与 HN 热议项目只写入数据文件，周报不展示
     max: 3
     created_within_days: 30         # 以报告周周日为基准
   hn_discussed:

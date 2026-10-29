@@ -3,7 +3,7 @@ week: {{WEEK}}
 range: {{START}}/{{END}}
 topics: [{{3–6 个，取自 config/topics.yaml}}]
 orgs: [{{本周涉及的主要公司和机构，写法见 config/topics.yaml 的 org_names}}]
-repos: [{{rank_github.py 输出的"周报元数据 repos"}}]
+repos: [{{rank_github.py 输出的"周报元数据 repos"，即 Top 5}}]
 ---
 
 # AI 周报 · {{WEEK}}（{{RANGE}}）{{回溯模式加"（回溯版）"}}
@@ -44,20 +44,6 @@ repos: [{{rank_github.py 输出的"周报元数据 repos"}}]
 ### 2. [{{owner/repo}}](https://github.com/{{owner/repo}})
 
 总 star {{N}}（本周 +{{N}}）｜{{一句话介绍}}，详见 ②。
-
-### 新晋项目
-
-- [{{owner/repo}}](https://github.com/{{owner/repo}})：{{一句话介绍}}（本周 +{{N}}）。{{触发事件}}
-
-### HN 热议项目
-
-- [{{owner/repo}}](https://github.com/{{owner/repo}})：HN {{分数}} 分，[讨论]({{HN 链接}})。{{一句话介绍}}
-
-### 未入榜说明
-
-- {{owner/repo}}：{{疑似刷星、已归档等排除原因与数据}}
-
-{{没有新晋、HN 热议或排除项目时，删去对应小节。}}
 
 ## ④ 传播文章 Top 5
 
