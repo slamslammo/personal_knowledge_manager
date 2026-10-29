@@ -1,0 +1,64 @@
+# 周报各榜单的规则参数，算法说明见 ../方案.md 第 3、6 节。
+# rank_github.py、collect_hn.py、collect_hf.py 读取本文件；执行手册中的文字规则与本文件保持一致。
+# 分数、天数等门槛均含边界（>=）。
+
+github:
+  candidates: trendshift_weekly     # 候选来源：Trendshift 报告周周榜（约 25 项）
+  sort_by: week_stars               # 报告周 7 天每日新增 star 之和
+  top_n: 5
+  new_entrants:                     # 新晋与 HN 热议项目只写入数据文件，周报不展示
+    max: 3
+    created_within_days: 30         # 以报告周周日为基准
+  hn_discussed:
+    max: 3                          # HN 热议但不在周榜里的项目，不参与排名
+    min_points: 50
+  exclude:
+    - awesome 类或纯链接合集
+    - 越狱提示词合集
+    - archived
+    - fork
+  star_farming:                     # 两个条件同时满足视为疑似刷星，不进榜
+    max_fork_to_star_ratio: 0.01    # 本周新增 fork ÷ 本周新增 star，低于此值
+    max_open_issues: 4              # 未关闭 issue 不超过此值
+  ossinsight_enrich:                # 请求 OSS Insight 补充信息的范围
+    top: 12
+    plus: [new_entrant_candidates, hn_discussed]
+  weekly_not_ready:                 # 周榜未就绪时的重试：先做其他采集和写作，之后再试，不空等
+    retries: 2
+
+overview:
+  min: 3                            # ① 本周概览：每条一行、一句话
+  max: 5
+
+articles:
+  source: hn
+  min_points: 100
+  top_n: 5
+  sort_by: [points, num_comments]
+  exclude_release_posts: true       # 只收文章与讨论；发布帖的热度写进 ② 或 ③
+
+hn_query:
+  min_points: 50                    # 一次取回本周分数不低于 50 的 story
+
+releases:
+  max_items: 5
+
+topics:
+  target: 5                         # ⑤ 热点话题，表格呈现
+
+insights:                           # 洞察：交叉各板块后的关键信息或趋势
+  min: 2
+  max: 3
+  reads_per_insight: [1, 2]
+
+hf_papers:
+  candidates_top: 10
+
+section_priority: [releases, github, articles, topics]   # 同一事件只在优先级最高的板块详细写
+
+monthly:
+  github_top_n: 10                  # 各周 week_stars 相加
+  must_read: 5                      # 从各期周报"洞察"的必读材料中精选
+
+quarterly:
+  retrospective_github: trendshift_weekly_appearances   # 回顾版按历史周榜上榜次数与名次

@@ -1,0 +1,69 @@
+# 周报、月报、季报元数据 topics 的受控词表。validate.py 校验 topics 只能取这里的 name。
+# 词表按需要增补：先在这里加词，并在 ../版本规划.md 记录原因，再在报告里使用。
+# 每期选 3–6 个最能概括本周内容的主题；desc 是选词依据。
+
+topics:
+  - name: 前沿模型
+    desc: 闭源旗舰模型与重大版本的发布、更新、定价
+  - name: 开源模型
+    desc: 开放权重模型的发布与对比
+  - name: 推理模型
+    desc: 长思维链、推理时计算、推理能力评测
+  - name: 智能体
+    desc: 智能体产品、框架与范式，含 harness 工程（围绕模型搭建智能体运行框架）
+  - name: AI 编程
+    desc: 编程助手、代码智能体、AI 生成代码的工程实践
+  - name: MCP 与工具调用
+    desc: MCP 等协议、插件、技能（skill）、工具调用
+  - name: 多模态
+    desc: 视觉、音频理解与跨模态模型
+  - name: 图像与视频生成
+    desc: 图像、视频、3D、世界模型等生成式内容
+  - name: 语音
+    desc: 语音识别、合成、克隆与实时对话
+  - name: 具身智能
+    desc: 机器人与物理世界中的 AI
+  - name: 模型训练
+    desc: 预训练、后训练、强化学习、数据与训练方法
+  - name: 推理部署
+    desc: 推理框架、量化、端侧与本地运行、服务成本
+  - name: 检索与记忆
+    desc: RAG、知识库、长期记忆与上下文管理
+  - name: 评测基准
+    desc: 基准、排行榜、评测方法与争议
+  - name: AI 安全
+    desc: 对齐、越狱、提示注入、安全漏洞与滥用
+  - name: 芯片与算力
+    desc: AI 芯片、数据中心、算力供给与价格
+  - name: 产业与资本
+    desc: 融资、并购、营收、合作与人事变动
+  - name: 政策监管
+    desc: 法规、诉讼、版权与政府政策
+  - name: 开发者工具
+    desc: API、SDK、开发平台与开源基础设施
+  - name: 应用产品
+    desc: 面向大众的 AI 应用与功能
+  - name: 研究进展
+    desc: 有影响力的论文、可解释性与基础研究
+
+# orgs 不做强制校验，但同一机构要用同一写法，便于按机构检索。常见写法：
+org_names:
+  - OpenAI
+  - Anthropic
+  - Google DeepMind      # Google 的模型与研究统一写 Google DeepMind；Google 其他业务写 Google
+  - Google
+  - Meta
+  - Microsoft
+  - Apple
+  - Amazon
+  - NVIDIA
+  - xAI
+  - Mistral AI
+  - DeepSeek
+  - Alibaba Qwen        # 通义千问团队；阿里其他业务写 Alibaba
+  - Moonshot AI         # Kimi
+  - Zhipu AI            # 智谱，z.ai
+  - ByteDance
+  - Tencent
+  - Hugging Face
+  - Cloudflare

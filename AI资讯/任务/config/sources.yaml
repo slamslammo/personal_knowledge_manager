@@ -1,0 +1,42 @@
+# AI 资讯任务的信息源。执行手册让智能体在运行时读取本文件；data_endpoints 由 scripts/ 下的采集脚本使用。
+
+official:                     # 官方一手来源，发布类资讯必须以此为原文
+  - openai.com
+  - anthropic.com
+  - deepmind.google
+  - blog.google
+  - ai.meta.com
+  - x.ai
+  - mistral.ai
+  - deepseek.com
+  - qwenlm.github.io
+  - z.ai
+  - moonshot.ai
+
+media:                        # 英文科技媒体
+  - theverge.com
+  - techcrunch.com
+  - venturebeat.com
+  - domain: theinformation.com
+    note: 付费墙，只能标注"仅媒体报道"
+
+papers:                       # 论文与技术报告
+  - arxiv.org
+  - huggingface.co/papers
+
+community:                    # 可以引用，但不作为发布类资讯的唯一来源
+  - news.ycombinator.com
+  - huggingface.co
+  - youtube.com
+  - 个人技术博客与项目官方博客
+
+excluded:                     # 不使用的信息源类型
+  - 中文媒体
+  - Newsletter
+
+data_endpoints:
+  trendshift_weekly: https://trendshift.io/weekly/{YEAR}/{WEEK_NUMBER}
+  trendshift_repo: https://trendshift.io/repositories/{id}
+  ossinsight_repo: https://api.ossinsight.io/gh/repos/{owner}/{repo}
+  hn_search: https://hn.algolia.com/api/v1/search
+  hf_papers: https://huggingface.co/api/daily_papers?week={WEEK}&limit=100

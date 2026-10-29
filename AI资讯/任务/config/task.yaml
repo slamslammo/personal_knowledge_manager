@@ -1,0 +1,57 @@
+# AI 资讯任务的部署清单。重新部署到任何平台时，按本文件配置定时、能力、网络与权限。
+# 说明见 ../部署指南.md。
+
+task: ai-weekly
+version: v0.1
+
+schedule:
+  cron: "0 10 * * 1"          # 每周一 10:00
+  timezone: Asia/Shanghai
+  report_period: 上一周（周一 00:00 至周日 24:00，北京时间）
+
+agent:
+  prompt: AI资讯/任务/prompts/routine-prompt.md   # 入口提示词，贴进定时任务
+  manual: AI资讯/任务/prompts/weekly.md           # 执行手册，运行时从仓库读取
+  model_tier: 中档通用模型                         # 不写具体型号，在平台设置中选择
+  capabilities:
+    - shell
+    - python3
+    - git_push
+    - web_search
+    - notify
+  web_search_budget: 40       # 每次运行的联网搜索上限
+
+repository:
+  name: slamslammo/personal_knowledge_manager
+  branch: main
+  fallback_branch: claude/ai-weekly-archive   # 无法推送到 main 时使用
+  requires_unrestricted_push: true             # 需要允许推送 main；Claude 云端是否需要额外开启待实测
+  write_paths:                                 # 任务只能写入这些路径
+    - AI资讯/周报/
+    - AI资讯/月报/                             # 仅月报到期且手册要求生成时
+    - AI资讯/季报/                             # 仅季报到期且手册要求生成时
+    - AI资讯/数据/github-weekly/
+  readonly_paths:
+    - AI资讯/任务/
+    - AI资讯/README.md
+
+runtime:
+  requires: [git, python3, PyYAML]
+  tests: python3 -m unittest discover -s AI资讯/任务/scripts/tests -t AI资讯/任务/scripts/tests
+
+network:
+  allow:
+    - trendshift.io
+    - api.ossinsight.io
+    - hn.algolia.com
+    - huggingface.co
+    - github.com              # 仅用于推送本仓库
+  known_blocked:
+    - api.github.com          # Claude 云端只允许已挂载仓库的接口
+    - www.reddit.com          # 需要 OAuth 凭证
+
+secrets: []                   # 当前不需要额外密钥
+
+notify:
+  banner_format: "【AI周报 W{WNUM}】<本周最重要的一件事>。"
+  report_url: https://github.com/slamslammo/personal_knowledge_manager/blob/main/{URL 编码后的周报路径}
