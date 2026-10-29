@@ -52,6 +52,18 @@ repos: [a/one, a/two]
 - **二**：第二条。
 - **三**：第三条。
 
+## 洞察
+
+### 洞察 1：结论一
+
+- **依据**：② 某发布；⑤ 话题1。
+- **必读**：[论文一](https://arxiv.org/abs/1)：收获。
+
+### 洞察 2：结论二
+
+- **依据**：③ a/one。
+- **必读**：[论文二](https://arxiv.org/abs/2)：收获；[论文三](https://arxiv.org/abs/3)：收获。
+
 ## ② 新发布与技术 Top 5
 
 ### 某发布
@@ -79,18 +91,6 @@ repos: [a/one, a/two]
 | 话题 | 起因 | 发展与争议 | 代表链接 |
 | --- | --- | --- | --- |
 {TOPIC_ROWS}
-
-## 洞察
-
-### 洞察 1：结论一
-
-- **依据**：② 某发布；⑤ 话题1。
-- **必读**：[论文一](https://arxiv.org/abs/1)：收获。
-
-### 洞察 2：结论二
-
-- **依据**：③ a/one。
-- **必读**：[论文二](https://arxiv.org/abs/2)：收获；[论文三](https://arxiv.org/abs/3)：收获。
 
 ## 数据说明
 
@@ -186,6 +186,14 @@ class ValidateTest(unittest.TestCase):
         errors = "\n".join(check(report).errors)
         self.assertIn("洞察 2 没有写依据", errors)
         self.assertIn("洞察 1 没有写必读", errors)
+
+    def test_insights_must_follow_overview(self):
+        i0 = REPORT.index("## 洞察\n")
+        i1 = REPORT.index("## ② ")
+        block = REPORT[i0:i1]
+        moved = REPORT[:i0] + REPORT[i1:]
+        moved = moved.replace("## 数据说明", block + "## 数据说明")
+        self.assertTrue(any("顺序不对" in e for e in check(moved).errors))
 
     def test_table_rows(self):
         rows = table_rows("说明\n| a | b |\n| --- | :---: |\n| 1 | x |\n| 2 | y |\n\n| z |\n")

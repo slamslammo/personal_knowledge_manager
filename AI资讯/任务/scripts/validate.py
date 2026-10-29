@@ -4,7 +4,7 @@
 - 元数据：week、range、topics、orgs、repos 齐全；week 与 range 和报告周一致；
   topics 3–6 个且都在 config/topics.yaml 词表内；repos 都是 owner/repo。
 - 标题：`# AI 周报 · {WEEK}（{M/D}–{M/D}）`，回溯模式下以"（回溯版）"结尾。
-- 板块：七个二级标题齐全且顺序正确；各板块条目数在 config/ranking.yaml 规定的范围内。
+- 板块：七个二级标题齐全且顺序正确（洞察紧跟在 ① 之后）；各板块条目数在 config/ranking.yaml 规定的范围内。
 - ④⑤ 是表格：④ 每行都有 HN 讨论链接，且不收 ②③ 已写的发布；⑤ 每行都有代表链接。
 - 洞察：每条（### 洞察 N：）都写了依据和必读。
 - 链接：Markdown 链接目标都是 http(s) 地址；没有残留的模板占位符。
@@ -28,15 +28,14 @@ import sys
 from common import REPO_DIR, load_config, normalize_url, read_json
 from weeks import Week, weekly_data_path, weekly_report_path
 
-SECTIONS = [
-    "## ① 本周概览",
-    "## ② 新发布与技术 Top 5",
-    "## ③ GitHub AI 项目热度 Top 5",
-    "## ④ 传播文章 Top 5",
-    "## ⑤ 热点话题 Top 5",
-    "## 洞察",
-    "## 数据说明",
-]
+OVERVIEW = "## ① 本周概览"
+INSIGHTS = "## 洞察"
+RELEASES = "## ② 新发布与技术 Top 5"
+GITHUB = "## ③ GitHub AI 项目热度 Top 5"
+ARTICLES = "## ④ 传播文章 Top 5"
+TOPICS = "## ⑤ 热点话题 Top 5"
+NOTES = "## 数据说明"
+SECTIONS = [OVERVIEW, INSIGHTS, RELEASES, GITHUB, ARTICLES, TOPICS, NOTES]  # 周报中的出现顺序
 STATUSES = {"top5", "new", "candidate", "hn", "excluded", "non_ai"}
 REPO_RE = re.compile(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$")
 LINK_RE = re.compile(r"\]\(([^)]*)\)")
@@ -232,17 +231,17 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
 
     lim = limits or section_limits()
     sec = section_bodies(body)
-    overview = re.findall(r"^- ", sec.get(SECTIONS[0], ""), re.M)
+    overview = re.findall(r"^- ", sec.get(OVERVIEW, ""), re.M)
     count_in_range(rep, "① 本周概览", len(overview), *lim["overview"])
 
-    s2 = sec.get(SECTIONS[1], "")
+    s2 = sec.get(RELEASES, "")
     releases = re.findall(r"^### ", s2, re.M)
     if len(releases) > lim["releases"][1]:
         rep.error(f"② 有 {len(releases)} 条，上限 {lim['releases'][1]}")
     else:
         count_in_range(rep, "② 新发布与技术", len(releases), *lim["releases"])
 
-    s3 = sec.get(SECTIONS[2], "")
+    s3 = sec.get(GITHUB, "")
     numbered = NUMBERED_RE.findall(s3)
     if [int(n) for n, _ in numbered] != list(range(1, len(numbered) + 1)):
         rep.error(f"③ 的项目编号应从 1 连续：{[n for n, _ in numbered]}")
@@ -254,7 +253,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
 
     covered = {normalize_url(u) for u in LINK_RE.findall(s2)}
     covered |= {normalize_url(f"https://github.com/{name}") for _, name in numbered}
-    articles = table_rows(sec.get(SECTIONS[3], ""))
+    articles = table_rows(sec.get(ARTICLES, ""))
     if len(articles) > lim["articles"]:
         rep.error(f"④ 有 {len(articles)} 篇，上限 {lim['articles']}")
     else:
@@ -269,7 +268,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
         if first and normalize_url(first.group(1)) in covered:
             rep.error(f"④ 第 {r[0]} 行是 ②③ 已写的发布，④ 只收文章与讨论：{first.group(1)}")
 
-    topics = table_rows(sec.get(SECTIONS[4], ""))
+    topics = table_rows(sec.get(TOPICS, ""))
     if len(topics) > lim["topics"]:
         rep.error(f"⑤ 有 {len(topics)} 个话题，上限 {lim['topics']}")
     else:
@@ -281,7 +280,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
         elif n_links < 2:
             rep.warn(f"⑤「{r[0]}」只有 {n_links} 个代表链接，规则为 2–3 个")
 
-    insights = re.split(r"^### 洞察 \d+[：:]", sec.get(SECTIONS[5], ""), flags=re.M)[1:]
+    insights = re.split(r"^### 洞察 \d+[：:]", sec.get(INSIGHTS, ""), flags=re.M)[1:]
     count_in_range(rep, "洞察", len(insights), *lim["insights"])
     for i, block in enumerate(insights, 1):
         if "**依据**" not in block:
@@ -295,7 +294,7 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
         else:
             count_in_range(rep, f"洞察 {i} 的必读", reads, *lim["reads"])
 
-    notes = sec.get(SECTIONS[6], "")
+    notes = sec.get(NOTES, "")
     if "搜索" not in notes:
         rep.error("数据说明里没有写联网搜索次数")
 
