@@ -1,7 +1,7 @@
 {
   "week": "2026-W43",
   "range": "2026-10-19/2026-10-25",
-  "generated_at": "2026-10-28T17:50:25+08:00",
+  "generated_at": "2026-10-29T18:06:52+08:00",
   "repos": [
     {
       "full_name": "morluto/rea",
@@ -10,7 +10,7 @@
       "week_stars": 62679,
       "week_forks": 15146,
       "days_covered": 7,
-      "total_stars": 399491,
+      "total_stars": 404939,
       "created_at": "2026-04-14T00:51:32Z",
       "status": "top5",
       "note": ""
@@ -22,7 +22,7 @@
       "week_stars": 19576,
       "week_forks": 2597,
       "days_covered": 7,
-      "total_stars": 23590,
+      "total_stars": 24119,
       "created_at": "2026-10-16T07:47:23Z",
       "status": "top5",
       "note": "HN 2353 分"
@@ -34,7 +34,7 @@
       "week_stars": 18181,
       "week_forks": 734,
       "days_covered": 7,
-      "total_stars": 47840,
+      "total_stars": 50002,
       "created_at": "2026-09-24T16:17:19Z",
       "status": "top5",
       "note": ""
@@ -46,7 +46,7 @@
       "week_stars": 15667,
       "week_forks": 962,
       "days_covered": 7,
-      "total_stars": 50760,
+      "total_stars": 52168,
       "created_at": "2026-06-18T14:08:44Z",
       "status": "top5",
       "note": ""
@@ -58,7 +58,7 @@
       "week_stars": 13484,
       "week_forks": 1388,
       "days_covered": 7,
-      "total_stars": 20737,
+      "total_stars": 21177,
       "created_at": "2026-10-06T21:48:11Z",
       "status": "top5",
       "note": "HN 81 分"
@@ -70,10 +70,10 @@
       "week_stars": 6529,
       "week_forks": 679,
       "days_covered": 7,
-      "total_stars": 11818,
+      "total_stars": 12695,
       "created_at": "2026-10-18T01:28:31Z",
       "status": "new",
-      "note": "HN 349 分"
+      "note": "HN 350 分"
     },
     {
       "full_name": "lemomo-ai/lemo-opuscar",
@@ -82,8 +82,20 @@
       "week_stars": 4330,
       "week_forks": 490,
       "days_covered": 7,
-      "total_stars": 8904,
+      "total_stars": 9258,
       "created_at": "2026-09-26T10:10:41Z",
+      "status": "new",
+      "note": ""
+    },
+    {
+      "full_name": "xiaoyang111222/cn-math-taxonomy",
+      "trendshift_position": 25,
+      "rank": null,
+      "week_stars": 3376,
+      "week_forks": 825,
+      "days_covered": 7,
+      "total_stars": 5061,
+      "created_at": "2026-10-18T09:04:43Z",
       "status": "new",
       "note": ""
     },
@@ -94,7 +106,7 @@
       "week_stars": null,
       "week_forks": null,
       "days_covered": 0,
-      "total_stars": 20397,
+      "total_stars": 20649,
       "created_at": "2026-02-24T22:52:22Z",
       "status": "hn",
       "note": "HN 507 分：https://news.ycombinator.com/item?id=50198675"
@@ -106,10 +118,10 @@
       "week_stars": null,
       "week_forks": null,
       "days_covered": 0,
-      "total_stars": 783,
+      "total_stars": 791,
       "created_at": "2026-03-09T16:59:42Z",
       "status": "hn",
-      "note": "HN 379 分：https://news.ycombinator.com/item?id=50169053"
+      "note": "HN 380 分：https://news.ycombinator.com/item?id=50169053"
     },
     {
       "full_name": "openai/openai-cli",
@@ -118,7 +130,7 @@
       "week_stars": null,
       "week_forks": null,
       "days_covered": 0,
-      "total_stars": 1136,
+      "total_stars": 1140,
       "created_at": "2026-05-01T16:40:05Z",
       "status": "hn",
       "note": "HN 244 分：https://news.ycombinator.com/item?id=50191507"
@@ -130,7 +142,7 @@
       "week_stars": 12665,
       "week_forks": 3446,
       "days_covered": 7,
-      "total_stars": 66951,
+      "total_stars": 67321,
       "created_at": "2026-03-18T14:33:04Z",
       "status": "candidate",
       "note": ""
@@ -142,7 +154,7 @@
       "week_stars": 11483,
       "week_forks": 1405,
       "days_covered": 7,
-      "total_stars": 92102,
+      "total_stars": 93555,
       "created_at": "2026-04-09T21:40:26Z",
       "status": "candidate",
       "note": ""
@@ -154,7 +166,7 @@
       "week_stars": 9180,
       "week_forks": 604,
       "days_covered": 7,
-      "total_stars": 108472,
+      "total_stars": 109572,
       "created_at": "2026-03-17T03:28:57Z",
       "status": "candidate",
       "note": ""
@@ -166,7 +178,7 @@
       "week_stars": 9146,
       "week_forks": 611,
       "days_covered": 7,
-      "total_stars": 178537,
+      "total_stars": 179586,
       "created_at": "2026-06-12T00:52:37Z",
       "status": "candidate",
       "note": ""
@@ -178,7 +190,7 @@
       "week_stars": 8294,
       "week_forks": 1416,
       "days_covered": 7,
-      "total_stars": 264309,
+      "total_stars": 265400,
       "created_at": "2026-08-13T11:56:32Z",
       "status": "candidate",
       "note": ""
@@ -190,7 +202,7 @@
       "week_stars": 7205,
       "week_forks": 717,
       "days_covered": 7,
-      "total_stars": 17223,
+      "total_stars": 17451,
       "created_at": "2026-06-30T04:32:45Z",
       "status": "candidate",
       "note": ""
@@ -202,8 +214,20 @@
       "week_stars": 6798,
       "week_forks": 563,
       "days_covered": 7,
-      "total_stars": 137273,
+      "total_stars": 138184,
       "created_at": "2026-04-03T15:49:07Z",
+      "status": "candidate",
+      "note": ""
+    },
+    {
+      "full_name": "AhmadHassan-BTed/Turnitout-Humanizer",
+      "trendshift_position": 17,
+      "rank": null,
+      "week_stars": 5003,
+      "week_forks": 98,
+      "days_covered": 7,
+      "total_stars": null,
+      "created_at": "2026-07-10T14:26:49Z",
       "status": "candidate",
       "note": ""
     },
@@ -250,7 +274,7 @@
       "week_stars": 4825,
       "week_forks": 509,
       "days_covered": 7,
-      "total_stars": 12150,
+      "total_stars": 12439,
       "created_at": "2026-09-27T06:19:36Z",
       "status": "excluded",
       "note": "awesome 类合集"
@@ -292,18 +316,6 @@
       "note": ""
     },
     {
-      "full_name": "AhmadHassan-BTed/Turnitout-Humanizer",
-      "trendshift_position": 17,
-      "rank": null,
-      "week_stars": 5003,
-      "week_forks": 98,
-      "days_covered": 7,
-      "total_stars": null,
-      "created_at": "2026-07-10T14:26:49Z",
-      "status": "non_ai",
-      "note": ""
-    },
-    {
       "full_name": "ly05010419/MacNativeGames",
       "trendshift_position": 16,
       "rank": null,
@@ -324,18 +336,6 @@
       "days_covered": 7,
       "total_stars": null,
       "created_at": "2026-10-13T05:20:14Z",
-      "status": "non_ai",
-      "note": ""
-    },
-    {
-      "full_name": "xiaoyang111222/cn-math-taxonomy",
-      "trendshift_position": 25,
-      "rank": null,
-      "week_stars": 3376,
-      "week_forks": 825,
-      "days_covered": 7,
-      "total_stars": null,
-      "created_at": "2026-10-18T09:04:43Z",
       "status": "non_ai",
       "note": ""
     }
