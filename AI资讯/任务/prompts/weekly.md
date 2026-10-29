@@ -46,7 +46,7 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
 3. **Hugging Face 本周论文**：`python3 $S/collect_hf.py --week $WEEK`，前 10 篇作为 ② 和"洞察"必读材料的候选。
 4. **AI 判定与 GitHub 排名**：
    - 逐个判断周榜仓库是否与 AI 相关：涉及大模型、智能体、模型训练或推理、RAG、MCP、AI 编程工具、多模态生成等。**拿不准的保留**，必要时参考 OSS Insight 的 topics。
-   - 第 1 项的输出会标出往期数据文件里的判定（如"往期：非 AI（2026-W42）"）。没有新信息时沿用往期判定，保证前后各周一致；改判时在数据说明里写一句原因。
+   - 第 1 项的输出会标出往期数据文件里的判定（如"往期：非 AI（2026-W42）"）。没有新信息时沿用往期判定，保证前后各周一致；改判时在数据说明里写一句原因。脚本按当周数据做的排除（归档、fork、疑似刷星、仓库不存在）每周重新计算，输出里标为"脚本曾自动排除"，不要把它们写进判定文件的 `exclude`。
    - 按名称和描述就能判断的排除项：awesome 类或纯链接合集、越狱提示词合集。
    - 从第 2 项的输出里找出与 AI 相关的 GitHub 仓库（数据文件里的"HN 热议项目"）。
    - 把判断写进 `/tmp/ai-weekly/judgments.json`：
@@ -156,7 +156,7 @@ echo $WEEK $START $END $RANGE $REPORT_PATH $DATA_PATH
    - 因权限被拒（有的平台只允许推送指定的工作分支）时，转第 4 项。
 4. **备用：工作分支加 PR**，只在第 3 项失败时做：
    - 工作分支：平台为本次运行指定了工作分支时用它，否则用 `ai-weekly/{WEEK}`，记为 `$BRANCH`。远端已有同名分支、且它不是 `HEAD` 的祖先时，加上时间后缀 `-{MMDDHHmm}`（北京时间）。推送：`git push -u origin HEAD:"$BRANCH"`，网络错误同样重试。
-   - 用平台提供的 GitHub 能力（如 `gh` 命令行、GitHub API 或平台内置的 GitHub 工具）建 PR：base 为 `main`，标题与提交信息相同，正文写周报路径和两项检查的结果。用 `merge` 方式合并。`main` 有新提交导致无法合并时，先 `git merge --no-edit origin/main`、推送工作分支后再合并一次；出现冲突就 `git merge --abort`，放弃合并。
+   - 用平台提供的 GitHub 能力（如 `gh` 命令行、GitHub API 或平台内置的 GitHub 工具）建 PR：base 为 `main`，标题与提交信息相同，正文写周报路径和两项检查的结果。用 `merge` 方式合并。`main` 有新提交导致无法合并时，先 `git fetch origin main && git merge --no-edit origin/main`、推送工作分支后再合并一次；出现冲突就 `git merge --abort`，放弃合并。
 5. **确认**：`git fetch origin main && git merge-base --is-ancestor HEAD origin/main`，退出码为 0 才算进入 `main`。记下结果（直接推送，或 PR 编号），第 6 步要用。
 6. 都失败时，周报留在工作分支上（连工作分支也推不上，就只留在本地），通知首句标明"未合并"，正文写明分支名和失败原因。
 

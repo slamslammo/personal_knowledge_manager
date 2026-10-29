@@ -5,7 +5,7 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from common import load_config  # noqa: E402
-from rank_github import rank  # noqa: E402
+from rank_github import auto_exclusion_kind, rank  # noqa: E402
 from weeks import Week  # noqa: E402
 
 WEEK = Week.parse("2026-W43")  # 10/19–10/25
@@ -76,6 +76,10 @@ class RankTest(unittest.TestCase):
         self.assertIn("疑似刷星", by["a/farm"]["note"])
         self.assertEqual(by["a/archived"]["status"], "excluded")
         self.assertEqual(by["a/awesome"]["status"], "excluded")
+        # 脚本排除的原因都能被识别为自动排除，手工排除不能
+        for name, kind in [("a/farm", "疑似刷星"), ("a/archived", "已归档"), ("h/gone", "仓库已不存在"),
+                           ("a/awesome", None)]:
+            self.assertEqual(auto_exclusion_kind(by[name]["note"]), kind, name)
         self.assertIn("HN 300 分", by["a/one"]["note"])
         self.assertEqual(by["a/one"]["total_stars"], 1000)
         self.assertIsNone(by["x/non-ai"]["total_stars"])

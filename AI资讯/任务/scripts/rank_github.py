@@ -34,6 +34,13 @@ from weeks import BJT, Week, weekly_data_path
 EXIT_NOT_READY = 3
 OSSINSIGHT = "https://api.ossinsight.io/gh/repos/{}"
 OSS_FIELDS = ("stargazers_count", "forks_count", "open_issues_count", "topics", "archived", "fork", "created_at")
+# 脚本按当周数据做的排除，原因以这些词开头。它们每周重新计算，不作为判定沿用到以后的周。
+AUTO_EXCLUSIONS = ("仓库已不存在", "已归档", "fork 仓库", "疑似刷星")
+
+
+def auto_exclusion_kind(reason: str) -> str | None:
+    """排除原因属于脚本自动排除时返回其类别；智能体的手工排除返回 None。"""
+    return next((k for k in AUTO_EXCLUSIONS if reason.startswith(k)), None)
 
 
 def ossinsight_lookup(full_name: str) -> dict:

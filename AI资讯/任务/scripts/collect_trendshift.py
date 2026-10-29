@@ -25,6 +25,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from common import BOARD_DIR, WORK_DIR, fetch, read_json, truncate, write_json
+from rank_github import auto_exclusion_kind
 from weeks import Week
 
 EXIT_NOT_READY = 3
@@ -120,6 +121,7 @@ def prior_judgments(week: Week, data_dir=DATA_DIR) -> dict[str, dict]:
     """往期数据文件里每个仓库最近一次的判定：{full_name: {"week", "verdict", "reason"}}。
 
     verdict 取值：AI（top5/new/candidate/hn）、非 AI（non_ai）、排除（excluded，reason 为排除原因）。
+    脚本按当周数据做的排除（归档、fork、疑似刷星等）记为 AI：它们由 rank_github.py 每周重算，不能沿用。
     只看早于报告周的数据文件；ISO 周编号按字符串排序即为时间顺序。
     """
     prior: dict[str, dict] = {}
@@ -136,6 +138,9 @@ def prior_judgments(week: Week, data_dir=DATA_DIR) -> dict[str, dict]:
                 verdict, reason = "非 AI", ""
             elif status == "excluded":
                 verdict, reason = "排除", (r.get("note") or "").split("；")[0]
+                kind = auto_exclusion_kind(reason)
+                if kind:
+                    verdict, reason = "AI", f"脚本曾自动排除（{kind}），本周重新计算"
             else:
                 verdict, reason = "AI", ""
             prior[r.get("full_name")] = {"week": path.stem, "verdict": verdict, "reason": reason}

@@ -62,7 +62,10 @@ class PriorJudgmentTest(unittest.TestCase):
             (d / "2026-W41.json").write_text(json.dumps({"repos": [
                 repo("a/x", "non_ai"), repo("a/y", "candidate"), repo("a/z", "top5")]}), encoding="utf-8")
             (d / "2026-W42.json").write_text(json.dumps({"repos": [
-                repo("a/x", "candidate"), repo("a/j", "excluded", "越狱提示词合集；HN 80 分")]}), encoding="utf-8")
+                repo("a/x", "candidate"), repo("a/j", "excluded", "越狱提示词合集；HN 80 分"),
+                repo("a/f", "excluded", "疑似刷星：本周 +900 star 仅 +3 fork，open issue 2 个"),
+                repo("a/k", "excluded", "已归档；HN 147 分：https://news.ycombinator.com/item?id=1")]}),
+                encoding="utf-8")
             (d / "2026-W43.json").write_text(json.dumps({"repos": [repo("a/z", "non_ai")]}), encoding="utf-8")
             (d / "broken.json").write_text("{", encoding="utf-8")
             prior = prior_judgments(Week.parse("2026-W43"), d)
@@ -71,6 +74,9 @@ class PriorJudgmentTest(unittest.TestCase):
         self.assertEqual(prior["a/z"]["week"], "2026-W41")  # 不看报告周本身和之后的文件
         self.assertEqual(describe_prior(prior["a/j"]), "往期：排除：越狱提示词合集（2026-W42）")
         self.assertEqual(describe_prior(None), "")
+        # 脚本按当周数据做的排除每周重算，不能当作排除判定沿用
+        self.assertEqual(prior["a/f"]["verdict"], "AI")
+        self.assertEqual(describe_prior(prior["a/k"]), "往期：AI：脚本曾自动排除（已归档），本周重新计算（2026-W42）")
 
 
 class LinkTest(unittest.TestCase):
