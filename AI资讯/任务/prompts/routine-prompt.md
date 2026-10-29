@@ -11,6 +11,7 @@
 1. 同步仓库：`git fetch origin main && git checkout -B main origin/main`。本次指令带 `TEST_RUN=1` 时跳过这一步，留在当前分支。
 2. 读取 `AI资讯/任务/prompts/weekly.md`，确认第一行是 `<!-- task: ai-weekly -->`，然后按它执行。
 3. 本次指令里的参数（`TARGET_START=YYYY-MM-DD`、`TARGET_WEEK=YYYY-Www`、`TEST_RUN=1`）原样适用于执行手册。
+4. 执行手册第 5 步的提交、推送工作分支、创建 PR 并合并到 `main` 是我授权的动作，自动完成，不需要等我确认。
 
 ## 无法生成周报时也要通知
 执行手册不存在、第一行不对，或任何一步出现无法恢复的错误导致无法生成周报时，都必须用 PushNotification 发通知，内容放在 `<routine_summary>` 标签里，纯文本：
