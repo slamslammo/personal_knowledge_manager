@@ -1,12 +1,15 @@
 import json
 import pathlib
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from collect_hn import build_stories  # noqa: E402
-from collect_trendshift import list_matches_week, parse_daily, parse_weekly_list, week_sums  # noqa: E402
+from collect_trendshift import (  # noqa: E402
+    describe_prior, list_matches_week, parse_daily, parse_weekly_list, prior_judgments, week_sums,
+)
 from common import github_repo_from_url, normalize_url  # noqa: E402
 from weeks import Week  # noqa: E402
 
@@ -47,6 +50,27 @@ class TrendshiftParseTest(unittest.TestCase):
         self.assertEqual(sums["week_forks"], 5)
         self.assertEqual(sums["days_covered"], 5)
         self.assertIsNone(week_sums({}, Week.parse("2026-W43"))["week_stars"])
+
+
+class PriorJudgmentTest(unittest.TestCase):
+    def test_latest_earlier_week_wins(self):
+        def repo(name, status, note=""):
+            return {"full_name": name, "status": status, "note": note}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            d = pathlib.Path(tmp)
+            (d / "2026-W41.json").write_text(json.dumps({"repos": [
+                repo("a/x", "non_ai"), repo("a/y", "candidate"), repo("a/z", "top5")]}), encoding="utf-8")
+            (d / "2026-W42.json").write_text(json.dumps({"repos": [
+                repo("a/x", "candidate"), repo("a/j", "excluded", "越狱提示词合集；HN 80 分")]}), encoding="utf-8")
+            (d / "2026-W43.json").write_text(json.dumps({"repos": [repo("a/z", "non_ai")]}), encoding="utf-8")
+            (d / "broken.json").write_text("{", encoding="utf-8")
+            prior = prior_judgments(Week.parse("2026-W43"), d)
+        self.assertEqual(prior["a/x"], {"week": "2026-W42", "verdict": "AI", "reason": ""})
+        self.assertEqual(prior["a/y"]["verdict"], "AI")
+        self.assertEqual(prior["a/z"]["week"], "2026-W41")  # 不看报告周本身和之后的文件
+        self.assertEqual(describe_prior(prior["a/j"]), "往期：排除：越狱提示词合集（2026-W42）")
+        self.assertEqual(describe_prior(None), "")
 
 
 class LinkTest(unittest.TestCase):

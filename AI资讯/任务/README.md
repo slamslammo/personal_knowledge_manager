@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | [方案.md](方案.md) | 板块规划、内容规则、数据源、GitHub 榜单算法、运行架构、存储与迁移设计 | 已完成 |
 | [版本规划.md](版本规划.md) | 版本路线、当前状态、迭代记录 | 持续更新 |
-| [部署指南.md](部署指南.md) | 验收、在 Claude Code 云端或其他平台部署的步骤与上线检查 | 已完成 |
+| [部署指南.md](部署指南.md) | 验收、各平台（Claude Code 云端、Codex、自建调度）的部署步骤、跨平台验收与上线检查 | 已完成 |
 | [config/task.yaml](config/task.yaml) | 部署清单：定时、能力、网络、写入路径 | 已完成 |
 | [config/sources.yaml](config/sources.yaml) | 信息源与数据接口 | 已完成 |
 | [config/ranking.yaml](config/ranking.yaml) | 各榜单的规则参数 | 已完成 |
@@ -16,7 +16,7 @@
 | [prompts/routine-prompt.md](prompts/routine-prompt.md) | 入口提示词：贴进定时任务，含安全规则与失败通知 | 已完成 |
 | [prompts/weekly.md](prompts/weekly.md) | 周报执行手册 | v0.1 验收中 |
 | [templates/weekly.md](templates/weekly.md) | 周报模板 | v0.1 验收中 |
-| [scripts/](scripts/) | 日期计算、采集、排名、校验脚本与测试 | v0.1 验收中 |
+| [scripts/](scripts/) | 日期计算、采集、排名、校验、完整性与可移植性检查脚本，以及测试 | v0.1 验收中 |
 | `prompts/monthly.md`、`quarterly.md` 及模板 | 月报、季报执行手册 | v0.2 计划 |
 
 ## 脚本
@@ -32,20 +32,22 @@ python3 $S/collect_hf.py --week 2026-W43
 python3 $S/rank_github.py --week 2026-W43       # 需要先写 /tmp/ai-weekly/judgments.json
 python3 $S/validate.py --week 2026-W43 [--backfill]
 python3 $S/check_run.py --week 2026-W43       # 运行完整性检查：各步是否在本次运行中做完
+python3 $S/check_portability.py                # 可移植性检查：执行文件不绑定某个平台
 python3 -m unittest discover -s $S/tests -t $S/tests
 ```
 
 ## 快速部署
 
-1. 在开发会话里按 [部署指南.md](部署指南.md) 第 2 节用测试模式跑一遍，确认产出。
-2. 按部署指南第 3 节配置环境网络和 GitHub 授权。
-3. 新建或编辑定时任务：每周一 10:00（GMT+8），挂载本仓库，提示词复制 `prompts/routine-prompt.md` 全文。
-4. 手动触发一次，按部署指南 3.4 的清单检查。
+1. 在开发会话里按 [部署指南.md](部署指南.md) 第 3 节用测试模式跑一遍，确认产出。
+2. 按部署指南第 4 节配置目标平台：定时每周一 10:00（GMT+8），命令可以联网，有推送本仓库的凭证，提示词复制 `prompts/routine-prompt.md` 全文。
+3. 新平台先按部署指南 4.4 做跨平台验收，再按 4.5 手动触发一次正式运行做上线检查。
 
 ## 维护约定
 
 - 修改规则时，先改 `方案.md`，再同步执行手册、模板、脚本和配置，并在 `版本规划.md` 记录原因。
 - 改脚本要同步改测试，提交前运行单元测试。
-- 执行手册、脚本和配置合并到 `main` 后下一次运行即生效；只有 `prompts/routine-prompt.md` 变化时才需要重新粘贴到定时任务。
+- 入口提示词 `prompts/routine-prompt.md` 只放引导、授权、安全边界和失败通知，尽量不改；流程、格式、平台细节都改在仓库里。执行手册、脚本和配置合并到 `main` 后下一次运行即生效，不用重新粘贴。
+- 执行文件（prompts、templates、config、scripts）保持平台无关，平台相关的做法只写在 `部署指南.md` 第 4 节；`check_portability.py` 随单元测试检查这一点。
+- 定时任务的会话只用于运行和诊断，任务工程的改动在开发会话里做。
 - 定时任务运行时只读本目录，不会修改这里的文件。
-- 本目录的改动走 PR；周报等产出由定时任务提交到工作分支，建 PR 后自动合并到 `main`。
+- 本目录的改动走 PR，等审查结束、用户确认后合并；周报等产出由定时任务直接推送到 `main`，被拒时经工作分支和 PR 合并。
