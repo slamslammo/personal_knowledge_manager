@@ -32,8 +32,8 @@ coordination:
   renew_below_minutes: 30     # 检查点上租约剩余不足此值就续期
   verify_lease_minutes: 20
   clock_skew_minutes: 5       # 判断租约过期时留出的时钟误差
-  wait_poll_seconds: 180      # 等待时每次查询的间隔
-  wait_call_max_seconds: 540  # 单次 wait 命令的最长时间，避免超过平台的命令超时
+  wait_poll_seconds: 60       # 等待时每次查询的间隔
+  wait_call_max_seconds: 100  # 单次 wait 命令的最长时间：低于常见智能体命令默认 2 分钟的超时
   wait_max_minutes: 70        # 一次运行累计等待的上限
   push_retries: 5             # 推送被拒后重新读取、重新生成提交的次数
 
