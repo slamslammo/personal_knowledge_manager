@@ -68,6 +68,30 @@ class SourceGateTest(unittest.TestCase):
         self.assertIn("GATE_NUMBERS", gate(report_with_releases(wrong)).codes)
         self.assertEqual(gate(report_with_releases(wrong), tolerance=0.15).errors, [])  # 校验时允许自然增长
 
+    def test_must_link_the_referenced_original(self):
+        # 引用了 OpenAI 公告的 HN 帖子，却只给一个无关的官方链接：不算写了原文
+        unrelated = ("### GPT-6.1 Terra\n\n- **原文**：[某仓库](https://github.com/openai/other)；"
+                     "[HN](https://news.ycombinator.com/item?id=12)\n")
+        rep = gate(report_with_releases(unrelated))
+        self.assertIn("GATE_NOT_OFFICIAL", rep.codes)
+        self.assertIn("introducing-gpt-6-1-terra", "\n".join(rep.errors))
+        # 同站点上互为路径前缀的链接可以接受（如帖子链接 PDF、条目链接仓库）
+        MATERIALS["hn"]["stories"].append(story(14, "https://github.com/openai/math/blob/main/paper.pdf", 803, 302))
+        try:
+            repo_root = "### 证明\n\n- **原文**：[仓库](https://github.com/openai/math)；[HN](https://news.ycombinator.com/item?id=14)\n"
+            self.assertEqual(gate(report_with_releases(repo_root)).errors, [])
+        finally:
+            MATERIALS["hn"]["stories"].pop()
+
+    def test_deduplicated_hn_id_still_resolves(self):
+        # 校验时重新采集，同链接的另一次提交成了保留条目，原来引用的 id 进了 dup_ids
+        others = [story(i, f"https://example.com/a{i}", 900 - i, 10) for i in range(2, 6)]
+        materials = {"hn": {"stories": [dict(story(99, "https://example.com/a1", 950, 40), dup_ids=["1"])] + others}}
+        rep = Report()
+        validate_sources(REPORT, materials, rep, 0.15, SOURCES)
+        self.assertNotIn("GATE_ARTICLE_LINK", rep.codes)
+        self.assertNotIn("GATE_NUMBERS", rep.codes)  # 这次提交的数字没有单独保存，不核对
+
     def test_media_only_needs_marker(self):
         items = "### 某传闻\n\n- **原文**：[TechCrunch](https://techcrunch.com/2026/x)\n"
         self.assertIn("GATE_NOT_OFFICIAL", gate(report_with_releases(items)).codes)

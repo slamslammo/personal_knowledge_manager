@@ -7,7 +7,7 @@ validate.py 检查周报内容；本脚本检查内容是不是本次运行产�
 | 步骤 | 检查 |
 | --- | --- |
 | 0 准备 | week.json 存在；coord.json 表明本次运行持有运行锁 |
-| 1 采集 | collect_report.json 与 materials.json 本次生成；周榜未就绪时 ③ 写了"周榜未就绪" |
+| 1 采集 | collect_report.json 与 materials.json 本次生成，每个数据源都有结果；周榜未就绪时 ③ 写了"周榜未就绪" |
 | 1 AI 判定与排名 | judgments.json 本次生成；产出目录里的数据文件本次生成（回溯复用存档时只要求存在） |
 | 1 联网搜索 | searches.txt 的次数在 runtime.yaml 的 search.min–max 之间（降级版不要求下限） |
 | 2 草稿与写作 | draft.py 本次运行过；周报在草稿之后写过 |
@@ -31,6 +31,7 @@ import sys
 from typing import NamedTuple
 
 import tracelog
+from collect_all import SOURCES
 from common import OUT_DIR, WORK_DIR, load_config, read_json
 from finalize import AUTO_BEGIN, AUTO_END
 from validate import GITHUB, run_checks, section_bodies, split_front_matter
@@ -38,6 +39,7 @@ from weeks import BJT, Week
 
 SEARCH_COUNT_RE = re.compile(r"联网搜索[：:][^\d\n]*(\d+)\s*次")
 JUDGMENT_KEYS = ("non_ai", "exclude", "hn_ai_repos")
+TERMINAL = ("ok", "reused", "skipped", "not_ready")  # 采集结果的终态：成功、复用存档、跳过、周榜未就绪
 TOLERANCE = 1.0  # 秒；文件修改时间的精度
 
 
@@ -100,9 +102,14 @@ def check(work_dir: pathlib.Path = WORK_DIR, out_dir: pathlib.Path = OUT_DIR) ->
     # 第 1 步：采集
     report = _read(work_dir / "collect_report.json")
     why = _fresh(work_dir / "collect_report.json", start) or _fresh(work_dir / "materials.json", start)
-    trendshift = ((report or {}).get("sources") or {}).get("trendshift", {}).get("status")
+    sources = (report or {}).get("sources") or {}
+    trendshift = sources.get("trendshift", {}).get("status")
+    missing = [k for k in SOURCES if (sources.get(k) or {}).get("status") not in TERMINAL]
     if why or not report:
         steps.append(Step("第 1 步 采集", False, why or "collect_report.json 无效，先运行 collect_all.py",
+                          "GATE_INCOMPLETE"))
+    elif missing:
+        steps.append(Step("第 1 步 采集", False, f"没有 {'、'.join(missing)} 的采集结果：运行 collect_all.py（不加 --only）",
                           "GATE_INCOMPLETE"))
     else:
         skipped = [k for k, v in report["sources"].items() if v.get("status") in ("skipped", "not_ready")]

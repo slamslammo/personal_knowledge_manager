@@ -15,7 +15,8 @@
 
 质量门槛（对照采集素材 materials.json，见 ../方案.md 7.8 节；没有素材时跳过）：
 - GATE_LINK_HOMEPAGE：② ④ 的链接不能只指向网站首页；
-- GATE_NOT_OFFICIAL：② 条目引用的 HN 帖子链接的是官方或一手来源时，条目里必须有官方或一手来源的链接；
+- GATE_NOT_OFFICIAL：② 条目引用的 HN 帖子链接的是官方或一手来源时，条目里必须有这篇原文的链接
+  （规范化后相同，或同站点上互为路径前缀，也接受原文跳转后的地址和规范链接）；
   链接全部来自媒体（sources.yaml 的 media）的条目必须标注「仅媒体报道」；
 - GATE_ARTICLE_LINK：④ 的文章链接与 HN 数据中该帖的原文链接一致，没有原文的帖子才用 HN 讨论链接；
 - GATE_NUMBERS：② ④ 中的 HN 分数、评论数与采集数据一致（--tolerance 允许校验时的自然增长）。
@@ -394,6 +395,8 @@ def validate_sources(text: str, materials: dict, rep: Report, tolerance: float =
     stories = {str(s["id"]): s for s in (materials.get("hn") or {}).get("stories", [])}
     if not stories:
         return
+    # 同一链接的多次提交去重后只保留一条；校验时重新采集，保留的那条可能换了，被引用的 id 落在 dup_ids 里
+    dups = {str(d): s for s in stories.values() for d in s.get("dup_ids", [])}
     _, body = split_front_matter(text)
     sec = section_bodies(body)
 
@@ -407,15 +410,14 @@ def validate_sources(text: str, materials: dict, rep: Report, tolerance: float =
             if is_homepage(u):
                 rep.error(f"② 「{title}」的链接只指向网站首页：{u}", "GATE_LINK_HOMEPAGE")
         non_hn = [u for u in links if "news.ycombinator.com" not in u]
-        has_official = any(matches_source(u, official) and not is_homepage(u) for u in non_hn)
         for hn_id in dict.fromkeys(HN_ID_RE.findall(block)):
-            s = stories.get(hn_id)
-            if s and story_official(s) and not has_official:
-                rep.error(f"② 「{title}」引用的 HN 帖子原文是官方或一手来源 {s['url']}，条目里没有这类链接",
+            s = stories.get(hn_id) or dups.get(hn_id)
+            if s and story_official(s) and not any(refers_to(u, s) for u in non_hn):
+                rep.error(f"② 「{title}」引用的 HN 帖子原文是官方或一手来源，条目里没有这篇原文的链接：{s['url']}",
                           "GATE_NOT_OFFICIAL")
         if non_hn and all(matches_source(u, media) for u in non_hn) and "仅媒体报道" not in block:
             rep.error(f"② 「{title}」的链接都来自媒体，须标注「仅媒体报道」", "GATE_NOT_OFFICIAL")
-        check_scores(block, f"② 「{title}」", stories, rep, tolerance)
+        check_scores(block, f"② 「{title}」", stories, rep, tolerance)  # 只核对仍是保留条目的 id
 
     for row in table_rows(sec.get(ARTICLES, "")):
         cells = " | ".join(row)
@@ -425,7 +427,9 @@ def validate_sources(text: str, materials: dict, rep: Report, tolerance: float =
             rep.error(f"④ 第 {row[0]} 行的文章链接只指向网站首页：{first.group(1)}", "GATE_LINK_HOMEPAGE")
         if not ids or not first:
             continue
-        s = stories.get(ids[-1])
+        s, is_dup = stories.get(ids[-1]), False
+        if s is None and ids[-1] in dups:
+            s, is_dup = dups[ids[-1]], True  # 链接相同，但这次提交的分数和评论没有单独保存，不核对数字
         if s is None:
             rep.error(f"④ 第 {row[0]} 行的 HN 帖子 {ids[-1]} 不在本周采集数据里", "GATE_ARTICLE_LINK")
             continue
@@ -434,11 +438,27 @@ def validate_sources(text: str, materials: dict, rep: Report, tolerance: float =
             rep.error(f"④ 第 {row[0]} 行的文章链接应为 HN 数据中的原文 {expected}，实际为 {first.group(1)}",
                       "GATE_ARTICLE_LINK")
         nums = [c.replace(",", "") for c in row if re.fullmatch(r"[\d,]+", c)]
-        if len(nums) >= 2:
+        if len(nums) >= 2 and not is_dup:
             points, comments = int(nums[-2]), int(nums[-1])
             if not number_ok(points, s["points"], tolerance) or not number_ok(comments, s["num_comments"], tolerance):
                 rep.error(f"④ 第 {row[0]} 行写的是 {points} 分、{comments} 评论，采集数据为 "
                           f"{s['points']} 分、{s['num_comments']} 评论", "GATE_NUMBERS")
+
+
+def refers_to(link: str, story: dict) -> bool:
+    """条目链接是否指向该帖子的原文：规范化后相同，或同站点上互为路径前缀（不含首页）。"""
+    if is_homepage(link):
+        return False
+    a = story.get("article") or {}
+    targets = {normalize_url(u) for u in (story.get("url"), a.get("final_url"), a.get("canonical")) if u}
+    mine = normalize_url(link)
+    for t in targets:
+        if mine == t:
+            return True
+        short, long_ = sorted((mine, t), key=len)
+        if long_.startswith(short + "/"):
+            return True
+    return False
 
 
 def check_scores(block: str, where: str, stories: dict, rep: Report, tolerance: float) -> None:

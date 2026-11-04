@@ -178,6 +178,25 @@ class FaultInjectionTest(unittest.TestCase):
         self.assertTrue((self.work / "digest.md").exists())
         self.assertIn("1", json.dumps(json.loads((self.work / "materials.json").read_text())["hn"]))
 
+    def test_exception_in_one_source_does_not_stop_others(self):
+        self.logged = []
+        (self.work / "week.json").write_text(json.dumps({"week": "2026-W45", "mode": "normal", "data_exists": False,
+                                                         "range_label": "11/2–11/8", "data_path": "x"}))
+        ok_hf = {"status": "ok", "error": None, "papers": []}
+        ts = {"status": "ok", "status_detail": "", "items": []}
+        with mock.patch.object(collect_all.tracelog, "log", side_effect=self.log), \
+                mock.patch.object(collect_all.collect_trendshift, "collect", return_value=ts), \
+                mock.patch.object(collect_all.collect_hn, "collect", side_effect=ValueError("Expecting value")), \
+                mock.patch.object(collect_all.collect_hf, "collect", return_value=ok_hf), \
+                mock.patch("sys.stdout"):
+            collect_all.run(None)
+        report = json.loads((self.work / "collect_report.json").read_text())
+        self.assertEqual((report["sources"]["hn"]["status"], report["sources"]["hn"]["code"]), ("skipped", "SRC_PARSE"))
+        self.assertEqual(report["sources"]["hf"]["status"], "ok")
+        self.assertEqual(report["sources"]["articles"]["status"], "skipped")
+        self.assertIn("SRC_PARSE", self.logged)
+        self.assertTrue((self.work / "digest.md").exists())
+
     def run(self, result=None):
         self.logged = []
         return super().run(result)

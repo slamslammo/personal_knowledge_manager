@@ -73,7 +73,8 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
     materials = {"hn": hn} if hn.get("status") == "ok" else None
     if materials is None:
         notes.append("HN 重新采集失败，跳过数字核对")
-    rep = run_checks(week, ctx.mode == "backfill", report_file, data_file if data_raw is not None else None,
+    backfill = (produced.get("mode") or ctx.mode) == "backfill"  # 标题按产出时的模式校验
+    rep = run_checks(week, backfill, report_file, data_file if data_raw is not None else None,
                      materials=materials, tolerance=tolerance)
     if rep.errors:
         codes += [c for c in rep.codes if c not in codes] or ["GATE_STRUCTURE"]

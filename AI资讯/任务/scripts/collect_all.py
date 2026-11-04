@@ -251,15 +251,17 @@ def run(only: str | None) -> int:
         report = None
     report = report or {"week": week.label, "sources": {}}
     targets = [only] if only else list(SOURCES)
+    collectors = {"trendshift": lambda: collect_trendshift_source(week, info), "hn": lambda: collect_hn_source(week),
+                  "hf": lambda: collect_hf_source(week), "articles": collect_articles_source}
     for name in targets:
-        if name == "trendshift":
-            report["sources"]["trendshift"] = collect_trendshift_source(week, info)
-        elif name == "hn":
-            report["sources"]["hn"] = collect_hn_source(week)
-        elif name == "hf":
-            report["sources"]["hf"] = collect_hf_source(week)
-        elif name == "articles":
-            report["sources"]["articles"] = collect_articles_source()
+        try:
+            report["sources"][name] = collectors[name]()
+        except Exception as e:  # 每个数据源单独兜底：接口返回了坏数据等，跳过并记录，继续采集其他数据源
+            detail = f"{type(e).__name__}: {e}"[:200]
+            tracelog.log("采集", name, "error", "SRC_PARSE", detail)
+            # 周榜记为未就绪，执行手册会安排稍后用 --only trendshift 重试
+            status = "not_ready" if name == "trendshift" else "skipped"
+            report["sources"][name] = {"status": status, "code": "SRC_PARSE", "detail": detail, "count": 0}
     report["generated_at"] = dt.datetime.now(BJT).isoformat(timespec="seconds")
     write_outputs(week, info, report)
 

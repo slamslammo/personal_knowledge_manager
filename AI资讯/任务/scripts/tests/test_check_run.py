@@ -76,8 +76,16 @@ class CheckRunTest(unittest.TestCase):
         write(self.work / "collect_report.json", {"week": "2026-W43", "sources": {}}, START - 3600)
         self.assertIn("不是本次运行生成的", self.failed()["第 1 步 采集"][0])
 
+    def test_every_source_must_have_a_result(self):
+        sources = {"trendshift": {"status": "ok"}}  # 只运行了 --only trendshift
+        write(self.work / "collect_report.json", {"week": "2026-W43", "sources": sources})
+        detail, code = self.failed()["第 1 步 采集"]
+        self.assertIn("hn", detail)
+        self.assertEqual(code, "GATE_INCOMPLETE")
+
     def test_trendshift_not_ready_must_be_written(self):
-        sources = {"trendshift": {"status": "not_ready"}, "hn": {"status": "ok"}}
+        sources = {"trendshift": {"status": "not_ready"}, "hn": {"status": "ok"}, "hf": {"status": "ok"},
+                   "articles": {"status": "ok"}}
         write(self.work / "collect_report.json", {"week": "2026-W43", "sources": sources})
         self.assertIn("周榜未就绪", self.failed()["第 1 步 采集"][0])
 
@@ -88,7 +96,8 @@ class CheckRunTest(unittest.TestCase):
         self.assertIn("没有 judgments.json", self.failed()["第 1 步 AI 判定与排名"][0])
 
     def test_reused_data_skips_ranking(self):
-        sources = {"trendshift": {"status": "reused"}, "hn": {"status": "ok"}}
+        sources = {"trendshift": {"status": "reused"}, "hn": {"status": "ok"}, "hf": {"status": "ok"},
+                   "articles": {"status": "ok"}}
         write(self.work / "collect_report.json", {"week": "2026-W43", "sources": sources})
         (self.work / "judgments.json").unlink()
         self.assertNotIn("第 1 步 AI 判定与排名", self.failed())

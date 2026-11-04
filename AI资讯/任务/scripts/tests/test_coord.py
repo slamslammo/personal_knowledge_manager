@@ -361,9 +361,11 @@ class VerifyTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def produce(self, lab, report, quality="full"):
+    def produce(self, lab, report, quality="full", mode="normal"):
         from test_validate import DATA
         a = lab.agent("a")
+        a.info["mode"] = mode
+        (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
         a.start()
         for rel, content in ((a.info["report_path"], report), (a.info["data_path"], json.dumps(DATA))):
             path = a.work / "out" / rel
@@ -404,6 +406,16 @@ class VerifyTest(unittest.TestCase):
         (ok, codes, _), _ = self.run_verify(lab, hn_points=2000)
         self.assertFalse(ok)
         self.assertIn("GATE_NUMBERS", codes)
+
+    def test_title_checked_against_producer_mode(self):
+        # 回溯产出的周报（标题带"回溯版"）由正常模式的定时运行来校验，不能因模式不同判为不通过
+        from test_validate import REPORT
+        import finalize
+        lab = Lab(self.root, week="2026-W43")
+        backfill = REPORT.replace("（10/19–10/25）\n", "（10/19–10/25）（回溯版）\n", 1)
+        self.produce(lab, finalize.apply(backfill, ["- 联网搜索：24 次。"]), mode="backfill")
+        (ok, codes, notes), _ = self.run_verify(lab)
+        self.assertTrue(ok, notes)
 
     def test_degraded_output_triggers_rerun(self):
         from test_validate import REPORT
