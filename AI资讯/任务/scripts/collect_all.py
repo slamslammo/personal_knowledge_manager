@@ -41,8 +41,8 @@ AI_HINT = re.compile(
     r"\b(AI|A\.I\.|AGI|LLMs?|GPT[-\w.]*|ChatGPT|Claude|Gemini|Gemma|Llama|Mistral|DeepSeek|Qwen|Kimi|Grok|"
     r"OpenAI|Anthropic|DeepMind|Hugging ?Face|transformers?|neural|machine learning|deep learning|"
     r"agents?|agentic|MCP|RAG|inference|fine-?tun\w*|diffusion|models?|Copilot|Cursor|vibe[- ]cod\w*|"
-    r"prompts?|tokens?|embeddings?|chatbots?|Sora|Veo|Midjourney|NVIDIA|GPUs?|CUDA|TPUs?|benchmarks?)\b",
-    re.IGNORECASE,
+    r"prompts?|tokens?|embeddings?|chatbots?|Sora|Veo|Midjourney|NVIDIA|GPUs?|CUDA|TPUs?|benchmarks?)(?![a-z])",
+    re.IGNORECASE,  # 结尾不用 \b：型号常紧跟版本号，如 Qwen3.5、GPT4o
 )
 AI_HINT_DOMAINS = ("openai.com", "anthropic.com", "deepmind", "huggingface.co", "arxiv.org", "mistral.ai")
 

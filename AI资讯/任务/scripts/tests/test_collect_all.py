@@ -110,6 +110,8 @@ class DigestTest(unittest.TestCase):
         self.assertTrue(collect_all.ai_hint({"title": "GPT-6.1 Terra", "url": ""}))
         self.assertTrue(collect_all.ai_hint({"title": "Genie 4", "url": "https://deepmind.google/x"}))
         self.assertFalse(collect_all.ai_hint({"title": "Patrick Stewart has died", "url": "https://nytimes.com"}))
+        self.assertTrue(collect_all.ai_hint({"title": "Qwenputer: a RISC-V CPU inside Qwen3.5", "url": ""}))
+        self.assertFalse(collect_all.ai_hint({"title": "AIM messenger returns", "url": ""}))
 
 
 class FaultInjectionTest(unittest.TestCase):

@@ -283,6 +283,8 @@ def main(argv=None) -> int:
     print_summary(rows, info)
     print(f"# 已写入 {out}")
     failed = info["ossinsight_failed"]
+    write_json(WORK_DIR / "rank_report.json", {"week": week.label, "ossinsight_requested": info["ossinsight_requested"],
+                                               "ossinsight_failed": failed})
     tracelog.log("排名", "rank_github", "ok" if not failed else "warn", "SRC_TIMEOUT" if failed else None,
                  f"Top 5：{', '.join(r['full_name'] for r in rows if r['status'] == 'top5')}"
                  + (f"；OSS Insight 失败 {len(failed)} 个：{'、'.join(failed)}" if failed else ""))

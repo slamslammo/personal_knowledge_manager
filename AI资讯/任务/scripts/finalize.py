@@ -51,8 +51,12 @@ def render_auto(work_dir: pathlib.Path, data: dict | None) -> list[str]:
         top = sorted((r for r in data.get("repos", []) if r.get("status") == "top5"), key=lambda r: r["rank"])
         short = [f"{r['full_name']}（{r['days_covered']} 天）" for r in top if r.get("days_covered", 0) < 7]
         lines.append("- 每日 star 数据：Top 5 均覆盖 7 天。" if not short else f"- 每日 star 数据：不足 7 天的有 {'、'.join(short)}。")
-        failed = [r["full_name"] for r in data.get("repos", []) if "OSS Insight 获取失败" in (r.get("note") or "")]
-        asked = sum(1 for r in data.get("repos", []) if r.get("total_stars") is not None) + len(failed)
+        rank = _load(work_dir / "rank_report.json") or {}
+        if rank.get("week") == data.get("week") and "ossinsight_requested" in rank:
+            asked, failed = rank["ossinsight_requested"], rank["ossinsight_failed"]
+        else:  # 回溯复用存档数据时没有排名报告，按数据文件估算
+            failed = [r["full_name"] for r in data.get("repos", []) if "OSS Insight 获取失败" in (r.get("note") or "")]
+            asked = sum(1 for r in data.get("repos", []) if r.get("total_stars") is not None) + len(failed)
         lines.append(f"- OSS Insight：请求 {asked} 个，失败 {len(failed)} 个" + (f"（{'、'.join(failed)}）。" if failed else "。"))
 
     for key, label in (("hn", "HN"), ("hf", "Hugging Face 论文"), ("articles", "原文读取")):

@@ -101,6 +101,25 @@ class FinalizeTest(unittest.TestCase):
         self.assertNotIn("3 次", twice)
 
 
+class FinalizeAutoTest(unittest.TestCase):
+    def test_render_auto_uses_rank_report_and_search_count(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            work = pathlib.Path(tmp)
+            sources = {"trendshift": {"status": "ok", "detail": "25 项"}, "hn": {"status": "skipped", "code": "SRC_TIMEOUT",
+                                                                              "detail": "超时"}}
+            (work / "collect_report.json").write_text(json.dumps({"sources": sources}), encoding="utf-8")
+            (work / "rank_report.json").write_text(json.dumps({"week": "2026-W43", "ossinsight_requested": 23,
+                                                               "ossinsight_failed": ["a/x"]}), encoding="utf-8")
+            (work / "searches.txt").write_text("发现\tq1\n发现\tq2\n", encoding="utf-8")
+            lines = "\n".join(finalize.render_auto(work, DATA))
+        self.assertIn("Trendshift 周榜：成功，25 项", lines)
+        self.assertIn("OSS Insight：请求 23 个，失败 1 个（a/x）", lines)
+        self.assertIn("HN：失败，已跳过（SRC_TIMEOUT：超时）", lines)
+        self.assertIn("联网搜索：2 次", lines)
+
+
 class DraftTest(unittest.TestCase):
     INFO = {"week": "2026-W43", "start": "2026-10-19", "end": "2026-10-25", "range_label": "10/19–10/25",
             "mode": "normal"}
