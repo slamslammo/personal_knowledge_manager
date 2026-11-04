@@ -12,6 +12,20 @@ official:                     # 官方一手来源，发布类资讯必须以此
   - qwenlm.github.io
   - z.ai
   - moonshot.ai
+  - ai.google.dev
+  - nvidia.com
+  - microsoft.com
+  - apple.com
+  - aws.amazon.com
+  - github.blog
+  - cursor.com
+  - huggingface.co/blog
+
+primary:                      # 其他一手来源：论文、代码仓库、监管文件。② 引用的 HN 帖子原文属于 official 或 primary 时，条目必须写该原文链接
+  - arxiv.org
+  - github.com
+  - huggingface.co
+  - sec.gov
 
 media:                        # 英文科技媒体
   - theverge.com

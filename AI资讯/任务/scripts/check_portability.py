@@ -5,6 +5,8 @@
 入口提示词、执行手册、模板、配置和脚本必须与平台无关。本脚本逐行检查这些文件：
 
 - 不出现平台专属的工具名、标签或分支前缀（见 PLATFORM_TERMS）；
+- 执行手册不让智能体直接用 git 提交、推送、变基或改分支（见 GIT_TERMS）：这些操作只能经 coord.py 完成，
+  否则会绕过协调锁（../方案.md 7.9 节）；
 - 入口提示词只做引导：不引用执行手册的步骤编号，并指向执行手册与任务标记。
 
 退出码：0 通过；1 有问题。开发时由单元测试自动运行。
@@ -30,6 +32,8 @@ PLATFORM_TERMS = [
     (r"(?i)\bcodex\b", "平台名称"),
     (r"已挂载", "平台专属的仓库挂载概念"),
 ]
+# 执行手册里不能出现的 git 写操作：提交与推送一律经 coord.py
+GIT_TERMS = re.compile(r"git\s+(add|commit|push|pull|rebase|merge|reset|checkout|switch|branch|restore|stash)\b")
 MANUAL_MARKER = "<!-- task: ai-weekly -->"
 
 
@@ -70,9 +74,23 @@ def check_entry_prompt(path: pathlib.Path, base: pathlib.Path) -> list[str]:
     return problems
 
 
+def check_git_discipline(task_dir: pathlib.Path, base: pathlib.Path) -> list[str]:
+    """执行手册（入口提示词以外的 prompts/*.md）不能让智能体直接做 git 写操作。"""
+    problems = []
+    for path in sorted((task_dir / "prompts").glob("*.md")):
+        if path.name == "routine-prompt.md":
+            continue  # 入口提示词里的是禁止项（如禁止 git reset --hard），不是操作指引
+        for no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            m = GIT_TERMS.search(line)
+            if m:
+                problems.append(f"{path.relative_to(base)}:{no}：直接的 git 写操作「{m.group(0)}」，应改用 coord.py")
+    return problems
+
+
 def run(task_dir: pathlib.Path = TASK_DIR) -> list[str]:
     base = task_dir.parent.parent
-    return scan(neutral_files(task_dir), base) + check_entry_prompt(task_dir / "prompts" / "routine-prompt.md", base)
+    return (scan(neutral_files(task_dir), base) + check_git_discipline(task_dir, base)
+            + check_entry_prompt(task_dir / "prompts" / "routine-prompt.md", base))
 
 
 def main() -> int:

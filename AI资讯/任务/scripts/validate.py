@@ -13,10 +13,23 @@
 
 数据文件（格式见 ../方案.md 6.3 节）：字段齐全、类型正确、status 合法、rank 只给 top5 且从 1 连续编号。
 
+质量门槛（对照采集素材 materials.json，见 ../方案.md 7.8 节；没有素材时跳过）：
+- GATE_LINK_HOMEPAGE：② ④ 的链接不能只指向网站首页；
+- GATE_NOT_OFFICIAL：② 条目引用的 HN 帖子链接的是官方或一手来源时，条目里必须有这篇原文的链接
+  （规范化后相同，或同站点上互为路径前缀，也接受原文跳转后的地址和规范链接）；
+  链接全部来自媒体（sources.yaml 的 media）的条目必须标注「仅媒体报道」；
+- GATE_ARTICLE_LINK：④ 的文章链接与 HN 数据中该帖的原文链接一致，没有原文的帖子才用 HN 讨论链接；
+- GATE_NUMBERS：② ④ 中的 HN 分数、评论数与采集数据一致（--tolerance 允许校验时的自然增长）。
+错误信息以 [错误码] 开头。
+
+降级版（元数据 quality: degraded）只检查结构、元数据、③ 与数据文件的一致性，不检查各板块条目数。
+
+默认校验本次运行的产出（/tmp/ai-weekly/out 下）；没有时校验仓库中的文件。
+
 退出码：0 通过（可能有警告）；1 有错误。
 
 用法：
-    python3 validate.py --week 2026-W43 [--backfill]
+    python3 validate.py --week 2026-W43 [--backfill] [--materials 路径 | --no-materials]
 """
 from __future__ import annotations
 
@@ -25,7 +38,7 @@ import datetime as dt
 import re
 import sys
 
-from common import REPO_DIR, load_config, normalize_url, read_json
+from common import OUT_DIR, REPO_DIR, WORK_DIR, is_homepage, load_config, matches_source, normalize_url, read_json
 from weeks import Week, weekly_data_path, weekly_report_path
 
 OVERVIEW = "## ① 本周概览"
@@ -47,9 +60,12 @@ class Report:
     def __init__(self):
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self.codes: list[str] = []  # 质量门槛的错误码，按出现顺序去重
 
-    def error(self, msg):
-        self.errors.append(msg)
+    def error(self, msg, code: str | None = None):
+        self.errors.append(f"[{code}] {msg}" if code else msg)
+        if code and code not in self.codes:
+            self.codes.append(code)
 
     def warn(self, msg):
         self.warnings.append(msg)
@@ -197,6 +213,9 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
                     vocabulary: set[str], rep: Report, limits: dict | None = None) -> None:
     import yaml
 
+    for m in PLACEHOLDER_RE.finditer(text):  # 先查占位符：草稿里元数据的占位符也会让 YAML 解析失败
+        line = text[: m.start()].count("\n") + 1
+        rep.error(f"第 {line} 行残留占位符：{m.group(0)}")
     fm_text, body = split_front_matter(text)
     if fm_text is None:
         rep.error("周报开头缺少 --- 包围的元数据")
@@ -206,6 +225,9 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     except yaml.YAMLError as e:
         rep.error(f"元数据不是合法 YAML：{e}")
         return
+    degraded = fm.get("quality") == "degraded"
+    if fm.get("quality") not in (None, "degraded"):
+        rep.error(f"元数据 quality 只能是 degraded（降级版）或不写：{fm.get('quality')!r}")
     for key in ("week", "range", "topics", "orgs", "repos"):
         if key not in fm:
             rep.error(f"元数据缺少 {key}")
@@ -214,14 +236,18 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     if fm.get("range") != f"{week.start}/{week.end}":
         rep.error(f"元数据 range 为 {fm.get('range')}，应为 {week.start}/{week.end}")
     topics = fm.get("topics") or []
-    if not isinstance(topics, list) or not 3 <= len(topics) <= 6:
+    if degraded and topics == []:
+        pass  # 降级版没有做内容判断，主题可以为空
+    elif not isinstance(topics, list) or not 3 <= len(topics) <= 6:
         rep.error(f"元数据 topics 应为 3–6 个，实际为 {topics!r}")
     else:
         unknown = [t for t in topics if t not in vocabulary]
         if unknown:
             rep.error(f"topics 不在 config/topics.yaml 词表内：{unknown}")
     orgs = fm.get("orgs") or []
-    if not isinstance(orgs, list) or not orgs or not all(isinstance(o, str) and o for o in orgs):
+    if degraded and orgs == []:
+        pass
+    elif not isinstance(orgs, list) or not orgs or not all(isinstance(o, str) and o for o in orgs):
         rep.error(f"元数据 orgs 应为非空字符串列表：{orgs!r}")
     repos = fm.get("repos")
     if repos is None:
@@ -249,12 +275,11 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     for target in LINK_RE.findall(body):
         if not re.match(r"^https?://\S+$", target.strip()):
             rep.error(f"链接不是 http(s) 地址：({target})")
-    for m in PLACEHOLDER_RE.finditer(text):
-        line = text[: m.start()].count("\n") + 1
-        rep.error(f"第 {line} 行残留占位符：{m.group(0)}")
-
     lim = limits or section_limits()
     sec = section_bodies(body)
+    if degraded:
+        validate_github_consistency(sec, repos, data, rep)
+        return
     overview = re.findall(r"^- ", sec.get(OVERVIEW, ""), re.M)
     count_in_range(rep, "① 本周概览", len(overview), *lim["overview"])
 
@@ -323,7 +348,11 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     notes = sec.get(NOTES, "")
     if "搜索" not in notes:
         rep.error("数据说明里没有写联网搜索次数")
+    validate_github_consistency(sec, repos, data, rep)
 
+
+def validate_github_consistency(sec: dict, repos: list, data: dict | None, rep: Report) -> None:
+    numbered = NUMBERED_RE.findall(sec.get(GITHUB, ""))
     if data is None:
         if numbered:
             rep.error("③ 有排名项目，但没有对应的数据文件")
@@ -339,15 +368,121 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
                   f"多 {sorted(set(repos) - meta)}")
 
 
+# ---------------------------------------------------------------- 质量门槛（对照采集素材）
+
+HN_ID_RE = re.compile(r"news\.ycombinator\.com/item\?id=(\d+)")
+HN_SCORE_RE = re.compile(r"\[[^\]]*?HN[^\]]*?([\d,]+)\s*分\]\(https?://news\.ycombinator\.com/item\?id=(\d+)\)")
+
+
+def release_items(text: str) -> list[tuple[str, str]]:
+    """② 的条目：(三级标题, 正文)。"""
+    parts = re.split(r"^### (.+)$", text, flags=re.M)
+    return [(parts[i].strip(), parts[i + 1]) for i in range(1, len(parts) - 1, 2)]
+
+
+def number_ok(written: int, actual: int, tolerance: float) -> bool:
+    if tolerance <= 0:
+        return written == actual
+    return abs(actual - written) <= max(10, tolerance * actual)
+
+
+def validate_sources(text: str, materials: dict, rep: Report, tolerance: float = 0.0,
+                     sources: dict | None = None) -> None:
+    """对照 materials.json 检查 ②④ 的链接与数字。tolerance 为校验时允许的分数自然变化比例。"""
+    sources = sources or load_config("sources")
+    official = (sources.get("official") or []) + (sources.get("primary") or [])
+    media = sources.get("media") or []
+    stories = {str(s["id"]): s for s in (materials.get("hn") or {}).get("stories", [])}
+    if not stories:
+        return
+    # 同一链接的多次提交去重后只保留一条；校验时重新采集，保留的那条可能换了，被引用的 id 落在 dup_ids 里
+    dups = {str(d): s for s in stories.values() for d in s.get("dup_ids", [])}
+    _, body = split_front_matter(text)
+    sec = section_bodies(body)
+
+    def story_official(s):
+        a = s.get("article") or {}
+        return bool(s.get("url")) and (a.get("official") or a.get("primary") or matches_source(s["url"], official))
+
+    for title, block in release_items(sec.get(RELEASES, "")):
+        links = [u.strip() for u in LINK_RE.findall(block)]
+        for u in links:
+            if is_homepage(u):
+                rep.error(f"② 「{title}」的链接只指向网站首页：{u}", "GATE_LINK_HOMEPAGE")
+        non_hn = [u for u in links if "news.ycombinator.com" not in u]
+        for hn_id in dict.fromkeys(HN_ID_RE.findall(block)):
+            s = stories.get(hn_id) or dups.get(hn_id)
+            if s and story_official(s) and not any(refers_to(u, s) for u in non_hn):
+                rep.error(f"② 「{title}」引用的 HN 帖子原文是官方或一手来源，条目里没有这篇原文的链接：{s['url']}",
+                          "GATE_NOT_OFFICIAL")
+        if non_hn and all(matches_source(u, media) for u in non_hn) and "仅媒体报道" not in block:
+            rep.error(f"② 「{title}」的链接都来自媒体，须标注「仅媒体报道」", "GATE_NOT_OFFICIAL")
+        check_scores(block, f"② 「{title}」", stories, rep, tolerance)  # 只核对仍是保留条目的 id
+
+    for row in table_rows(sec.get(ARTICLES, "")):
+        cells = " | ".join(row)
+        ids = HN_ID_RE.findall(cells)
+        first = LINK_RE.search(cells)
+        if first and is_homepage(first.group(1)):
+            rep.error(f"④ 第 {row[0]} 行的文章链接只指向网站首页：{first.group(1)}", "GATE_LINK_HOMEPAGE")
+        if not ids or not first:
+            continue
+        s, is_dup = stories.get(ids[-1]), False
+        if s is None and ids[-1] in dups:
+            s, is_dup = dups[ids[-1]], True  # 链接相同，但这次提交的分数和评论没有单独保存，不核对数字
+        if s is None:
+            rep.error(f"④ 第 {row[0]} 行的 HN 帖子 {ids[-1]} 不在本周采集数据里", "GATE_ARTICLE_LINK")
+            continue
+        expected = s.get("url") or s["hn_url"]
+        if normalize_url(first.group(1)) != normalize_url(expected):
+            rep.error(f"④ 第 {row[0]} 行的文章链接应为 HN 数据中的原文 {expected}，实际为 {first.group(1)}",
+                      "GATE_ARTICLE_LINK")
+        nums = [c.replace(",", "") for c in row if re.fullmatch(r"[\d,]+", c)]
+        if len(nums) >= 2 and not is_dup:
+            points, comments = int(nums[-2]), int(nums[-1])
+            if not number_ok(points, s["points"], tolerance) or not number_ok(comments, s["num_comments"], tolerance):
+                rep.error(f"④ 第 {row[0]} 行写的是 {points} 分、{comments} 评论，采集数据为 "
+                          f"{s['points']} 分、{s['num_comments']} 评论", "GATE_NUMBERS")
+
+
+def refers_to(link: str, story: dict) -> bool:
+    """条目链接是否指向该帖子的原文：规范化后相同，或同站点上互为路径前缀（不含首页）。"""
+    if is_homepage(link):
+        return False
+    a = story.get("article") or {}
+    targets = {normalize_url(u) for u in (story.get("url"), a.get("final_url"), a.get("canonical")) if u}
+    mine = normalize_url(link)
+    for t in targets:
+        if mine == t:
+            return True
+        short, long_ = sorted((mine, t), key=len)
+        if long_.startswith(short + "/"):
+            return True
+    return False
+
+
+def check_scores(block: str, where: str, stories: dict, rep: Report, tolerance: float) -> None:
+    for written, hn_id in HN_SCORE_RE.findall(block):
+        s = stories.get(hn_id)
+        if s and not number_ok(int(written.replace(",", "")), s["points"], tolerance):
+            rep.error(f"{where} 写的 HN 分数 {written} 与采集数据 {s['points']} 不一致", "GATE_NUMBERS")
+
+
 def load_vocabulary() -> set[str]:
     return {t["name"] for t in load_config("topics")["topics"]}
 
 
+def default_path(rel: str):
+    """本次运行的产出优先（OUT_DIR 下），没有时用仓库里的文件。"""
+    out = OUT_DIR / rel
+    return out if out.exists() else REPO_DIR / rel
+
+
 def run_checks(week: Week, backfill: bool = False, report_path=None, data_path=None,
-               data_only: bool = False) -> Report:
-    """校验仓库里（或指定路径）的周报与数据文件，返回 Report。check_run.py 也调用它。"""
+               data_only: bool = False, materials: dict | None = None, tolerance: float = 0.0) -> Report:
+    """校验周报与数据文件，返回 Report。check_run.py、verify.py 也调用它。"""
     rep = Report()
-    data_path = data_path or REPO_DIR / weekly_data_path(week)
+    data_path = data_path or default_path(weekly_data_path(week))
     data = None
     try:
         data = read_json(data_path)
@@ -358,31 +493,48 @@ def run_checks(week: Week, backfill: bool = False, report_path=None, data_path=N
         rep.error(f"数据文件不是合法 JSON：{e}")
 
     if not data_only:
-        report_path = report_path or REPO_DIR / weekly_report_path(week)
+        report_path = report_path or default_path(weekly_report_path(week))
         try:
             with open(report_path, encoding="utf-8") as f:
                 text = f.read()
             validate_report(text, week, backfill, data, load_vocabulary(), rep)
+            if materials:
+                validate_sources(text, materials, rep, tolerance)
         except FileNotFoundError:
             rep.error(f"没有周报文件：{report_path}")
     return rep
+
+
+def load_materials(path=None) -> dict | None:
+    try:
+        return read_json(path or WORK_DIR / "materials.json")
+    except (OSError, ValueError):
+        return None
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--week", required=True, help="报告周编号，YYYY-Www")
     ap.add_argument("--backfill", action="store_true", help="回溯模式：标题须以（回溯版）结尾")
-    ap.add_argument("--report", help="默认为仓库中的周报路径")
-    ap.add_argument("--data", help="默认为仓库中的数据文件路径")
+    ap.add_argument("--report", help="默认为本次运行的产出，没有时为仓库中的周报")
+    ap.add_argument("--data", help="默认为本次运行的产出，没有时为仓库中的数据文件")
     ap.add_argument("--data-only", action="store_true", help="只校验数据文件")
+    g = ap.add_mutually_exclusive_group()
+    g.add_argument("--materials", help="采集素材，默认 /tmp/ai-weekly/materials.json（存在时）")
+    g.add_argument("--no-materials", action="store_true", help="不做对照素材的门槛检查")
+    ap.add_argument("--tolerance", type=float, default=0.0, help="HN 数字允许的变化比例（校验时用）")
     args = ap.parse_args(argv)
 
-    rep = run_checks(Week.parse(args.week), args.backfill, args.report, args.data, args.data_only)
+    materials = None if args.no_materials else load_materials(args.materials)
+    rep = run_checks(Week.parse(args.week), args.backfill, args.report, args.data, args.data_only,
+                     materials, args.tolerance)
     for w in rep.warnings:
         print(f"警告：{w}")
     for e in rep.errors:
         print(f"错误：{e}")
     print("校验通过" if not rep.errors else f"校验失败：{len(rep.errors)} 个错误")
+    if rep.codes:
+        print("CODES=" + ",".join(rep.codes))
     return 0 if not rep.errors else 1
 
 
