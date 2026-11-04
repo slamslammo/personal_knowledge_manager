@@ -1,4 +1,4 @@
-"""按 ../方案.md 6.3 节计算 GitHub AI 项目热度榜，写入 数据/github-weekly/{WEEK}.json。
+"""按 ../方案.md 6.3 节计算 GitHub AI 项目热度榜，写入本次运行产出目录下的 数据/github-weekly/{WEEK}.json（由 coord.py 提交）。
 
 输入：
 - collect_trendshift.py 的输出（周榜全部条目与本周新增 star、fork）；
@@ -28,7 +28,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
-from common import REPO_DIR, WORK_DIR, fetch, load_config, read_json, write_json
+import tracelog
+from common import OUT_DIR, WORK_DIR, fetch, load_config, read_json, write_json
 from weeks import BJT, Week, weekly_data_path
 
 EXIT_NOT_READY = 3
@@ -254,7 +255,7 @@ def main(argv=None) -> int:
     ap.add_argument("--trendshift", default=str(WORK_DIR / "trendshift.json"))
     ap.add_argument("--hn", default=str(WORK_DIR / "hn.json"))
     ap.add_argument("--judgments", default=str(WORK_DIR / "judgments.json"))
-    ap.add_argument("--out", help="默认写入仓库的 数据/github-weekly/{WEEK}.json")
+    ap.add_argument("--out", help="默认写入本次运行的产出目录 /tmp/ai-weekly/out/AI资讯/数据/github-weekly/{WEEK}.json")
     args = ap.parse_args(argv)
 
     week = Week.parse(args.week)
@@ -272,7 +273,7 @@ def main(argv=None) -> int:
     judgments = read_json(args.judgments)
 
     rows, info = rank(week, trendshift, hn, judgments, load_config("ranking")["github"])
-    out = args.out or str(REPO_DIR / weekly_data_path(week))
+    out = args.out or str(OUT_DIR / weekly_data_path(week))
     write_json(out, {
         "week": week.label,
         "range": f"{week.start}/{week.end}",
@@ -281,6 +282,10 @@ def main(argv=None) -> int:
     })
     print_summary(rows, info)
     print(f"# 已写入 {out}")
+    failed = info["ossinsight_failed"]
+    tracelog.log("排名", "rank_github", "ok" if not failed else "warn", "SRC_TIMEOUT" if failed else None,
+                 f"Top 5：{', '.join(r['full_name'] for r in rows if r['status'] == 'top5')}"
+                 + (f"；OSS Insight 失败 {len(failed)} 个：{'、'.join(failed)}" if failed else ""))
     return 0
 
 

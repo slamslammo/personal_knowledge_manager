@@ -1,0 +1,41 @@
+# 运行时的重试、上限与协调参数，规则说明见 ../方案.md 7.7、7.9、7.10 节。
+# coord.py、collect_all.py、fetch_articles.py、check_run.py、trace.py 读取本文件。
+
+network:
+  retries: 3                  # 单个请求失败后的重试次数
+  backoff_seconds: 2          # 重试间隔 2、4、8 秒
+  timeout_seconds: 40
+
+articles:                     # fetch_articles.py 读取 HN 高分帖链接的原文
+  min_points: 100             # 与 ranking.yaml 的 articles.min_points 一致
+  max_articles: 40            # 每次运行最多读取的篇数
+  max_bytes: 2000000          # 单页上限，超出部分丢弃
+  timeout_seconds: 20
+  retries: 2                  # 原文站点慢，重试少一些，避免拖长运行
+  max_redirects: 3
+
+digest:
+  max_lines: 150              # digest.md 的行数上限；完整数据在 materials.json
+
+search:
+  min: 20                     # 联网搜索下限，check_run.py 检查
+  max: 40                     # 上限
+
+gates:
+  max_rounds: 3               # 质量门槛不通过时最多返工的轮数
+
+coordination:
+  state_dir: AI资讯/数据/运行记录    # 状态文件：{state_dir}/{WEEK}.json
+  branch: main
+  max_attempts: 3             # 每周所有智能体合计的产出尝试上限，用完标为"需人工"
+  run_lease_minutes: 60
+  renew_below_minutes: 30     # 检查点上租约剩余不足此值就续期
+  verify_lease_minutes: 20
+  clock_skew_minutes: 5       # 判断租约过期时留出的时钟误差
+  wait_poll_seconds: 180      # 等待时每次查询的间隔
+  wait_call_max_seconds: 540  # 单次 wait 命令的最长时间，避免超过平台的命令超时
+  wait_max_minutes: 70        # 一次运行累计等待的上限
+  push_retries: 5             # 推送被拒后重新读取、重新生成提交的次数
+
+trace:
+  max_events_in_state: 400    # 状态文件里保留的事件条数（保留最新的）
