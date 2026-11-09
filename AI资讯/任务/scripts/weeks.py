@@ -135,6 +135,11 @@ def weekly_data_path(week: Week) -> str:
     return f"{BOARD}/数据/github-weekly/{week.label}.json"
 
 
+def weekly_state_path(week: Week) -> str:
+    """当周的状态文件：协调锁与执行记录（../方案.md 7.9、7.10 节）。"""
+    return f"{BOARD}/数据/运行记录/{week.label}.json"
+
+
 def monthly_report_path(year: int, month: int) -> str:
     return f"{BOARD}/月报/{year}/{year}-{month:02d}.md"
 
@@ -208,6 +213,7 @@ def describe(week: Week, today: dt.date, mode: str, repo_dir: pathlib.Path) -> d
         "quarter": "%d-Q%d" % week.quarter,
         "report_path": weekly_report_path(week),
         "data_path": weekly_data_path(week),
+        "state_path": weekly_state_path(week),
         "report_exists": (repo_dir / weekly_report_path(week)).exists(),
         "data_exists": (repo_dir / weekly_data_path(week)).exists(),
         "trendshift_weekly_url": f"https://trendshift.io/weekly/{week.iso_year}/{week.number}",
@@ -221,7 +227,7 @@ ENV_KEYS = {
     "MODE": "mode", "WEEK": "week", "YEAR": "iso_year", "WNUM": "wnum",
     "START": "start", "END": "end", "RANGE": "range_label",
     "START_TS": "start_ts", "END_TS": "end_ts",
-    "REPORT_PATH": "report_path", "DATA_PATH": "data_path",
+    "REPORT_PATH": "report_path", "DATA_PATH": "data_path", "STATE_PATH": "state_path",
 }
 
 
@@ -251,8 +257,13 @@ def main(argv=None) -> int:
 
     info = describe(week, today, mode, REPO_DIR)
     if args.format == "env":
+        from common import OUT_DIR
+
         for key, field in ENV_KEYS.items():
             print(f"{key}={shlex.quote(str(info[field]))}")
+        # 本次运行的产出写在 OUT_DIR 下与仓库相同的相对路径，由 coord.py 提交
+        print(f"OUT_REPORT={shlex.quote(str(OUT_DIR / info['report_path']))}")
+        print(f"OUT_DATA={shlex.quote(str(OUT_DIR / info['data_path']))}")
     else:
         json.dump(info, sys.stdout, ensure_ascii=False, indent=2)
         print()

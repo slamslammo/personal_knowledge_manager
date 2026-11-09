@@ -5,7 +5,7 @@
 - 排序：points 降序，同分按评论数降序（文章榜规则，见 ../方案.md 3.6）。
 - AI 相关性由智能体逐条判断，本脚本不做过滤。
 
-结果写入 --out（默认 /tmp/ai-weekly/hn.json）。标准输出打印两组：
+结果写入 --out（默认 /tmp/ai-weekly/hn.json）。通常由 collect_all.py 调用；单独运行时标准输出打印两组（带完整链接）：
 分数不低于 100 的全部 story（④ 传播文章与 ⑤ 热点话题的候选），以及 50–99 分里的 GitHub 仓库链接（③ HN 热议项目的候选）。
 
 用法：
@@ -81,21 +81,14 @@ def collect(week: Week, min_points: int) -> dict:
     return out
 
 
-def domain(url: str | None) -> str:
-    if not url:
-        return "(HN 帖)"
-    host = urllib.parse.urlsplit(url).netloc.lower()
-    return host[4:] if host.startswith("www.") else host
-
-
 def print_summary(result: dict, article_min: int) -> None:
     print(f"# HN {result['week']} {result['status']} 共 {len(result['stories'])} 条（去重后）"
           + (f" 错误：{result['error']}" if result["error"] else ""))
-    print(f"# 分数 >= {article_min}：分数 | 评论 | id | 标题 | 域名 | GitHub")
+    print(f"# 分数 >= {article_min}：分数 | 评论 | id | 标题 | 原文链接 | GitHub")
     for s in result["stories"]:
         if s["points"] >= article_min:
             gh = f" | gh:{s['github_repo']}" if s["github_repo"] else ""
-            print(f"{s['points']} | {s['num_comments']} | {s['id']} | {truncate(s['title'], 100)} | {domain(s['url'])}{gh}")
+            print(f"{s['points']} | {s['num_comments']} | {s['id']} | {truncate(s['title'], 100)} | {s['url'] or s['hn_url']}{gh}")
     print(f"# 分数 < {article_min} 的 GitHub 仓库链接：分数 | 评论 | id | 仓库 | 标题")
     for s in result["stories"]:
         if s["points"] < article_min and s["github_repo"]:

@@ -50,6 +50,16 @@ class PortabilityTest(unittest.TestCase):
             self.assertIn("任务标记", problems)
             self.assertIn("第 5 步", problems)
 
+    def test_manual_must_not_run_git_writes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = self.make_task_dir(pathlib.Path(tmp), GOOD_PROMPT + "禁止 `git reset --hard`。\n",
+                                      manual="提交：`git add -- 周报` 后 `git push origin HEAD:main`。\n用 coord.py publish 提交。\n")
+            problems = "\n".join(cp.run(task))
+            self.assertIn("weekly.md:1", problems)
+            self.assertIn("git add", problems)
+            self.assertNotIn("weekly.md:2", problems)
+            self.assertNotIn("routine-prompt.md", problems)  # 入口提示词里的禁止项不算
+
     def test_good_entry_prompt_passes(self):
         with tempfile.TemporaryDirectory() as tmp:
             task = self.make_task_dir(pathlib.Path(tmp), GOOD_PROMPT)
