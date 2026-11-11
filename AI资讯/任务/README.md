@@ -9,6 +9,8 @@
 | [方案.md](方案.md) | 板块规划、内容规则、数据源、GitHub 榜单算法、运行架构、存储与迁移设计 | 已完成 |
 | [版本规划.md](版本规划.md) | 版本路线、当前状态、迭代记录 | 持续更新 |
 | [部署指南.md](部署指南.md) | 验收、各平台（Claude Code 云端、Codex、自建调度）的部署步骤、跨平台验收与上线检查 | 已完成 |
+| [协作契约.md](协作契约.md) | 角色分工、评审门禁与顺序、审查触发方式、谁能写什么、证据要求 | 已完成 |
+| [提案/](提案/) | 每轮开发方案与评审记录：目录说明、提案模板、进行中的提案 | 持续更新 |
 | [config/task.yaml](config/task.yaml) | 部署清单：定时、能力、网络、写入路径 | 已完成 |
 | [config/runtime.yaml](config/runtime.yaml) | 运行上限：重试、搜索次数、返工轮数、协调锁的租约与等待 | v0.8 |
 | [config/sources.yaml](config/sources.yaml) | 信息源与数据接口 | 已完成 |
@@ -19,10 +21,13 @@
 | [templates/weekly.md](templates/weekly.md) | 周报模板（`draft.py` 据此生成草稿） | 已上线 |
 | [scripts/](scripts/) | 协调锁、采集、原文读取、排名、草稿、校验与质量门槛、独立校验、执行记录、可移植性检查，以及测试 | v0.8 |
 | `prompts/monthly.md`、`quarterly.md` 及模板 | 月报、季报执行手册 | v0.2 计划 |
+| [requirements.txt](requirements.txt) | 运行依赖（PyYAML），本地与 CI 共用 | 已完成 |
 
 ## 脚本
 
 在仓库根目录运行，只依赖 Python 标准库和 PyYAML。中间文件默认写到 `/tmp/ai-weekly/`（可用环境变量 `AI_WEEKLY_TMP` 修改）。
+
+依赖按 `requirements.txt` 安装，本地、CI 与部署环境使用同一份：`python3 -m pip install -r AI资讯/任务/requirements.txt`。
 
 按执行手册的顺序（产出写在 `/tmp/ai-weekly/out/` 下，由 `coord.py` 提交）：
 
