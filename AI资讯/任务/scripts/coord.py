@@ -775,10 +775,11 @@ def derive_quality(gates_ok: bool, degraded: bool, requested: str | None) -> tup
 def override_allowed(ctx: Ctx) -> bool:
     """能不能用 --allow-quality-override 覆盖门槛结果。
 
-    只有真正的回溯运行（week.json 的 mode=backfill），或跑在沙箱远端上的测试运行可以。
-    `--test` 仍可显式指定真实远端（--remote origin），那种运行等于在生产上跑，不能算测试。
+    只认回溯运行（week.json 的 mode=backfill）。不看 `--test` 标志：`--test` 允许显式指定
+    任意远端（`--remote origin`、生产 URL 都可以），那种运行等于在生产上跑，按名字排除 origin
+    挡不住，所以干脆不给测试运行这个权限——要覆盖就把 mode 设成 backfill，那是唯一真实场景。
     """
-    return ctx.mode == "backfill" or (ctx.test and ctx.remote != "origin")
+    return ctx.mode == "backfill"
 
 
 def mark_gate_unverified(state: dict) -> None:
@@ -833,9 +834,21 @@ def cmd_publish(args) -> int:
     gates = {"check_run": gate_status, "codes": gate_codes}
     if script.name != "check_run.py":  # 测试注入的替身：留痕，便于事后分辨
         gates["script"] = str(script)
-    degraded = report_is_degraded(ctx.out / ctx.report_path)
+    # 人工改过周报时提交的不是本次候选，按未验证处理；质量也不看候选的元数据（那份不提交）
+    degraded = False if manual else report_is_degraded(ctx.out / ctx.report_path)
     if args.allow_quality_override:
-        quality, mismatch = args.quality, None  # 回溯/测试：显式按声明的质量发布
+        if manual:
+            emit("error", "GATE_OVERRIDE_CONFLICT：周报被人工改过，本次提交的不是你的候选，不能声明产出质量")
+            return EXIT_ERROR
+        # 覆盖只用来跳过门槛的新鲜度判断，不能改产物本身的质量：必须和周报元数据一致
+        want = "degraded" if degraded else "full"
+        if args.quality != want:
+            tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_CONFLICT",
+                         f"周报元数据是 {want}，声明的是 {args.quality}", work_dir=ctx.work)
+            emit("error", f"GATE_OVERRIDE_CONFLICT：周报元数据是 {want}，不能覆盖成 {args.quality}；"
+                          f"覆盖只用于跳过门槛的新鲜度检查")
+            return EXIT_ERROR
+        quality, mismatch = args.quality, None
         gates["override"] = quality
     else:
         quality, mismatch = derive_quality(gates_ok, degraded, args.quality)
