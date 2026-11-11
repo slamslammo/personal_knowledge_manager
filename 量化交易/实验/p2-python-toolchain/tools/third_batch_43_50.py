@@ -3,7 +3,15 @@
 
 from __future__ import annotations
 
-from build_first_batch import COMMON_SETUP, LABS, NOTEBOOKS, code, md, write_notebook
+from build_first_batch import (
+    COMMON_SETUP,
+    LABS,
+    NOTEBOOKS,
+    code,
+    course_href,
+    md,
+    write_notebook,
+)
 
 
 PACKAGES = {
@@ -24,7 +32,7 @@ def source_note(number: int, title: str, data_note: str) -> str:
 
 本 Notebook 对应「365 天量化金融」第 {number} 课。课程方法来自本地完整视频、课件截图和本地 Whisper 口播整理；这里把它重建为默认离线、可核对、可重复执行的量化教学实现。
 
-- 图文口播：`/Users/mojiawen/Documents/pam-video-captures/365-days-quant-finance/{PACKAGES[number]}/index.html`
+- 图文口播：[打开课程原始材料]({course_href(PACKAGES[number])})
 - 环境：`pkm-quant`
 - 数据：{data_note}
 - 状态：可运行学习稿；不代表策略收益承诺
@@ -312,7 +320,7 @@ db_path = OUTPUT_DIR / "45_market_data.sqlite"
 if db_path.exists():
     db_path.unlink()
 connection = sqlite3.connect(db_path)
-print("数据库:", db_path)
+print("数据库:", db_path.relative_to(PROJECT_ROOT))
 """),
         md("""
 ## 1. 先建约束，再写数据
@@ -554,7 +562,7 @@ manifest = {
 }
 manifest_path = OUTPUT_DIR / "46_pipeline_manifest.json"
 manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
-print("已写入:", manifest_path)
+print("已写入:", manifest_path.relative_to(PROJECT_ROOT))
 assert manifest_path.exists()
 assert len(manifest["input_sha256"]) == 64
 """),

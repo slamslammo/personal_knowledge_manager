@@ -7,6 +7,7 @@ from build_first_batch import (
     COMMON_SETUP,
     NOTEBOOKS,
     code,
+    course_href,
     md,
     write_notebook,
 )
@@ -18,7 +19,7 @@ def source_note(number: int, title: str, package: str) -> str:
 
 本 Notebook 对应「365 天量化金融」第 {number} 课。课程方法来自本地完整视频、课件截图和本地 Whisper 口播整理；这里将课程 API 重建为可离线执行、可核对的量化教学实现，并补充数据契约、断言与方法边界。
 
-- 图文口播：`/Users/mojiawen/Documents/pam-video-captures/365-days-quant-finance/{package}/index.html`
+- 图文口播：[打开课程原始材料]({course_href(package)})
 - 环境：`pkm-quant`
 - 数据：固定随机种子生成的离线模拟行情（**非真实股票数据**）
 - 状态：可运行学习稿；不代表策略收益承诺
@@ -361,7 +362,7 @@ fig.write_html(
 )
 html_head = interactive_path.read_text(encoding="utf-8")[:500]
 
-print("已写入:", interactive_path)
+print("已写入:", interactive_path.relative_to(PROJECT_ROOT))
 print("文件大小:", round(interactive_path.stat().st_size / 1024 / 1024, 2), "MiB")
 
 assert interactive_path.exists()
@@ -754,7 +755,7 @@ review_axes[0].legend(
 review_fig.savefig(image_path, dpi=160, bbox_inches="tight")
 plt.close(review_fig)
 
-print("已写入:", image_path)
+print("已写入:", image_path.relative_to(PROJECT_ROOT))
 print("文件大小:", round(image_path.stat().st_size / 1024, 1), "KiB")
 assert image_path.exists()
 assert image_path.stat().st_size > 50_000

@@ -201,10 +201,9 @@ html = f\"\"\"<!doctype html><meta charset='utf-8'>
 \"\"\"
 path = OUTPUT_DIR / "L6_p1_strategy_report.html"
 path.write_text(html, encoding="utf-8")
-print("已生成:", path)
+print("已生成:", path.relative_to(ROOT))
 """,
             ),
         ],
     }
     return cells[lab_id]
-
