@@ -9,8 +9,8 @@
     coord.py start --platform NAME [--test]   决定本次做什么并取得锁
     coord.py wait                              等待持锁者，结果同 start
     coord.py renew                             检查点续期（租约剩余不足阈值时才推送）
-    coord.py publish [--quality full|degraded|check_failed]
-                                               提交 OUT_DIR 下的产出和状态文件
+    coord.py publish [--quality full|degraded|check_failed] [--allow-quality-override]
+                                               推送前跑 check_run.py 推导质量，再提交 OUT_DIR 下的产出和状态文件
     coord.py verified --result pass|fail [--codes A,B] [--detail 说明]
                                                写校验结果；fail 时把锁转为运行，接着重跑
     coord.py fail --code CODE [--detail 说明]  放弃本次运行：释放锁，记录原因
@@ -396,12 +396,12 @@ def _finish_entry(s: dict, ctx: Ctx, t: dt.datetime, outcome: str, codes: list[s
 
 
 def apply_publish(state: dict, ctx: Ctx, t: dt.datetime, quality: str, files: list[str],
-                  codes: list[str], summary: dict | None) -> dict:
+                  codes: list[str], summary: dict | None, gates: dict | None = None) -> dict:
     s = json.loads(json.dumps(state))
     entry = _run_entry(s, ctx.run_id) or {}
     s["phase"], s["lock"] = "produced", None
     s["produced"] = {"run_id": ctx.run_id, "platform": ctx.platform, "at": iso(t), "quality": quality,
-                     "mode": entry.get("mode", "normal"), "files": files}
+                     "mode": entry.get("mode", "normal"), "files": files, "gates": gates or {}}
     s["verified"] = None
     _finish_entry(s, ctx, t, f"produced:{quality}", codes, summary)
     return s
@@ -703,6 +703,58 @@ def collect_outputs(ctx: Ctx) -> tuple[dict[str, bytes], list[str]]:
     return files, rejected
 
 
+GATE_TIMEOUT_SECONDS = 120
+
+
+def report_is_degraded(path: pathlib.Path) -> bool:
+    """周报元数据里是否有 quality: degraded（降级版）。"""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    m = re.match(r"(?s)^---\s*\n(.*?)\n---", text)
+    return bool(m and re.search(r"(?m)^quality:\s*degraded\s*$", m.group(1)))
+
+
+def gate_script(ctx: Ctx) -> pathlib.Path:
+    """门槛脚本：默认同目录的 check_run.py。
+
+    仅供测试：coord.py start --test 的运行可用 coordination.publish.gate_script 指向替身
+    （集成测试里没有真实的采集产物，跑不动真门槛）。生产运行不带 --test，不读该配置。
+    """
+    name = (ctx.cfg.get("publish") or {}).get("gate_script") if ctx.test else None
+    return pathlib.Path(name) if name else pathlib.Path(__file__).resolve().parent / "check_run.py"
+
+
+def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:
+    """发布前跑 check_run.py（内含 validate.py 的全部校验与质量门槛），返回 (是否通过, 错误码)。
+
+    门槛结果由脚本给出，不由智能体声明；跑不起来时按未通过处理（GATE_UNVERIFIED）。
+    """
+    script = gate_script(ctx)
+    timeout = int((ctx.cfg.get("publish") or {}).get("gate_timeout_seconds", GATE_TIMEOUT_SECONDS))
+    try:
+        p = subprocess.run([sys.executable, str(script), "--work-dir", str(ctx.work)],
+                           capture_output=True, text=True, timeout=timeout)
+    except (subprocess.TimeoutExpired, OSError):
+        return False, ["GATE_UNVERIFIED"]
+    codes = []
+    for line in (p.stdout or "").splitlines():
+        if line.startswith("CODES="):
+            codes = [c for c in line[len("CODES="):].split(",") if c]
+    if p.returncode != 0 and not codes:
+        codes = ["GATE_INCOMPLETE"]
+    return p.returncode == 0, codes
+
+
+def derive_quality(gates_ok: bool, degraded: bool, requested: str | None) -> tuple[str, str | None]:
+    """quality 由门槛结果推导；requested 只作期望值，不一致时返回 GATE_MISMATCH。"""
+    derived = "degraded" if degraded else ("full" if gates_ok else "check_failed")
+    if requested and requested != derived:
+        return derived, "GATE_MISMATCH"
+    return derived, None
+
+
 def publish_message(ctx: Ctx, state: dict, quality: str) -> str:
     entry = _run_entry(state, ctx.run_id) or {}
     tags = {"rerun": "重跑", "takeover": "接管", "backfill": "回溯"}.get(entry.get("mode"), "")
@@ -713,13 +765,39 @@ def publish_message(ctx: Ctx, state: dict, quality: str) -> str:
 def cmd_publish(args) -> int:
     ctx = load_ctx()
     t = now()
+
+    gates_ok, gate_codes = publish_gate(ctx)
+    script = gate_script(ctx)
+    gates = {"check_run": "pass" if gates_ok else "fail", "codes": gate_codes}
+    if script.name != "check_run.py":  # 测试注入的替身：留痕，便于事后分辨
+        gates["script"] = str(script)
+    degraded = report_is_degraded(ctx.out / ctx.report_path)
+    if args.allow_quality_override and args.quality:
+        quality, mismatch = args.quality, None  # 回溯/测试：显式按声明的质量发布
+        gates["override"] = quality
+    else:
+        quality, mismatch = derive_quality(gates_ok, degraded, args.quality)
+    if mismatch:
+        tracelog.log("提交", "拒绝发布", "error", "GATE_MISMATCH",
+                     f"门槛结果是 {quality}，与 --quality {args.quality} 不一致", work_dir=ctx.work)
+        emit("error", f"GATE_MISMATCH：门槛结果是 {quality}，与 --quality {args.quality} 不一致；"
+                      f"去掉 --quality 由脚本推导，或加 --allow-quality-override 显式覆盖")
+        return EXIT_ERROR
+    if "override" in gates:
+        tracelog.log("提交", "质量覆盖", "warn", "GATE_OVERRIDE",
+                     f"按 --quality {quality} 发布，门槛结果是 {'pass' if gates_ok else 'fail'}",
+                     work_dir=ctx.work)
+    if not gates_ok:
+        tracelog.log("提交", "门槛未通过", "warn", ",".join(gate_codes) or "GATE_INCOMPLETE",
+                     f"按 {quality} 发布", work_dir=ctx.work)
+
     files, rejected = collect_outputs(ctx)
     for rel in rejected:
         tracelog.log("提交", "白名单外的文件", "warn", detail=f"{rel} 不在写入白名单内，未提交", work_dir=ctx.work)
     if ctx.report_path not in files:
         emit("error", f"OUT_DIR 下没有周报：{ctx.out / ctx.report_path}")
         return EXIT_ERROR
-    codes = [c for c in (args.codes or "").split(",") if c]
+    codes = list(dict.fromkeys(gate_codes + [c for c in (args.codes or "").split(",") if c]))
     dropped = []
 
     def extra(state, tip):
@@ -734,11 +812,11 @@ def cmd_publish(args) -> int:
         if not holds(state, ctx.run_id, "run"):
             raise CoordError("LOCK_LOST", "运行锁已被接管或释放，放弃推送")
         events = tracelog.read_events(ctx.work)
-        new = apply_publish(state, ctx, t, args.quality, sorted(files), codes, tracelog.summarize(events))
+        new = apply_publish(state, ctx, t, quality, sorted(files), codes, tracelog.summarize(events), gates)
         return new, None
 
     def run():
-        sha, state, _ = write_state(ctx, build, lambda s, r: publish_message(ctx, s, args.quality), extra)
+        sha, state, _ = write_state(ctx, build, lambda s, r: publish_message(ctx, s, quality), extra)
         if dropped:
             tracelog.log("提交", "周报被手工修改", "warn", "MANUAL_EDIT", "未覆盖周报，只提交了数据和状态",
                          work_dir=ctx.work)
@@ -845,7 +923,10 @@ def main(argv=None) -> int:
     sub.add_parser("wait")
     sub.add_parser("renew")
     p = sub.add_parser("publish")
-    p.add_argument("--quality", choices=["full", "degraded", "check_failed"], default="full")
+    p.add_argument("--quality", choices=["full", "degraded", "check_failed"], default=None,
+                   help="期望的产出质量；实际值由 check_run.py 的门槛结果推导，不一致时拒绝发布")
+    p.add_argument("--allow-quality-override", action="store_true",
+                   help="回溯或测试时按 --quality 直接发布，跳过与门槛结果的比对（记入 gates.override）")
     p.add_argument("--codes", help="本次运行遇到的错误码，逗号分隔")
     v = sub.add_parser("verified")
     v.add_argument("--result", choices=["pass", "fail"], required=True)

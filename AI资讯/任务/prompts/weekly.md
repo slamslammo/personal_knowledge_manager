@@ -168,16 +168,18 @@ python3 $S/check_run.py | tee /tmp/ai-weekly/checks.txt
 | 其他 `validate.py` 错误 | 按报错修改 |
 
 - 最多返工 3 轮（`config/runtime.yaml` 的 gates.max_rounds）。仍未通过时：
-  - 周报结构完整，只是门槛没过：照常提交，第 5 步加 `--quality check_failed --codes <CODES>`；
-  - 周报残缺、或写作中断：运行 `python3 $S/draft.py --degraded --reason "<原因>"` 生成降级版，再运行 `finalize.py`，第 5 步加 `--quality degraded`。
+  - 周报结构完整，只是门槛没过：照常提交，**第 5 步不加任何 quality 参数**——`coord.py` 按门槛结果自动标 `check_failed`；
+  - 周报残缺、或写作中断：运行 `python3 $S/draft.py --degraded --reason "<原因>"` 生成降级版，再运行 `finalize.py`，同样照常提交（元数据带 `quality: degraded`，脚本据此标 `degraded`）。
 - 警告不阻止提交，但要看一眼是否合理。
 
 ## 第 5 步：提交
 
 ```
-python3 $S/coord.py publish [--quality full|check_failed|degraded] [--codes <CODES>]
+python3 $S/coord.py publish
 ```
 
+- **不要传 `--quality`**：产出质量由 `coord.py` 在推送前跑 `check_run.py`（含 `validate.py` 全部门槛）推导——门槛通过是 `full`，未通过是 `check_failed`，周报是降级版则是 `degraded`。传了期望值且与推导结果不一致会被拒绝（`GATE_MISMATCH`），这时按第 4 步返工，不要绕过。
+- `--allow-quality-override` 只用于回溯和测试模式，正式运行不要用。
 - `coord.py` 只提交 `/tmp/ai-weekly/out/` 下白名单内的文件，连同状态文件放在同一个提交里，推送到 `main`。远端有新提交时它会自行重新读取、重试，不需要你处理。
 - 输出 `ACTION=published`：记下提交号，第 6 步要用。
 - 输出 `ACTION=lost`：运行锁已被其他运行接管（本次超时太久），产出没有推送。通知首句标"未提交"，正文说明锁被接管。

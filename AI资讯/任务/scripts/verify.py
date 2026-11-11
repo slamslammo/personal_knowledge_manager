@@ -57,6 +57,11 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
         code = "WRITE_FAILED" if produced["quality"] == "degraded" else "GATE_STRUCTURE"
         codes.append(code)
         notes.append(f"产出为 {produced['quality']}，需要重跑")
+    if "gates" not in produced:
+        codes.append("GATE_UNVERIFIED")
+        notes.append("状态文件缺少 gates 记录（发布前没有跑门槛），按检查未通过处理")
+    elif produced["gates"].get("override"):
+        notes.append(f"产出发布时显式覆盖了门槛结果（{produced['gates']['override']}），按覆盖后的质量校验")
 
     report_raw = coord.read_at(ctx, tip, ctx.report_path)
     data_raw = coord.read_at(ctx, tip, ctx.data_path)

@@ -127,6 +127,18 @@ class Lab:
         self.git(seed, "push", "-q", "origin", "HEAD:main")
         self.overrides = {"wait_poll_seconds": 1, "wait_call_max_seconds": 30, "wait_max_minutes": 1}
         self.overrides.update(overrides or {})
+        self.gate_pass = self.gate("pass")
+        self.gate_fail = self.gate("fail")
+        # 测试无法产出真实的采集中间文件，coord.py publish 前的门槛用替身（--test 模式下才生效）
+        self.overrides.setdefault("publish", {}).setdefault("gate_script", str(self.gate_pass))
+
+    def gate(self, kind: str) -> pathlib.Path:
+        """写一个门槛替身：pass 退出 0；fail 输出 CODES 并退出 1。"""
+        path = self.root / f"gate_{kind}.py"
+        body = "raise SystemExit(0)\n" if kind == "pass" else \
+            'print("CODES=GATE_NUMBERS")\nraise SystemExit(1)\n'
+        path.write_text(body, encoding="utf-8")
+        return path
 
     @staticmethod
     def git(repo, *args):
@@ -177,10 +189,11 @@ class Agent:
         return first.split("=", 1)[1], p
 
     def start(self):
-        return self.coord("start", "--platform", self.name, "--remote", str(self.lab.remote))
+        return self.coord("start", "--test", "--platform", self.name, "--remote", str(self.lab.remote))
 
-    def write_outputs(self, text="周报正文"):
-        for rel, content in ((self.info["report_path"], f"# {self.name} {text}\n"),
+    def write_outputs(self, text="周报正文", degraded=False):
+        head = f"---\nweek: {self.info['week']}\nquality: degraded\n---\n\n" if degraded else ""
+        for rel, content in ((self.info["report_path"], f"{head}# {self.name} {text}\n"),
                              (self.info["data_path"], json.dumps({"by": self.name}) + "\n")):
             path = self.work / "out" / rel
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -267,8 +280,8 @@ class MultiAgentTest(unittest.TestCase):
         lab = Lab(self.root, overrides={"max_attempts": 2})
         a, b = lab.agent("a"), lab.agent("b")
         a.start()
-        a.write_outputs()
-        a.coord("publish", "--quality", "degraded")
+        a.write_outputs(degraded=True)  # 降级版的元数据由脚本写在周报里，quality 从元数据推导
+        self.assertEqual(a.coord("publish")[0], "published")
         self.assertIn("AI 周报 2026-W45（降级）", lab.log())
         self.assertEqual(b.start()[0], "verify")
         action, _ = b.coord("verified", "--result", "fail", "--codes", "GATE_NOT_OFFICIAL")
@@ -346,6 +359,43 @@ class MultiAgentTest(unittest.TestCase):
         self.assertEqual(a.coord("publish")[0], "published")
         self.assertIsNone(lab.show("AI资讯/任务/方案.md"))
 
+    def test_gate_failure_publishes_check_failed(self):
+        lab = Lab(self.root)
+        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        a = lab.agent("a")
+        a.start()
+        a.write_outputs()
+        action, p = a.coord("publish")
+        self.assertEqual(action, "published", p.stdout + p.stderr)
+        self.assertIn("AI 周报 2026-W45（检查未通过）", lab.log())
+        prod = lab.state()["produced"]
+        self.assertEqual((prod["quality"], prod["gates"]["check_run"]), ("check_failed", "fail"))
+        self.assertIn("GATE_NUMBERS", prod["gates"]["codes"])
+        self.assertEqual(prod["gates"]["script"], str(lab.gate_fail))  # 用了哪支门槛脚本要留痕
+
+    def test_declared_quality_must_match_gate(self):
+        lab = Lab(self.root)
+        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        a = lab.agent("a")
+        a.start()
+        a.write_outputs()
+        action, p = a.coord("publish", "--quality", "full")
+        self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
+        self.assertIn("GATE_MISMATCH", p.stdout)
+        self.assertIsNone(lab.show(a.info["report_path"]))
+        self.assertEqual(lab.state()["phase"], "running")  # 锁还在，返工后可以再发
+
+    def test_quality_override_is_recorded(self):
+        lab = Lab(self.root)
+        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        a = lab.agent("a")
+        a.start()
+        a.write_outputs()
+        action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
+        self.assertEqual(action, "published", p.stdout + p.stderr)
+        prod = lab.state()["produced"]
+        self.assertEqual((prod["quality"], prod["gates"]["override"]), ("full", "full"))
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -361,7 +411,7 @@ class VerifyTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def produce(self, lab, report, quality="full", mode="normal"):
+    def produce(self, lab, report, mode="normal"):
         from test_validate import DATA
         a = lab.agent("a")
         a.info["mode"] = mode
@@ -371,7 +421,7 @@ class VerifyTest(unittest.TestCase):
             path = a.work / "out" / rel
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-        a.coord("publish", "--quality", quality)
+        self.assertEqual(a.coord("publish")[0], "published")
 
     def run_verify(self, lab, hn_points=899):
         import verify
@@ -421,8 +471,70 @@ class VerifyTest(unittest.TestCase):
         from test_validate import REPORT
         import finalize
         lab = Lab(self.root, week="2026-W43")
-        self.produce(lab, finalize.apply(REPORT, ["- 联网搜索：24 次。"]), quality="degraded")
+        # 降级版的标记写在周报元数据里（draft.py --degraded 的产物），publish 据此推导 quality
+        degraded = finalize.apply(REPORT, ["- 联网搜索：24 次。"]).replace(
+            "---\nweek: 2026-W43\n", "---\nweek: 2026-W43\nquality: degraded\n", 1)
+        self.produce(lab, degraded)
         (ok, codes, _), b = self.run_verify(lab)
         self.assertFalse(ok)
         self.assertIn("WRITE_FAILED", codes)
         self.assertEqual(b.coord("verified", "--result", "fail", "--codes", ",".join(codes))[0], "run")
+
+
+class PublishGateTest(unittest.TestCase):
+    """发布前的质量推导：quality 由门槛结果决定，不再由智能体声明（提案 2.1、2.2）。"""
+
+    def test_derive_matrix(self):
+        self.assertEqual(coord.derive_quality(True, False, None), ("full", None))
+        self.assertEqual(coord.derive_quality(False, False, None), ("check_failed", None))
+        self.assertEqual(coord.derive_quality(True, True, None), ("degraded", None))
+        self.assertEqual(coord.derive_quality(False, True, None), ("degraded", None))
+
+    def test_requested_mismatch_is_rejected(self):
+        self.assertEqual(coord.derive_quality(False, False, "full"), ("check_failed", "GATE_MISMATCH"))
+        self.assertEqual(coord.derive_quality(True, True, "check_failed"), ("degraded", "GATE_MISMATCH"))
+
+    def test_requested_matches(self):
+        self.assertEqual(coord.derive_quality(False, False, "check_failed"), ("check_failed", None))
+        self.assertEqual(coord.derive_quality(True, False, "full"), ("full", None))
+
+    def test_report_is_degraded(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = pathlib.Path(d) / "r.md"
+            p.write_text("---\nweek: 2026-W45\nquality: degraded\n---\n\n# t\n", encoding="utf-8")
+            self.assertTrue(coord.report_is_degraded(p))
+            p.write_text("---\nweek: 2026-W45\n---\n\n# t\n", encoding="utf-8")
+            self.assertFalse(coord.report_is_degraded(p))
+            p.write_text("---\nweek: 2026-W45\nquality: full\n---\n\n# t\n", encoding="utf-8")
+            self.assertFalse(coord.report_is_degraded(p))
+            self.assertFalse(coord.report_is_degraded(pathlib.Path(d) / "missing.md"))
+
+    def test_gate_script_only_injected_in_test_mode(self):
+        injected = dict(CFG, publish={"gate_script": "/tmp/替身.py"})
+        self.assertEqual(coord.gate_script(ctx_for(test=False, cfg=injected)).name, "check_run.py")
+        self.assertEqual(coord.gate_script(ctx_for(test=True, cfg=injected)).name, "替身.py")
+        self.assertEqual(coord.gate_script(ctx_for(test=True)).name, "check_run.py")
+
+    def test_gate_unverified_when_runner_fails(self):
+        ctx = ctx_for()
+        orig = coord.subprocess.run
+
+        def boom(*a, **kw):
+            raise coord.subprocess.TimeoutExpired(cmd="check_run.py", timeout=1)
+
+        coord.subprocess.run = boom
+        try:
+            ok, codes = coord.publish_gate(ctx)
+        finally:
+            coord.subprocess.run = orig
+        self.assertFalse(ok)
+        self.assertEqual(codes, ["GATE_UNVERIFIED"])
+
+    def test_apply_publish_records_gates(self):
+        state = coord.empty_state("2026-W45")
+        out = coord.apply_publish(state, ctx_for(), T0, "check_failed", ["r.md"], ["GATE_NUMBERS"], None,
+                                  {"check_run": "fail", "codes": ["GATE_NUMBERS"]})
+        self.assertEqual(out["produced"]["quality"], "check_failed")
+        self.assertEqual(out["produced"]["gates"]["check_run"], "fail")
+        self.assertEqual(out["produced"]["gates"]["codes"], ["GATE_NUMBERS"])
+        self.assertEqual(out["phase"], "produced")
