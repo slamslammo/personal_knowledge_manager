@@ -732,32 +732,7 @@ def report_is_degraded(path: pathlib.Path) -> bool:
     return isinstance(fm, dict) and fm.get("quality") == "degraded"
 
 
-def is_local_remote(remote: str) -> bool:
-    """远端是不是本地路径：origin、upstream 这类别名和 https/ssh 地址都不是。
-
-    `--test` 放行显式远端，但显式远端可能是 origin 的别名或生产 URL，按名字排除挡不住，
-    所以替身注入只看「远端是不是本地已有的目录/裸仓库」。
-    """
-    path = pathlib.Path(remote)
-    return path.is_absolute() and path.exists()
-
-
-def gate_script(ctx: Ctx) -> pathlib.Path:
-    """门槛脚本：默认同目录的 check_run.py。
-
-    仅供测试：替身要同时满足三条——`--test` 运行、远端是本地路径（不是 origin 别名或生产 URL）、
-    脚本就在本次运行的工作目录里。任何一条不满足就用真门槛。
-    """
-    default = pathlib.Path(__file__).resolve().parent / "check_run.py"
-    name = (ctx.cfg.get("publish") or {}).get("gate_script") if ctx.test else None
-    if not name or not is_local_remote(ctx.remote):
-        return default
-    stub = pathlib.Path(name).resolve()
-    try:
-        stub.relative_to(pathlib.Path(ctx.work).resolve())
-    except ValueError:
-        return default
-    return stub
+GATE_SCRIPT = pathlib.Path(__file__).resolve().parent / "check_run.py"  # 固定，不提供替换入口
 
 
 def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:
@@ -767,10 +742,9 @@ def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:
     门槛结果，一律记 GATE_UNVERIFIED（让运维去查脚本或环境），而不是 GATE_INCOMPLETE
     （那个码的语义是「步骤没做」，会把人引向返工流程）。
     """
-    script = gate_script(ctx)
     timeout = int((ctx.cfg.get("publish") or {}).get("gate_timeout_seconds", GATE_TIMEOUT_SECONDS))
     try:
-        p = subprocess.run([sys.executable, str(script), "--work-dir", str(ctx.work)],
+        p = subprocess.run([sys.executable, str(GATE_SCRIPT), "--work-dir", str(ctx.work)],
                            capture_output=True, text=True, timeout=timeout)
     except (subprocess.TimeoutExpired, OSError):
         return False, ["GATE_UNVERIFIED"]
@@ -838,8 +812,8 @@ def cmd_publish(args) -> int:
             tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_DENIED",
                          f"mode={ctx.mode} test={ctx.test} remote={ctx.remote} 时不能用 --allow-quality-override",
                          work_dir=ctx.work)
-            emit("error", "GATE_OVERRIDE_DENIED：只有回溯（week.json 的 mode=backfill）和跑在沙箱上的测试运行"
-                          "可以覆盖门槛结果；正式运行按门槛结果发布，或按第 4 步返工")
+            emit("error", "GATE_OVERRIDE_DENIED：只有回溯（week.json 的 mode=backfill）可以覆盖门槛结果；"
+                          "正式运行与测试运行都按门槛结果发布，或按第 4 步返工")
             return EXIT_ERROR
     # 周报被人工改过时本次不会提交 OUT_DIR 里的周报（见 extra），门槛检的就不是最终内容，按未验证处理
     manual = report_is_manual(ctx, remote_tip(ctx))
@@ -850,10 +824,7 @@ def cmd_publish(args) -> int:
     else:
         gates_ok, gate_codes = publish_gate(ctx)
         gate_status = "pass" if gates_ok else "fail"
-    script = gate_script(ctx)
     gates = {"check_run": gate_status, "codes": gate_codes}
-    if script.name != "check_run.py":  # 测试注入的替身：留痕，便于事后分辨
-        gates["script"] = str(script)
     # 人工改过周报时提交的不是本次候选，按未验证处理；质量也不看候选的元数据（那份不提交）
     degraded = False if manual else report_is_degraded(ctx.out / ctx.report_path)
     if args.allow_quality_override:
