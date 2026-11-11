@@ -210,7 +210,8 @@ def count_in_range(rep, name, n, low, high):
 
 
 def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
-                    vocabulary: set[str], rep: Report, limits: dict | None = None) -> None:
+                    vocabulary: set[str], rep: Report, limits: dict | None = None,
+                    require_full: bool = False) -> None:
     import yaml
 
     for m in PLACEHOLDER_RE.finditer(text):  # 先查占位符：草稿里元数据的占位符也会让 YAML 解析失败
@@ -225,7 +226,8 @@ def validate_report(text: str, week: Week, backfill: bool, data: dict | None,
     except yaml.YAMLError as e:
         rep.error(f"元数据不是合法 YAML：{e}")
         return
-    degraded = fm.get("quality") == "degraded"
+    # require_full：发布时声明了 full 就按完整周报校验，元数据自称降级也不能少内容
+    degraded = fm.get("quality") == "degraded" and not require_full
     if fm.get("quality") not in (None, "degraded"):
         rep.error(f"元数据 quality 只能是 degraded（降级版）或不写：{fm.get('quality')!r}")
     for key in ("week", "range", "topics", "orgs", "repos"):
@@ -479,8 +481,12 @@ def default_path(rel: str):
 
 
 def run_checks(week: Week, backfill: bool = False, report_path=None, data_path=None,
-               data_only: bool = False, materials: dict | None = None, tolerance: float = 0.0) -> Report:
-    """校验周报与数据文件，返回 Report。check_run.py、verify.py 也调用它。"""
+               data_only: bool = False, materials: dict | None = None, tolerance: float = 0.0,
+               require_full: bool = False) -> Report:
+    """校验周报与数据文件，返回 Report。check_run.py、verify.py 也调用它。
+
+    require_full：按完整周报校验，不被元数据里的 quality: degraded 放宽（校验声明为 full 的产出）。
+    """
     rep = Report()
     data_path = data_path or default_path(weekly_data_path(week))
     data = None
@@ -497,7 +503,7 @@ def run_checks(week: Week, backfill: bool = False, report_path=None, data_path=N
         try:
             with open(report_path, encoding="utf-8") as f:
                 text = f.read()
-            validate_report(text, week, backfill, data, load_vocabulary(), rep)
+            validate_report(text, week, backfill, data, load_vocabulary(), rep, require_full=require_full)
             if materials:
                 validate_sources(text, materials, rep, tolerance)
         except FileNotFoundError:

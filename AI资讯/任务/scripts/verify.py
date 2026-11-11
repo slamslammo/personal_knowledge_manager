@@ -91,8 +91,10 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
     if materials is None:
         notes.append("HN 重新采集失败，跳过数字核对")
     backfill = (produced.get("mode") or ctx.mode) == "backfill"  # 标题按产出时的模式校验
+    # 声明 full 就按完整周报校验：元数据自称降级也不能把 full 的产出放到宽松规则下过一遍
     rep = run_checks(week, backfill, report_file, data_file if data_raw is not None else None,
-                     materials=materials, tolerance=tolerance)
+                     materials=materials, tolerance=tolerance,
+                     require_full=produced.get("quality") == "full")
     if rep.errors:
         codes += [c for c in rep.codes if c not in codes] or ["GATE_STRUCTURE"]
         notes += rep.errors

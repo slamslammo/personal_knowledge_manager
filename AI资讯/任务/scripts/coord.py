@@ -734,11 +734,20 @@ def report_is_degraded(path: pathlib.Path) -> bool:
 def gate_script(ctx: Ctx) -> pathlib.Path:
     """门槛脚本：默认同目录的 check_run.py。
 
-    仅供测试：coord.py start --test 的运行可用 coordination.publish.gate_script 指向替身
-    （集成测试里没有真实的采集产物，跑不动真门槛）。生产运行不带 --test，不读该配置。
+    仅供测试：`--test` 的运行可以用 coordination.publish.gate_script 指向替身，但必须同时满足
+    远端不是 origin、且脚本就在本次运行的工作目录（临时目录）里——测试的产出和替身都建在那里。
+    任何一条不满足就用真门槛：`--test` 仍可显式指定真实远端，只按 test 标志放行等于把门禁交出去。
     """
+    default = pathlib.Path(__file__).resolve().parent / "check_run.py"
     name = (ctx.cfg.get("publish") or {}).get("gate_script") if ctx.test else None
-    return pathlib.Path(name) if name else pathlib.Path(__file__).resolve().parent / "check_run.py"
+    if not name or ctx.remote == "origin":
+        return default
+    stub = pathlib.Path(name).resolve()
+    try:
+        stub.relative_to(pathlib.Path(ctx.work).resolve())
+    except ValueError:
+        return default
+    return stub
 
 
 def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:

@@ -126,19 +126,13 @@ class Lab:
         self.git(seed, "commit", "-q", "-m", "init")
         self.git(seed, "push", "-q", "origin", "HEAD:main")
         self.overrides = {"wait_poll_seconds": 1, "wait_call_max_seconds": 30, "wait_max_minutes": 1}
-        self.overrides.update(overrides or {})
-        self.gate_pass = self.gate("pass")
-        self.gate_fail = self.gate("fail")
-        # 测试无法产出真实的采集中间文件，coord.py publish 前的门槛用替身（--test 模式下才生效）
-        self.overrides.setdefault("publish", {}).setdefault("gate_script", str(self.gate_pass))
+        self.overrides.update({k: v for k, v in (overrides or {}).items() if k != "publish"})
+        self.gate_kind = "pass"  # 各智能体在自work目录里生成门槛替身，见 Agent.write_gate
 
-    def gate(self, kind: str) -> pathlib.Path:
-        """写一个门槛替身：pass 退出 0；fail 输出 CODES 并退出 1。"""
-        path = self.root / f"gate_{kind}.py"
-        body = "raise SystemExit(0)\n" if kind == "pass" else \
-            'print("CODES=GATE_NUMBERS")\nraise SystemExit(1)\n'
-        path.write_text(body, encoding="utf-8")
-        return path
+    @staticmethod
+    def gate_body(kind: str) -> str:
+        """门槛替身的内容：pass 退出 0；fail 输出 CODES 并退出 1。"""
+        return "raise SystemExit(0)\n" if kind == "pass" else 'print("CODES=GATE_NUMBERS")\nraise SystemExit(1)\n'
 
     @staticmethod
     def git(repo, *args):
@@ -175,11 +169,20 @@ class Lab:
 class Agent:
     def __init__(self, lab, name, repo, work, info):
         self.lab, self.name, self.repo, self.work, self.info = lab, name, repo, work, info
+        self.write_gate()
+
+    def write_gate(self):
+        """在本次运行的工作目录里落一个门槛替身（coord.py 只接受工作目录内的替身）。"""
+        path = self.work / "gate.py"
+        path.write_text(self.lab.gate_body(self.lab.gate_kind), encoding="utf-8")
+        return path
 
     def env(self):
         e = dict(os.environ)
+        overrides = {k: v for k, v in self.lab.overrides.items() if k != "publish"}
+        overrides["publish"] = {"gate_script": str(self.work / "gate.py")}
         e.update(AI_WEEKLY_TMP=str(self.work), AI_WEEKLY_REPO=str(self.repo),
-                 AI_WEEKLY_COORD=json.dumps(self.lab.overrides))
+                 AI_WEEKLY_COORD=json.dumps(overrides))
         return e
 
     def coord(self, *args):
@@ -199,6 +202,29 @@ class Agent:
             path = self.work / "out" / rel
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
+
+
+class RequireFullTest(unittest.TestCase):
+    """声明 full 就按完整周报校验，元数据自称降级也不能放宽（verify.py 用 require_full）。"""
+
+    @staticmethod
+    def checks(text, require_full):
+        import validate
+        from test_validate import DATA
+        with tempfile.TemporaryDirectory() as d:
+            rp, dp = pathlib.Path(d) / "r.md", pathlib.Path(d) / "d.json"
+            rp.write_text(text, encoding="utf-8")
+            dp.write_text(json.dumps(DATA), encoding="utf-8")
+            return validate.run_checks(validate.Week.parse("2026-W43"), False, rp, dp,
+                                       require_full=require_full)
+
+    def test_degraded_metadata_cannot_relax_a_full_declaration(self):
+        from test_validate import REPORT
+        # 降级版可以不写主题；声明 full 时这条放宽必须失效
+        degraded = REPORT.replace("topics: [智能体, 开源模型, 推理部署]", "topics: []", 1).replace(
+            "---\nweek: 2026-W43\n", "---\nweek: 2026-W43\nquality: degraded\n", 1)
+        self.assertFalse(self.checks(degraded, False).errors)
+        self.assertTrue(self.checks(degraded, True).errors)
 
 
 class MultiAgentTest(unittest.TestCase):
@@ -339,6 +365,25 @@ class MultiAgentTest(unittest.TestCase):
         self.assertIn("GATE_UNVERIFIED", st["gates"]["codes"])
         self.assertIn("检查未通过", lab.log()[0])
 
+    def test_manual_edit_keeps_skipped_candidate_out_of_quality(self):
+        # 人工改动时提交的是远端那份；本次候选即使是降级版，也不能把质量记成 degraded
+        lab = Lab(self.root)
+        a = lab.agent("a")
+        user = self.root / "user"
+        sh("git", "clone", "-q", str(lab.remote), str(user))
+        path = user / a.info["report_path"]
+        path.parent.mkdir(parents=True)
+        path.write_text("我手工改的\n", encoding="utf-8")
+        Lab.git(user, "add", "-A")
+        Lab.git(user, "commit", "-q", "-m", "手工修改周报")
+        Lab.git(user, "push", "-q", "origin", "HEAD:main")
+        self.assertEqual(a.start()[0], "run")
+        a.write_outputs(degraded=True)
+        self.assertEqual(a.coord("publish")[0], "published")
+        st = lab.state()["produced"]
+        self.assertEqual((st["quality"], st["gates"]["check_run"]), ("check_failed", "skipped"))
+        self.assertIn("检查未通过", lab.log()[0])
+
     def test_invalid_state_stops(self):
         lab = Lab(self.root)
         a = lab.agent("a")
@@ -367,7 +412,7 @@ class MultiAgentTest(unittest.TestCase):
 
     def test_gate_failure_publishes_check_failed(self):
         lab = Lab(self.root)
-        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        lab.gate_kind = "fail"  # 让本轮的门槛替身返回失败
         a = lab.agent("a")
         a.start()
         a.write_outputs()
@@ -377,11 +422,11 @@ class MultiAgentTest(unittest.TestCase):
         prod = lab.state()["produced"]
         self.assertEqual((prod["quality"], prod["gates"]["check_run"]), ("check_failed", "fail"))
         self.assertIn("GATE_NUMBERS", prod["gates"]["codes"])
-        self.assertEqual(prod["gates"]["script"], str(lab.gate_fail))  # 用了哪支门槛脚本要留痕
+        self.assertTrue(prod["gates"]["script"].endswith("gate.py"))  # 用了替身要留痕
 
     def test_declared_quality_must_match_gate(self):
         lab = Lab(self.root)
-        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        lab.gate_kind = "fail"  # 让本轮的门槛替身返回失败
         a = lab.agent("a")
         a.start()
         a.write_outputs()
@@ -393,7 +438,7 @@ class MultiAgentTest(unittest.TestCase):
 
     def test_quality_override_is_recorded(self):
         lab = Lab(self.root)
-        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        lab.gate_kind = "fail"  # 让本轮的门槛替身返回失败
         a = lab.agent("a")
         a.info["mode"] = "backfill"  # 覆盖只对回溯放行
         (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
@@ -410,7 +455,7 @@ class MultiAgentTest(unittest.TestCase):
     def test_override_must_match_report_metadata(self):
         # 覆盖不能改产物本身的质量：降级版周报不能声明 full
         lab = Lab(self.root)
-        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        lab.gate_kind = "fail"  # 让本轮的门槛替身返回失败
         a = lab.agent("a")
         a.info["mode"] = "backfill"
         (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
@@ -425,7 +470,7 @@ class MultiAgentTest(unittest.TestCase):
     def test_override_denied_in_production_run(self):
         # 正式运行（非 --test、mode=normal）不许覆盖门槛结果：否则门槛失败的产出能被标成 full
         lab = Lab(self.root)
-        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        lab.gate_kind = "fail"  # 让本轮的门槛替身返回失败
         a = lab.agent("a")
         a.start(test=False)
         a.write_outputs()
@@ -436,7 +481,7 @@ class MultiAgentTest(unittest.TestCase):
 
     def test_override_allowed_in_backfill(self):
         lab = Lab(self.root)
-        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        lab.gate_kind = "fail"  # 让本轮的门槛替身返回失败
         a = lab.agent("a")
         a.info["mode"] = "backfill"
         (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
@@ -579,10 +624,20 @@ class PublishGateTest(unittest.TestCase):
             self.assertFalse(coord.report_is_degraded(pathlib.Path(d) / "missing.md"))
 
     def test_gate_script_only_injected_in_test_mode(self):
-        injected = dict(CFG, publish={"gate_script": "/tmp/替身.py"})
-        self.assertEqual(coord.gate_script(ctx_for(test=False, cfg=injected)).name, "check_run.py")
-        self.assertEqual(coord.gate_script(ctx_for(test=True, cfg=injected)).name, "替身.py")
-        self.assertEqual(coord.gate_script(ctx_for(test=True)).name, "check_run.py")
+        # 注入要同时满足：--test、远端不是 origin、脚本就在本次运行的工作目录里
+        with tempfile.TemporaryDirectory() as d:
+            work = pathlib.Path(d)
+            (work / "gate.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+            cfg = dict(CFG, publish={"gate_script": str(work / "gate.py")})
+            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote="/tmp/r.git",
+                                                       cfg=cfg)).name, "gate.py")
+            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote="origin",
+                                                       cfg=cfg)).name, "check_run.py")
+            self.assertEqual(coord.gate_script(ctx_for(test=False, work=work, remote="/tmp/r.git",
+                                                       cfg=cfg)).name, "check_run.py")
+            outside = dict(CFG, publish={"gate_script": str(work.parent / "outside.py")})
+            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote="/tmp/r.git",
+                                                       cfg=outside)).name, "check_run.py")
 
     def test_gate_unverified_when_runner_fails(self):
         ctx = ctx_for()
