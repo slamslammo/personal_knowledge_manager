@@ -624,20 +624,35 @@ class PublishGateTest(unittest.TestCase):
             self.assertFalse(coord.report_is_degraded(pathlib.Path(d) / "missing.md"))
 
     def test_gate_script_only_injected_in_test_mode(self):
-        # 注入要同时满足：--test、远端不是 origin、脚本就在本次运行的工作目录里
+        # 注入要同时满足：--test、远端是本地路径、脚本就在本次运行的工作目录里
         with tempfile.TemporaryDirectory() as d:
-            work = pathlib.Path(d)
+            work = pathlib.Path(d) / "work"
+            work.mkdir()
+            remote = pathlib.Path(d) / "remote.git"
+            remote.mkdir()
             (work / "gate.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
             cfg = dict(CFG, publish={"gate_script": str(work / "gate.py")})
-            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote="/tmp/r.git",
+            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote=str(remote),
                                                        cfg=cfg)).name, "gate.py")
-            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote="origin",
-                                                       cfg=cfg)).name, "check_run.py")
-            self.assertEqual(coord.gate_script(ctx_for(test=False, work=work, remote="/tmp/r.git",
+            # origin 别名、upstream 别名、生产 URL 都不是本地路径，一律用真门槛
+            for bad in ("origin", "upstream", "https://github.com/o/r.git", "git@github.com:o/r.git"):
+                self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote=bad,
+                                                           cfg=cfg)).name, "check_run.py", bad)
+            self.assertEqual(coord.gate_script(ctx_for(test=False, work=work, remote=str(remote),
                                                        cfg=cfg)).name, "check_run.py")
             outside = dict(CFG, publish={"gate_script": str(work.parent / "outside.py")})
-            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote="/tmp/r.git",
+            self.assertEqual(coord.gate_script(ctx_for(test=True, work=work, remote=str(remote),
                                                        cfg=outside)).name, "check_run.py")
+
+    def test_gate_unverified_is_idempotent_and_does_not_touch_shared_gates(self):
+        gates = {"check_run": "pass", "codes": []}
+        out = coord.apply_publish(coord.empty_state("2026-W45"), ctx_for(), T0, "full", [], [], None, gates)
+        coord.mark_gate_unverified(out)
+        self.assertEqual(gates, {"check_run": "pass", "codes": []})  # 调用方手里的 gates 不被改写
+        self.assertEqual((out["produced"]["quality"], out["produced"]["gates"]["check_run"]),
+                         ("check_failed", "skipped"))
+        coord.mark_gate_unverified(out)  # 重试时再调一次，结果不变
+        self.assertEqual(out["produced"]["gates"]["codes"], ["GATE_UNVERIFIED"])
 
     def test_gate_unverified_when_runner_fails(self):
         ctx = ctx_for()

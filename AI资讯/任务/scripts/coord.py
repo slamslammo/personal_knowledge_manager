@@ -401,7 +401,8 @@ def apply_publish(state: dict, ctx: Ctx, t: dt.datetime, quality: str, files: li
     entry = _run_entry(s, ctx.run_id) or {}
     s["phase"], s["lock"] = "produced", None
     s["produced"] = {"run_id": ctx.run_id, "platform": ctx.platform, "at": iso(t), "quality": quality,
-                     "mode": entry.get("mode", "normal"), "files": files, "gates": gates or {}}
+                     "mode": entry.get("mode", "normal"), "files": files,
+                     "gates": json.loads(json.dumps(gates or {}))}  # 深拷贝：重试时改的是状态里的那份
     s["verified"] = None
     _finish_entry(s, ctx, t, f"produced:{quality}", codes, summary)
     return s
@@ -731,16 +732,25 @@ def report_is_degraded(path: pathlib.Path) -> bool:
     return isinstance(fm, dict) and fm.get("quality") == "degraded"
 
 
+def is_local_remote(remote: str) -> bool:
+    """远端是不是本地路径：origin、upstream 这类别名和 https/ssh 地址都不是。
+
+    `--test` 放行显式远端，但显式远端可能是 origin 的别名或生产 URL，按名字排除挡不住，
+    所以替身注入只看「远端是不是本地已有的目录/裸仓库」。
+    """
+    path = pathlib.Path(remote)
+    return path.is_absolute() and path.exists()
+
+
 def gate_script(ctx: Ctx) -> pathlib.Path:
     """门槛脚本：默认同目录的 check_run.py。
 
-    仅供测试：`--test` 的运行可以用 coordination.publish.gate_script 指向替身，但必须同时满足
-    远端不是 origin、且脚本就在本次运行的工作目录（临时目录）里——测试的产出和替身都建在那里。
-    任何一条不满足就用真门槛：`--test` 仍可显式指定真实远端，只按 test 标志放行等于把门禁交出去。
+    仅供测试：替身要同时满足三条——`--test` 运行、远端是本地路径（不是 origin 别名或生产 URL）、
+    脚本就在本次运行的工作目录里。任何一条不满足就用真门槛。
     """
     default = pathlib.Path(__file__).resolve().parent / "check_run.py"
     name = (ctx.cfg.get("publish") or {}).get("gate_script") if ctx.test else None
-    if not name or ctx.remote == "origin":
+    if not name or not is_local_remote(ctx.remote):
         return default
     stub = pathlib.Path(name).resolve()
     try:
@@ -796,9 +806,10 @@ def mark_gate_unverified(state: dict) -> None:
     prod = state.setdefault("produced", {})
     gates = prod.setdefault("gates", {})
     gates["check_run"] = "skipped"
-    codes = gates.setdefault("codes", [])
+    codes = list(gates.get("codes") or [])
     if "GATE_UNVERIFIED" not in codes:
         codes.append("GATE_UNVERIFIED")
+    gates["codes"] = codes
     prod["quality"] = "check_failed"
 
 
@@ -889,9 +900,8 @@ def cmd_publish(args) -> int:
         if report_is_manual(ctx, tip):
             out.pop(ctx.report_path)  # 周报被手工改过：不覆盖
             dropped.append(ctx.report_path)
-            # 推送期间才出现的改动：这时门槛已经按 OUT_DIR 的候选跑过了，同样降为未验证
-            if (state.get("produced") or {}).get("gates", {}).get("check_run") == "pass":
-                mark_gate_unverified(state)
+            # 每次尝试都要降级：推送被拒后重试时，build 会按原来的 quality 重新生成状态
+            mark_gate_unverified(state)
         return out
 
     def build(state, tip):
