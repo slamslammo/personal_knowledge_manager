@@ -707,13 +707,28 @@ GATE_TIMEOUT_SECONDS = 120
 
 
 def report_is_degraded(path: pathlib.Path) -> bool:
-    """周报元数据里是否有 quality: degraded（降级版）。"""
+    """周报元数据里的 quality 是否为 degraded（降级版）。
+
+    与 validate.py 用同一套解析（split_front_matter + yaml.safe_load），不能各用各的：
+    `quality: "degraded"` 或行尾带注释的写法，validate 认、正则不认，就会出现
+    「按降级版的宽松规则校验通过，却被标成 full 发布」。
+    """
+    import validate  # 延迟导入：coord 只在发布时读周报元数据
+
     try:
         text = path.read_text(encoding="utf-8")
     except OSError:
         return False
-    m = re.match(r"(?s)^---\s*\n(.*?)\n---", text)
-    return bool(m and re.search(r"(?m)^quality:\s*degraded\s*$", m.group(1)))
+    fm_text, _ = validate.split_front_matter(text)
+    if fm_text is None:
+        return False
+    try:
+        import yaml
+
+        fm = yaml.safe_load(fm_text) or {}
+    except Exception:  # noqa: BLE001 元数据坏掉时按非降级处理，交给 validate 报结构错误
+        return False
+    return isinstance(fm, dict) and fm.get("quality") == "degraded"
 
 
 def gate_script(ctx: Ctx) -> pathlib.Path:
@@ -766,13 +781,23 @@ def cmd_publish(args) -> int:
     ctx = load_ctx()
     t = now()
 
+    if args.allow_quality_override:
+        if not args.quality:
+            emit("error", "--allow-quality-override 要同时给 --quality，说明按哪个质量发布")
+            return EXIT_ERROR
+        if not (ctx.test or ctx.mode == "backfill"):
+            tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_DENIED",
+                         f"{ctx.mode} 模式下不能用 --allow-quality-override", work_dir=ctx.work)
+            emit("error", "GATE_OVERRIDE_DENIED：只有回溯（week.json 的 mode=backfill）和测试模式可以覆盖门槛结果；"
+                          "正式运行按门槛结果发布，或按第 4 步返工")
+            return EXIT_ERROR
     gates_ok, gate_codes = publish_gate(ctx)
     script = gate_script(ctx)
     gates = {"check_run": "pass" if gates_ok else "fail", "codes": gate_codes}
     if script.name != "check_run.py":  # 测试注入的替身：留痕，便于事后分辨
         gates["script"] = str(script)
     degraded = report_is_degraded(ctx.out / ctx.report_path)
-    if args.allow_quality_override and args.quality:
+    if args.allow_quality_override:
         quality, mismatch = args.quality, None  # 回溯/测试：显式按声明的质量发布
         gates["override"] = quality
     else:

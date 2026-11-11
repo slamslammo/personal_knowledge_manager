@@ -48,6 +48,7 @@ ERROR_CODES = {
     "GATE_MISMATCH": "发布时声明的 quality 与门槛结果不一致，拒绝发布",
     "GATE_UNVERIFIED": "发布前无法运行门槛检查，按检查未通过处理",
     "GATE_OVERRIDE": "发布时显式覆盖了门槛结果（回溯或测试），质量以声明为准",
+    "GATE_OVERRIDE_DENIED": "正式运行不允许覆盖门槛结果，只有回溯和测试模式可以",
     # 协调与提交
     "LOCK_LOST": "锁已被其他运行接管，放弃推送",
     "PUSH_REJECTED": "推送被拒（远端已有新提交），重试用尽",

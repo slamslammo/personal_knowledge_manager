@@ -188,8 +188,9 @@ class Agent:
         first = (p.stdout.splitlines() or ["ACTION=?"])[0]
         return first.split("=", 1)[1], p
 
-    def start(self):
-        return self.coord("start", "--test", "--platform", self.name, "--remote", str(self.lab.remote))
+    def start(self, test=True):
+        args = ["start"] + (["--test"] if test else []) + ["--platform", self.name, "--remote", str(self.lab.remote)]
+        return self.coord(*args)
 
     def write_outputs(self, text="周报正文", degraded=False):
         head = f"---\nweek: {self.info['week']}\nquality: degraded\n---\n\n" if degraded else ""
@@ -391,10 +392,38 @@ class MultiAgentTest(unittest.TestCase):
         a = lab.agent("a")
         a.start()
         a.write_outputs()
+        action, p = a.coord("publish", "--allow-quality-override")  # 没给 --quality：直接报用法错误
+        self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
+        self.assertIn("--quality", p.stdout)
         action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
         self.assertEqual(action, "published", p.stdout + p.stderr)
         prod = lab.state()["produced"]
         self.assertEqual((prod["quality"], prod["gates"]["override"]), ("full", "full"))
+
+    def test_override_denied_in_production_run(self):
+        # 正式运行（非 --test、mode=normal）不许覆盖门槛结果：否则门槛失败的产出能被标成 full
+        lab = Lab(self.root)
+        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        a = lab.agent("a")
+        a.start(test=False)
+        a.write_outputs()
+        action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
+        self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
+        self.assertIn("GATE_OVERRIDE_DENIED", p.stdout)
+        self.assertIsNone(lab.show(a.info["report_path"]))
+
+    def test_override_allowed_in_backfill(self):
+        lab = Lab(self.root)
+        lab.overrides["publish"]["gate_script"] = str(lab.gate_fail)
+        a = lab.agent("a")
+        a.info["mode"] = "backfill"
+        (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
+        a.start(test=False)
+        a.write_outputs()
+        action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
+        self.assertEqual(action, "published", p.stdout + p.stderr)
+        self.assertIn("AI 周报 2026-W45（回溯）", lab.log())
+        self.assertEqual(lab.state()["produced"]["gates"]["override"], "full")
 
 
 if __name__ == "__main__":
@@ -503,9 +532,16 @@ class PublishGateTest(unittest.TestCase):
             p = pathlib.Path(d) / "r.md"
             p.write_text("---\nweek: 2026-W45\nquality: degraded\n---\n\n# t\n", encoding="utf-8")
             self.assertTrue(coord.report_is_degraded(p))
+            # 与 validate.py 同一套 YAML 解析：带引号、行尾带注释都算降级版
+            p.write_text('---\nweek: 2026-W45\nquality: "degraded"\n---\n\n# t\n', encoding="utf-8")
+            self.assertTrue(coord.report_is_degraded(p))
+            p.write_text("---\nweek: 2026-W45\nquality: degraded  # 写作中断\n---\n\n# t\n", encoding="utf-8")
+            self.assertTrue(coord.report_is_degraded(p))
             p.write_text("---\nweek: 2026-W45\n---\n\n# t\n", encoding="utf-8")
             self.assertFalse(coord.report_is_degraded(p))
             p.write_text("---\nweek: 2026-W45\nquality: full\n---\n\n# t\n", encoding="utf-8")
+            self.assertFalse(coord.report_is_degraded(p))
+            p.write_text("没有元数据\n", encoding="utf-8")
             self.assertFalse(coord.report_is_degraded(p))
             self.assertFalse(coord.report_is_degraded(pathlib.Path(d) / "missing.md"))
 
