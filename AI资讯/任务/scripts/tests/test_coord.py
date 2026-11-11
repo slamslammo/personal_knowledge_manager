@@ -333,6 +333,11 @@ class MultiAgentTest(unittest.TestCase):
         self.assertIn("未覆盖", p.stdout)
         self.assertEqual(lab.show(a.info["report_path"]), "我手工改的\n")
         self.assertIn('"by": "a"', lab.show(a.info["data_path"]))
+        # 门槛检的是 OUT_DIR 的候选，提交的是人工改过的那份：不能记成 full/pass
+        st = lab.state()["produced"]
+        self.assertEqual((st["quality"], st["gates"]["check_run"]), ("check_failed", "skipped"))
+        self.assertIn("GATE_UNVERIFIED", st["gates"]["codes"])
+        self.assertIn("检查未通过", lab.log()[0])
 
     def test_invalid_state_stops(self):
         lab = Lab(self.root)
@@ -440,7 +445,7 @@ class VerifyTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def produce(self, lab, report, mode="normal"):
+    def produce(self, lab, report, mode="normal", override=None):
         from test_validate import DATA
         a = lab.agent("a")
         a.info["mode"] = mode
@@ -450,7 +455,8 @@ class VerifyTest(unittest.TestCase):
             path = a.work / "out" / rel
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-        self.assertEqual(a.coord("publish")[0], "published")
+        args = ["publish"] + (["--quality", override, "--allow-quality-override"] if override else [])
+        self.assertEqual(a.coord(*args)[0], "published")
 
     def run_verify(self, lab, hn_points=899):
         import verify
@@ -509,6 +515,18 @@ class VerifyTest(unittest.TestCase):
         self.assertIn("WRITE_FAILED", codes)
         self.assertEqual(b.coord("verified", "--result", "fail", "--codes", ",".join(codes))[0], "run")
 
+    def test_override_full_on_degraded_report_is_conflict(self):
+        # 回溯覆盖成 full，但周报自己写着降级：run_checks 只走宽松校验，full 名不副实
+        from test_validate import REPORT
+        import finalize
+        lab = Lab(self.root, week="2026-W43")
+        degraded = finalize.apply(REPORT, ["- 联网搜索：24 次。"]).replace(
+            "---\nweek: 2026-W43\n", "---\nweek: 2026-W43\nquality: degraded\n", 1)
+        self.produce(lab, degraded, override="full")
+        (ok, codes, notes), _ = self.run_verify(lab)
+        self.assertFalse(ok, notes)
+        self.assertIn("GATE_OVERRIDE_CONFLICT", codes)
+
 
 class PublishGateTest(unittest.TestCase):
     """发布前的质量推导：quality 由门槛结果决定，不再由智能体声明（提案 2.1、2.2）。"""
@@ -565,6 +583,24 @@ class PublishGateTest(unittest.TestCase):
             coord.subprocess.run = orig
         self.assertFalse(ok)
         self.assertEqual(codes, ["GATE_UNVERIFIED"])
+
+    def test_gate_crash_without_codes_is_unverified(self):
+        # 崩溃、输出里没有 CODES=：说明没拿到门槛结果（排查脚本/环境），不是「步骤没做」
+        ctx = ctx_for()
+        orig = coord.subprocess.run
+        coord.subprocess.run = lambda *a, **kw: coord.subprocess.CompletedProcess(
+            a, 1, stdout="Traceback (most recent call last): ...\n", stderr="")
+        try:
+            ok, codes = coord.publish_gate(ctx)
+        finally:
+            coord.subprocess.run = orig
+        self.assertEqual((ok, codes), (False, ["GATE_UNVERIFIED"]))
+
+    def test_override_allowed_scope(self):
+        self.assertTrue(coord.override_allowed(ctx_for(test=True, remote="/tmp/sandbox.git")))
+        self.assertFalse(coord.override_allowed(ctx_for(test=True, remote="origin")))  # --test 指向真实远端不算测试
+        self.assertTrue(coord.override_allowed(ctx_for(test=False, mode="backfill")))
+        self.assertFalse(coord.override_allowed(ctx_for(test=False, mode="normal")))
 
     def test_apply_publish_records_gates(self):
         state = coord.empty_state("2026-W45")

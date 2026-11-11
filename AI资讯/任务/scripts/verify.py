@@ -72,6 +72,10 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
     if data_raw is not None:
         data_file.write_bytes(data_raw)
     text = report_raw.decode("utf-8")
+    # 覆盖成 full、但周报自己写着降级：run_checks 会按元数据走宽松校验，full 名不副实，需要重跑
+    if produced.get("quality") == "full" and coord.report_is_degraded(report_file):
+        codes.append("GATE_OVERRIDE_CONFLICT")
+        notes.append("发布时声明 full，但周报元数据是降级版（只过了降级版的宽松校验）")
 
     hn = collect_hn.collect(week, load_config("ranking")["hn_query"]["min_points"])
     write_json(vdir / "hn.json", hn)

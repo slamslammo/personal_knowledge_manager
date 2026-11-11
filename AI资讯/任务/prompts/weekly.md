@@ -180,6 +180,7 @@ python3 $S/coord.py publish
 
 - **不要传 `--quality`**：产出质量由 `coord.py` 在推送前跑 `check_run.py`（含 `validate.py` 全部门槛）推导——门槛通过是 `full`，未通过是 `check_failed`，周报是降级版则是 `degraded`。传了期望值且与推导结果不一致会被拒绝（`GATE_MISMATCH`），这时按第 4 步返工，不要绕过。
 - `--allow-quality-override` 只用于回溯和测试模式；正式运行（`mode=normal`）加它会被拒绝（`GATE_OVERRIDE_DENIED`），不要试图绕过。
+- 如果远端周报被人工改过，本次不会覆盖它，只提交数据和状态，`quality` 按 `check_failed` 记录（`gates.check_run=skipped`）——门槛检的是你这次写的候选，不是提交的那份，别把它说成「已通过」。
 - `coord.py` 只提交 `/tmp/ai-weekly/out/` 下白名单内的文件，连同状态文件放在同一个提交里，推送到 `main`。远端有新提交时它会自行重新读取、重试，不需要你处理。
 - 输出 `ACTION=published`：记下提交号，第 6 步要用。
 - 输出 `ACTION=lost`：运行锁已被其他运行接管（本次超时太久），产出没有推送。通知首句标"未提交"，正文说明锁被接管。

@@ -744,7 +744,9 @@ def gate_script(ctx: Ctx) -> pathlib.Path:
 def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:
     """发布前跑 check_run.py（内含 validate.py 的全部校验与质量门槛），返回 (是否通过, 错误码)。
 
-    门槛结果由脚本给出，不由智能体声明；跑不起来时按未通过处理（GATE_UNVERIFIED）。
+    门槛结果由脚本给出，不由智能体声明；崩溃、超时或输出里没有 CODES= 时，说明本轮**没拿到**
+    门槛结果，一律记 GATE_UNVERIFIED（让运维去查脚本或环境），而不是 GATE_INCOMPLETE
+    （那个码的语义是「步骤没做」，会把人引向返工流程）。
     """
     script = gate_script(ctx)
     timeout = int((ctx.cfg.get("publish") or {}).get("gate_timeout_seconds", GATE_TIMEOUT_SECONDS))
@@ -758,7 +760,7 @@ def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:
         if line.startswith("CODES="):
             codes = [c for c in line[len("CODES="):].split(",") if c]
     if p.returncode != 0 and not codes:
-        codes = ["GATE_INCOMPLETE"]
+        return False, ["GATE_UNVERIFIED"]
     return p.returncode == 0, codes
 
 
@@ -768,6 +770,32 @@ def derive_quality(gates_ok: bool, degraded: bool, requested: str | None) -> tup
     if requested and requested != derived:
         return derived, "GATE_MISMATCH"
     return derived, None
+
+
+def override_allowed(ctx: Ctx) -> bool:
+    """能不能用 --allow-quality-override 覆盖门槛结果。
+
+    只有真正的回溯运行（week.json 的 mode=backfill），或跑在沙箱远端上的测试运行可以。
+    `--test` 仍可显式指定真实远端（--remote origin），那种运行等于在生产上跑，不能算测试。
+    """
+    return ctx.mode == "backfill" or (ctx.test and ctx.remote != "origin")
+
+
+def mark_gate_unverified(state: dict) -> None:
+    """把本次产出的门槛记录降为「未验证」：检的不是最终提交的那份周报时用（周报被人工改过）。"""
+    prod = state.setdefault("produced", {})
+    gates = prod.setdefault("gates", {})
+    gates["check_run"] = "skipped"
+    codes = gates.setdefault("codes", [])
+    if "GATE_UNVERIFIED" not in codes:
+        codes.append("GATE_UNVERIFIED")
+    prod["quality"] = "check_failed"
+
+
+def report_is_manual(ctx: Ctx, tip: str) -> bool:
+    """远端最新的周报提交不是本脚本写的（人工改过），本次发布不会覆盖它。"""
+    subject = last_subject(ctx, tip, ctx.report_path)
+    return bool(subject and not subject.startswith("AI 周报 "))
 
 
 def publish_message(ctx: Ctx, state: dict, quality: str) -> str:
@@ -785,15 +813,24 @@ def cmd_publish(args) -> int:
         if not args.quality:
             emit("error", "--allow-quality-override 要同时给 --quality，说明按哪个质量发布")
             return EXIT_ERROR
-        if not (ctx.test or ctx.mode == "backfill"):
+        if not override_allowed(ctx):
             tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_DENIED",
-                         f"{ctx.mode} 模式下不能用 --allow-quality-override", work_dir=ctx.work)
-            emit("error", "GATE_OVERRIDE_DENIED：只有回溯（week.json 的 mode=backfill）和测试模式可以覆盖门槛结果；"
-                          "正式运行按门槛结果发布，或按第 4 步返工")
+                         f"mode={ctx.mode} test={ctx.test} remote={ctx.remote} 时不能用 --allow-quality-override",
+                         work_dir=ctx.work)
+            emit("error", "GATE_OVERRIDE_DENIED：只有回溯（week.json 的 mode=backfill）和跑在沙箱上的测试运行"
+                          "可以覆盖门槛结果；正式运行按门槛结果发布，或按第 4 步返工")
             return EXIT_ERROR
-    gates_ok, gate_codes = publish_gate(ctx)
+    # 周报被人工改过时本次不会提交 OUT_DIR 里的周报（见 extra），门槛检的就不是最终内容，按未验证处理
+    manual = report_is_manual(ctx, remote_tip(ctx))
+    if manual:
+        gates_ok, gate_codes, gate_status = False, ["GATE_UNVERIFIED"], "skipped"
+        tracelog.log("提交", "周报被人工修改", "warn", "MANUAL_EDIT",
+                     "不覆盖远端周报，门槛结果不适用于本次提交内容，按未验证处理", work_dir=ctx.work)
+    else:
+        gates_ok, gate_codes = publish_gate(ctx)
+        gate_status = "pass" if gates_ok else "fail"
     script = gate_script(ctx)
-    gates = {"check_run": "pass" if gates_ok else "fail", "codes": gate_codes}
+    gates = {"check_run": gate_status, "codes": gate_codes}
     if script.name != "check_run.py":  # 测试注入的替身：留痕，便于事后分辨
         gates["script"] = str(script)
     degraded = report_is_degraded(ctx.out / ctx.report_path)
@@ -827,10 +864,12 @@ def cmd_publish(args) -> int:
 
     def extra(state, tip):
         out = dict(files)
-        subject = last_subject(ctx, tip, ctx.report_path)
-        if subject and not subject.startswith("AI 周报 "):
+        if report_is_manual(ctx, tip):
             out.pop(ctx.report_path)  # 周报被手工改过：不覆盖
             dropped.append(ctx.report_path)
+            # 推送期间才出现的改动：这时门槛已经按 OUT_DIR 的候选跑过了，同样降为未验证
+            if (state.get("produced") or {}).get("gates", {}).get("check_run") == "pass":
+                mark_gate_unverified(state)
         return out
 
     def build(state, tip):
@@ -841,7 +880,9 @@ def cmd_publish(args) -> int:
         return new, None
 
     def run():
-        sha, state, _ = write_state(ctx, build, lambda s, r: publish_message(ctx, s, quality), extra)
+        sha, state, _ = write_state(
+            ctx, build, lambda s, r: publish_message(ctx, s, (s.get("produced") or {}).get("quality") or quality),
+            extra)
         if dropped:
             tracelog.log("提交", "周报被手工修改", "warn", "MANUAL_EDIT", "未覆盖周报，只提交了数据和状态",
                          work_dir=ctx.work)
