@@ -73,8 +73,27 @@ class CheckRunTest(unittest.TestCase):
         self.assertIn("第 0 步 准备", self.failed())
 
     def test_stale_collection(self):
-        write(self.work / "collect_report.json", {"week": "2026-W43", "sources": {}}, START - 3600)
-        self.assertIn("不是本次运行生成的", self.failed()["第 1 步 采集"][0])
+        sources = {k: {"status": "ok"} for k in ("trendshift", "hn", "hf", "articles")}
+        write(self.work / "collect_report.json", {"week": "2026-W43", "sources": sources}, START - 3600)
+        detail, code = self.failed()["第 1 步 采集"]
+        self.assertIn("不是本次运行生成的", detail)
+        self.assertEqual(code, "GATE_STALE")  # 只有「材料旧」可以豁免
+
+    def test_missing_material_is_not_stale(self):
+        (self.work / "materials.json").unlink()
+        detail, code = self.failed()["第 1 步 采集"]
+        self.assertIn("materials.json", detail)
+        self.assertEqual(code, "GATE_INCOMPLETE")  # 「这轮没产出」与「材料是旧的」要分开
+
+    def test_stale_report_cannot_hide_a_missing_material(self):
+        # 组合场景：采集报告是旧的 + materials.json 不在。先看新鲜度再看不存在的写法，
+        # 这里只会剩一个可豁免的 GATE_STALE，缺产物就被藏起来了
+        sources = {k: {"status": "ok"} for k in ("trendshift", "hn", "hf", "articles")}
+        write(self.work / "collect_report.json", {"week": "2026-W43", "sources": sources}, START - 3600)
+        (self.work / "materials.json").unlink()
+        detail, code = self.failed()["第 1 步 采集"]
+        self.assertIn("materials.json", detail)
+        self.assertEqual(code, "GATE_INCOMPLETE")
 
     def test_every_source_must_have_a_result(self):
         sources = {"trendshift": {"status": "ok"}}  # 只运行了 --only trendshift

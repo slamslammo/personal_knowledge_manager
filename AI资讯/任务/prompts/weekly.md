@@ -168,16 +168,20 @@ python3 $S/check_run.py | tee /tmp/ai-weekly/checks.txt
 | 其他 `validate.py` 错误 | 按报错修改 |
 
 - 最多返工 3 轮（`config/runtime.yaml` 的 gates.max_rounds）。仍未通过时：
-  - 周报结构完整，只是门槛没过：照常提交，第 5 步加 `--quality check_failed --codes <CODES>`；
-  - 周报残缺、或写作中断：运行 `python3 $S/draft.py --degraded --reason "<原因>"` 生成降级版，再运行 `finalize.py`，第 5 步加 `--quality degraded`。
+  - 周报结构完整，只是门槛没过：照常提交，**第 5 步不加任何 quality 参数**——`coord.py` 按门槛结果自动标 `check_failed`；
+  - 周报残缺、或写作中断：运行 `python3 $S/draft.py --degraded --reason "<原因>"` 生成降级版，再运行 `finalize.py`，同样照常提交（元数据带 `quality: degraded`，脚本据此标 `degraded`）。
 - 警告不阻止提交，但要看一眼是否合理。
 
 ## 第 5 步：提交
 
 ```
-python3 $S/coord.py publish [--quality full|check_failed|degraded] [--codes <CODES>]
+python3 $S/coord.py publish
 ```
 
+- **不要传 `--quality`**：产出质量由 `coord.py` 在推送前跑 `check_run.py`（含 `validate.py` 全部门槛）推导——门槛通过是 `full`，未通过是 `check_failed`，周报是降级版则是 `degraded`。传了期望值且与推导结果不一致会被拒绝（`GATE_MISMATCH`），这时按第 4 步返工，不要绕过。
+- `--allow-quality-override` 只在回溯（`week.json` 的 `mode=backfill`）时可用，正式运行加它会被拒绝（`GATE_OVERRIDE_DENIED`），不要试图绕过；而且它只豁免 `GATE_STALE`（材料早于本次运行），出现结构错误、缺材料、搜索次数不够时照样拒绝。声明值还要与周报元数据一致（降级版不能声明 `full`，否则 `GATE_OVERRIDE_CONFLICT`）。
+- 门槛没过**不会阻止推送**，只会让这次发布带 `check_failed` 标记（标题带「检查未通过」）。通知里要如实写这次没达标，不要写成「已完成、质量合格」。
+- 如果远端周报被人工改过，本次不会覆盖它，只提交数据和状态，`quality` 按 `check_failed` 记录（`gates.check_run=skipped`）——门槛检的是你这次写的候选，不是提交的那份，别把它说成「已通过」。
 - `coord.py` 只提交 `/tmp/ai-weekly/out/` 下白名单内的文件，连同状态文件放在同一个提交里，推送到 `main`。远端有新提交时它会自行重新读取、重试，不需要你处理。
 - 输出 `ACTION=published`：记下提交号，第 6 步要用。
 - 输出 `ACTION=lost`：运行锁已被其他运行接管（本次超时太久），产出没有推送。通知首句标"未提交"，正文说明锁被接管。

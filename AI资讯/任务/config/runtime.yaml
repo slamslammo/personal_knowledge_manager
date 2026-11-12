@@ -37,5 +37,8 @@ coordination:
   wait_max_minutes: 70        # 一次运行累计等待的上限
   push_retries: 5             # 推送被拒后重新读取、重新生成提交的次数
 
+  publish:                    # coord.py publish 前的门槛检查，见 ../提案/2026-11-11-发布门槛与上线整改.md
+    gate_timeout_seconds: 120 # 跑 check_run.py 的超时；超时或跑不起来按 check_failed 发布
+
 trace:
   max_events_in_state: 400    # 状态文件里保留的事件条数（保留最新的）

@@ -43,6 +43,14 @@ def check_link(url: str) -> tuple[str, str]:
     return "unknown", res.error or f"HTTP {res.status}"
 
 
+def override_conflict(produced: dict, report_file) -> bool:
+    """声明 full、但周报元数据是降级版：run_checks 只会走宽松规则，full 名不副实。
+
+    publish 侧已经拒绝这种组合，这里防的是旧状态文件与手工写入。
+    """
+    return produced.get("quality") == "full" and coord.report_is_degraded(report_file)
+
+
 def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]]:
     """返回 (是否通过, 错误码, 说明)。"""
     week = Week.parse(ctx.week)
@@ -57,6 +65,11 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
         code = "WRITE_FAILED" if produced["quality"] == "degraded" else "GATE_STRUCTURE"
         codes.append(code)
         notes.append(f"产出为 {produced['quality']}，需要重跑")
+    if "gates" not in produced:
+        codes.append("GATE_UNVERIFIED")
+        notes.append("状态文件缺少 gates 记录（发布前没有跑门槛），按检查未通过处理")
+    elif produced["gates"].get("override"):
+        notes.append(f"产出发布时显式覆盖了门槛结果（{produced['gates']['override']}），按覆盖后的质量校验")
 
     report_raw = coord.read_at(ctx, tip, ctx.report_path)
     data_raw = coord.read_at(ctx, tip, ctx.data_path)
@@ -67,6 +80,10 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
     if data_raw is not None:
         data_file.write_bytes(data_raw)
     text = report_raw.decode("utf-8")
+    # 覆盖成 full、但周报自己写着降级：run_checks 会按元数据走宽松校验，full 名不副实，需要重跑
+    if override_conflict(produced, report_file):
+        codes.append("GATE_OVERRIDE_CONFLICT")
+        notes.append("发布时声明 full，但周报元数据是降级版（只过了降级版的宽松校验）")
 
     hn = collect_hn.collect(week, load_config("ranking")["hn_query"]["min_points"])
     write_json(vdir / "hn.json", hn)
@@ -74,8 +91,10 @@ def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]
     if materials is None:
         notes.append("HN 重新采集失败，跳过数字核对")
     backfill = (produced.get("mode") or ctx.mode) == "backfill"  # 标题按产出时的模式校验
+    # 声明 full 就按完整周报校验：元数据自称降级也不能把 full 的产出放到宽松规则下过一遍
     rep = run_checks(week, backfill, report_file, data_file if data_raw is not None else None,
-                     materials=materials, tolerance=tolerance)
+                     materials=materials, tolerance=tolerance,
+                     require_full=produced.get("quality") == "full")
     if rep.errors:
         codes += [c for c in rep.codes if c not in codes] or ["GATE_STRUCTURE"]
         notes += rep.errors
