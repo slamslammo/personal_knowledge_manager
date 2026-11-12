@@ -180,10 +180,26 @@ class Agent:
         args = ["start"] + (["--test"] if test else []) + ["--platform", self.name, "--remote", str(self.lab.remote)]
         return self.coord(*args)
 
-    def write_fixture(self, searches=24, degraded=False):
+    def write_fixture(self, searches=24, degraded=False, title_suffix=""):
         """写一整套「本次运行都做了」的产物，让真实门槛通过（见 tests/fixture.py）。"""
         import fixture
-        return fixture.build(self.work, self.info, searches=searches, degraded=degraded)
+        return fixture.build(self.work, self.info, searches=searches, degraded=degraded,
+                             title_suffix=title_suffix)
+
+    def write_stale_fixture(self, **kw):
+        """产物都是上一轮留下的：只把 week.json 的时间改成现在。
+
+        于是门槛里唯一的失败是「材料早于本次运行」（GATE_STALE）——回溯复用历史材料正是这样。
+        """
+        text = self.write_fixture(**kw)
+        now = time.time()
+        os.utime(self.work / "week.json", (now, now))
+        return text
+
+    def break_structure(self):
+        """把周报改成结构不合格（删掉「洞察」板块），内容问题与时间无关。"""
+        path = self.work / "out" / self.info["report_path"]
+        path.write_text(path.read_text(encoding="utf-8").replace("## 洞察", "## 观点速览"), encoding="utf-8")
 
     def write_outputs(self, text="周报正文", degraded=False):
         head = f"---\nweek: {self.info['week']}\nquality: degraded\n---\n\n" if degraded else ""
@@ -425,28 +441,31 @@ class MultiAgentTest(unittest.TestCase):
         self.assertEqual(lab.state()["phase"], "running")  # 锁还在，返工后可以再发
 
     def test_quality_override_is_recorded(self):
-        lab = Lab(self.root)
+        # 回溯 + 唯一失败是「材料是旧的」：可以按 full 发布，并把豁免了什么一起记下来
+        lab = Lab(self.root, week="2026-W43")
         a = lab.agent("a")
         a.info["mode"] = "backfill"  # 覆盖只对回溯放行
         (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
         a.start()
-        a.write_outputs()
+        a.write_stale_fixture(title_suffix="（回溯版）")
         action, p = a.coord("publish", "--allow-quality-override")  # 没给 --quality：用法错误
         self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
         self.assertIn("--quality", p.stdout)
         action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
         self.assertEqual(action, "published", p.stdout + p.stderr)
+        self.assertIn("AI 周报 2026-W43（回溯）", lab.log())
         prod = lab.state()["produced"]
         self.assertEqual((prod["quality"], prod["gates"]["override"]), ("full", "full"))
+        self.assertEqual(prod["gates"]["waived"], ["GATE_STALE"])
 
     def test_override_must_match_report_metadata(self):
         # 覆盖不能改产物本身的质量：降级版周报不能声明 full
-        lab = Lab(self.root)
+        lab = Lab(self.root, week="2026-W43")
         a = lab.agent("a")
         a.info["mode"] = "backfill"
         (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
         a.start()
-        a.write_outputs(degraded=True)
+        a.write_stale_fixture(degraded=True, title_suffix="（回溯版）")
         action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
         self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
         self.assertIn("GATE_OVERRIDE_CONFLICT", p.stdout)
@@ -464,17 +483,34 @@ class MultiAgentTest(unittest.TestCase):
         self.assertIn("GATE_OVERRIDE_DENIED", p.stdout)
         self.assertIsNone(lab.show(a.info["report_path"]))
 
-    def test_override_allowed_in_backfill(self):
-        lab = Lab(self.root)
+    def test_override_denied_when_report_is_structurally_broken(self):
+        # 「材料是旧的」可以豁免；结构不合格不行——否则带缺陷的周报会挂着 full 发布
+        lab = Lab(self.root, week="2026-W43")
         a = lab.agent("a")
         a.info["mode"] = "backfill"
         (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
-        a.start(test=False)
-        a.write_outputs()
+        a.start()
+        a.write_stale_fixture(title_suffix="（回溯版）")
+        a.break_structure()
         action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
-        self.assertEqual(action, "published", p.stdout + p.stderr)
-        self.assertIn("AI 周报 2026-W45（回溯）", lab.log())
-        self.assertEqual(lab.state()["produced"]["gates"]["override"], "full")
+        self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
+        self.assertIn("GATE_OVERRIDE_DENIED", p.stdout)
+        self.assertIn("GATE_STRUCTURE", p.stdout)
+        self.assertIsNone(lab.show(a.info["report_path"]))
+
+    def test_override_denied_when_artifacts_are_missing(self):
+        # 「这轮没做」与「材料是旧的」不是一回事：缺产物同样不能被覆盖成 full
+        lab = Lab(self.root, week="2026-W43")
+        a = lab.agent("a")
+        a.info["mode"] = "backfill"
+        (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
+        a.start()
+        a.write_fixture(title_suffix="（回溯版）")  # 产物是本次的，只是少了一样
+        (a.work / "materials.json").unlink()
+        action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
+        self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
+        self.assertIn("GATE_INCOMPLETE", p.stdout)
+        self.assertIsNone(lab.show(a.info["report_path"]))
 
 
 if __name__ == "__main__":

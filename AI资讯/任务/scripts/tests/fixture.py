@@ -46,11 +46,12 @@ def report_text(searches: int = 24, degraded: bool = False, title_suffix: str = 
 
 
 def build(work: pathlib.Path, info: dict, *, searches: int = 24, degraded: bool = False,
-          start: float | None = None) -> str:
+          start: float | None = None, title_suffix: str = "") -> str:
     """在 work 里写一整套「本次运行都做了」的产物，返回周报正文。
 
     week.json 的修改时间就是本次运行的开始时间（check_run.py 这么取），其余文件都晚于它。
     搜索次数低于下限（<20）或产物缺失时，真实门槛就会失败，用来测不通过的路径。
+    title_suffix 给回溯版用（标题要带「（回溯版）」）。
     """
     start = time.time() - 600 if start is None else start
     _write(work / "week.json", info, start)
@@ -61,6 +62,6 @@ def build(work: pathlib.Path, info: dict, *, searches: int = 24, degraded: bool 
     _write(work / "draft.json", {"degraded": degraded}, start + 50)
     _write(work / "searches.txt", "".join(f"发现\tq{i}\n" for i in range(searches)), start + 60)
     _write(work / "out" / info["data_path"], dict(DATA, generated_at=_iso(start + 120)), start + 130)
-    text = report_text(searches, degraded)
+    text = report_text(searches, degraded, title_suffix)
     _write(work / "out" / info["report_path"], text, start + 300)
     return text

@@ -44,11 +44,12 @@ ERROR_CODES = {
     "GATE_NUMBERS": "HN 分数或评论数与采集数据不一致",
     "GATE_STRUCTURE": "周报结构或元数据不符合模板",
     "GATE_INCOMPLETE": "完整性检查发现有步骤没在本次运行中做",
+    "GATE_STALE": "产物早于本次运行（回溯复用历史材料时属正常，是唯一可被覆盖豁免的码）",
     "GATE_LINK_DEAD": "校验时链接返回 404",
     "GATE_MISMATCH": "发布时声明的 quality 与门槛结果不一致，拒绝发布",
     "GATE_UNVERIFIED": "发布前无法运行门槛检查，按检查未通过处理",
     "GATE_OVERRIDE": "发布时显式覆盖了门槛结果（回溯或测试），质量以声明为准",
-    "GATE_OVERRIDE_DENIED": "正式运行不允许覆盖门槛结果，只有回溯和测试模式可以",
+    "GATE_OVERRIDE_DENIED": "不允许覆盖门槛结果：非回溯运行，或失败项不属于可豁免范围（只有 GATE_STALE）",
     "GATE_OVERRIDE_CONFLICT": "覆盖成 full 但周报是降级版：只过了宽松校验，需重跑",
     # 协调与提交
     "LOCK_LOST": "锁已被其他运行接管，放弃推送",

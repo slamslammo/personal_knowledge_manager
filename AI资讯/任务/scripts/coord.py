@@ -775,6 +775,14 @@ def override_allowed(ctx: Ctx) -> bool:
     return ctx.mode == "backfill"
 
 
+# --allow-quality-override 能豁免的失败码，只有「产物早于本次运行」这一类。
+# 回溯是补历史周报，复用当周存档材料属正常，材料旧可以用人工确认代替重跑；
+# 但「没有产物」「搜索次数不够」「结构不合格」说的是产出内容本身，与时间无关，
+# 一并豁免就会让结构错误、缺材料的周报带上 full（2026-11-12 评审复现：
+# quality=full、gate=fail、codes=[GATE_INCOMPLETE, GATE_SEARCH_MIN, GATE_STRUCTURE]）。
+OVERRIDABLE_CODES = frozenset({"GATE_STALE"})
+
+
 def mark_gate_unverified(state: dict) -> None:
     """把本次产出的门槛记录降为「未验证」：检的不是最终提交的那份周报时用（周报被人工改过）。"""
     prod = state.setdefault("produced", {})
@@ -840,7 +848,17 @@ def cmd_publish(args) -> int:
                           f"覆盖只用于跳过门槛的新鲜度检查")
             return EXIT_ERROR
         quality, mismatch = args.quality, None
+        # 覆盖只能豁免「材料是旧的」；其余失败说明产出本身不合格，不能借覆盖变成 full
+        blocked = [c for c in gate_codes if c not in OVERRIDABLE_CODES]
+        if blocked:
+            tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_DENIED",
+                         f"失败码不在可豁免范围：{','.join(blocked)}", work_dir=ctx.work)
+            emit("error", "GATE_OVERRIDE_DENIED：覆盖只能豁免 GATE_STALE（材料早于本次运行）；"
+                          f"本次还有 {'、'.join(blocked)}，需先按门槛返工，不能标为 {args.quality}")
+            return EXIT_ERROR
         gates["override"] = quality
+        if gate_codes:
+            gates["waived"] = sorted(set(gate_codes))
     else:
         quality, mismatch = derive_quality(gates_ok, degraded, args.quality)
     if mismatch:

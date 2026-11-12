@@ -74,7 +74,15 @@ class CheckRunTest(unittest.TestCase):
 
     def test_stale_collection(self):
         write(self.work / "collect_report.json", {"week": "2026-W43", "sources": {}}, START - 3600)
-        self.assertIn("不是本次运行生成的", self.failed()["第 1 步 采集"][0])
+        detail, code = self.failed()["第 1 步 采集"]
+        self.assertIn("不是本次运行生成的", detail)
+        self.assertEqual(code, "GATE_STALE")  # 只有「材料旧」可以豁免
+
+    def test_missing_material_is_not_stale(self):
+        (self.work / "materials.json").unlink()
+        detail, code = self.failed()["第 1 步 采集"]
+        self.assertIn("没有 materials.json", detail)
+        self.assertEqual(code, "GATE_INCOMPLETE")  # 「这轮没产出」与「材料是旧的」要分开
 
     def test_every_source_must_have_a_result(self):
         sources = {"trendshift": {"status": "ok"}}  # 只运行了 --only trendshift
