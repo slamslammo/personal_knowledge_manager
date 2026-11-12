@@ -1,7 +1,7 @@
 {
   "python": "3.11.15",
   "executable": "/opt/homebrew/Caskroom/miniforge/base/envs/pkm-quant/bin/python",
-  "platform": "macOS-26.5.1-arm64-arm-64bit",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
   "random_seed": 365,
   "packages": {
     "numpy": "2.4.6",
@@ -17,7 +17,7 @@
     "akshare": "1.18.64"
   },
   "code": {
-    "tools/build_first_batch.py": "d5679c99e5357ef6ccf6f911d87c0cb7b8cca53cf556d89b7f2503769d6e699e"
+    "tools/build_first_batch.py": "d76df9460b90d984253696728e02355be938bc0b197727a77fcacdf842e98a44"
   },
   "data": {
     "daily_prices.csv": "e57dd4377afd30cec702ad33494e0a98d2a5b83c8aecccfadcc027c55a29cef9",

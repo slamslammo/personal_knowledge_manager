@@ -66,7 +66,7 @@ P2 课程只保留一个浏览器入口：
 
 ```bash
 conda activate pkm-quant
-cd "/Users/mojiawen/Documents/personal_knowledge_manager/量化交易/实验/p2-python-toolchain"
+cd personal_knowledge_manager/量化交易/实验/p2-python-toolchain
 jupyter lab
 ```
 
@@ -95,7 +95,7 @@ conda activate pkm-quant
 python tools/validate_notebooks.py
 ```
 
-当前验收结果见 [notebook-validation.md](notebook-validation.md)：2026-07-29 使用 `pkm-quant` 从干净内核执行，36/36 个 Notebook、304/304 个代码单元通过。后续以该脚本重新生成的报告为准，不手工维护执行计数。
+当前验收结果见 [notebook-validation.md](notebook-validation.md)：2026-09-04 在迁移后的工作区使用 `pkm-quant` 从干净内核执行，36/36 个 Notebook、304/304 个代码单元通过。后续以该脚本重新生成的报告为准，不手工维护执行计数。
 
 ## 关键边界
 

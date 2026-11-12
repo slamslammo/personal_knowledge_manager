@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import nbformat as nbf
@@ -18,10 +19,10 @@ LABS = ROOT / "labs"
 FIXTURES = ROOT / "data" / "fixtures"
 OUTPUTS = ROOT / "outputs"
 RANDOM_SEED = 365
-COURSE_ROOT = Path(
-    "/Users/mojiawen/Documents/"
-    "pam-video-captures/365-days-quant-finance"
+COURSE_ROOT = (
+    ROOT.parents[3] / "pam-video-captures" / "365-days-quant-finance"
 )
+COURSE_LINK_PREFIX = Path(os.path.relpath(COURSE_ROOT, start=NOTEBOOKS))
 
 for directory in [NOTEBOOKS, LABS, FIXTURES, OUTPUTS]:
     directory.mkdir(parents=True, exist_ok=True)
@@ -35,14 +36,20 @@ def code(text: str):
     return nbf.v4.new_code_cell(text.strip())
 
 
+def course_href(package: str) -> str:
+    """Return a link that works from both notebook and report directories."""
+
+    return (COURSE_LINK_PREFIX / package / "index.html").as_posix()
+
+
 def source_note(number: int, title: str, package: str) -> str:
-    package_path = COURSE_ROOT / package / "index.html"
+    package_path = course_href(package)
     return f"""
 # 第 {number} 课｜{title}
 
 本 Notebook 对应「365 天量化金融」第 {number} 课。课程代码主线来自本地视频、课件截图和 Whisper 口播整理；在此基础上补充量化数据语义、断言、性能验证和方法边界。
 
-- 图文口播：`{package_path}`
+- 图文口播：[打开课程原始材料]({package_path})
 - 环境：`pkm-quant`
 - 数据：固定随机种子生成的离线模拟行情（**非真实股票数据**）
 - 状态：可运行学习稿；不代表策略收益承诺
@@ -107,7 +114,7 @@ RANDOM_SEED = 365
 
 print("Python:", sys.version.split()[0])
 print("解释器:", sys.executable)
-print("项目:", PROJECT_ROOT)
+print("项目:", PROJECT_ROOT.name)
 print("绘图字体:", chinese_font)
 """
 
@@ -500,7 +507,7 @@ for line in environment_text.splitlines():
 environment_declaration = pd.DataFrame(
     {
         "实际值": [
-            str(environment_file),
+            str(environment_file.relative_to(PROJECT_ROOT.parents[1])),
             declared_env_name,
             "  - numpy" in environment_text,
             "  - pandas" in environment_text,
@@ -715,7 +722,7 @@ pd.DataFrame(
             manifest_reloaded == manifest,
             len(next(iter(manifest_reloaded["code"].values()))),
             len(manifest_reloaded["data"]),
-            str(manifest_path),
+            str(manifest_path.relative_to(PROJECT_ROOT)),
         ]
     },
     index=[
@@ -2630,7 +2637,7 @@ fig.savefig(
     dpi=160,
     bbox_inches="tight",
 )
-print("图表已保存：", chart_path)
+print("图表已保存：", chart_path.relative_to(PROJECT_ROOT))
 plt.show()
 """
         ),

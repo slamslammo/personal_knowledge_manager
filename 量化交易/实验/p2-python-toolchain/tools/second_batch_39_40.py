@@ -7,6 +7,7 @@ from build_first_batch import (
     COMMON_SETUP,
     NOTEBOOKS,
     code,
+    course_href,
     md,
     write_notebook,
 )
@@ -18,7 +19,7 @@ def source_note(number: int, title: str, package: str) -> str:
 
 本 Notebook 对应「365 天量化金融」第 {number} 课。课程方法来自本地完整视频、课件截图和本地 Whisper 口播整理；这里将课程 API 重建为可离线执行、可核对的量化教学实现，并补充数据契约、断言与方法边界。
 
-- 图文口播：`/Users/mojiawen/Documents/pam-video-captures/365-days-quant-finance/{package}/index.html`
+- 图文口播：[打开课程原始材料]({course_href(package)})
 - 环境：`pkm-quant`
 - 数据：固定随机种子生成的离线模拟行情与本课内构造的模拟财报（**均非真实证券数据**）
 - 状态：可运行学习稿；不代表策略收益承诺
@@ -1662,7 +1663,7 @@ fig.savefig(
 assert len(fig.axes) == 4  # 3 个主轴 + 1 个 twinx 右轴
 assert chart_path.exists()
 assert chart_path.stat().st_size > 0
-print("图表已保存：", chart_path)
+print("图表已保存：", chart_path.relative_to(PROJECT_ROOT))
 print("图片字节数：", chart_path.stat().st_size)
 plt.show()
 plt.close(fig)

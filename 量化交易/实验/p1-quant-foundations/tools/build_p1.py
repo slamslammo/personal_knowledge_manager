@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import html
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -31,6 +32,7 @@ NOTES = ROOT / "notes"
 REPORTS = ROOT / "reports"
 DATA = ROOT / "data" / "fixtures"
 OUTPUTS = ROOT / "outputs"
+COURSE_LINK_PREFIX = Path(os.path.relpath(COURSE_ROOT, start=NOTEBOOKS))
 for path in (NOTEBOOKS, LABS, NOTES, REPORTS, DATA, OUTPUTS):
     path.mkdir(parents=True, exist_ok=True)
 
@@ -63,8 +65,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 RANDOM_SEED = 365
-print("项目:", ROOT)
-print("数据:", DATA_DIR)
+print("项目:", ROOT.name)
+print("数据:", DATA_DIR.relative_to(ROOT))
 print("数据身份: 固定随机种子生成的模拟教学数据，不是真实证券行情")
 """
 
@@ -216,15 +218,22 @@ def course_source(number: int, outline_by_number: dict[int, dict]) -> str:
     return lesson.get("mapping", {}).get("localHtml", "")
 
 
+def course_href(source: str) -> str:
+    """Return a link that works from both notebook and report directories."""
+
+    return (COURSE_LINK_PREFIX / source).as_posix()
+
+
 def notebook_intro(number: int, outline: dict) -> str:
     detail = DETAILS[number]
     module = module_for(number)
     source = course_source(number, outline)
+    source_href = course_href(source)
     return f"""# 第 {number:02d} 课｜{outline[number]["outlineTitle"]}
 
 > **数据身份**：固定随机种子生成的模拟教学数据，不是真实证券行情。  
 > **环境**：`pkm-quant` · Python 3.11 · 默认离线运行。  
-> **课程原始材料**：`{source}`  
+> **课程原始材料**：[图文口播]({source_href})
 > **所属模块**：P1-{module["id"]} · {module["title"]}
 
 ## 本节量化问题
@@ -382,10 +391,11 @@ def build_non_code_notes(outline: dict[int, dict]) -> None:
         detail = DETAILS[number]
         module = module_for(number)
         source = course_source(number, outline)
+        source_href = course_href(source)
         markdown = (
             f"# 第 {number:02d} 课｜{outline[number]['outlineTitle']}\n\n"
             f"- 所属模块：P1-{module['id']} · {module['title']}\n"
-            f"- 原始材料：`{source}`\n"
+            f"- 原始材料：[图文口播]({source_href})\n"
             f"- 策略报告字段：{detail['report_field']}\n\n"
             f"## 本节量化问题\n\n{detail['question']}\n\n"
             f"## 准确定义\n\n{detail['concepts']}\n\n"
@@ -443,7 +453,9 @@ def build_manifest(outline: dict[int, dict]) -> None:
         "courseRange": [1, 30],
         "environment": "pkm-quant",
         "dataDefault": "offline-synthetic-fixtures",
-        "singleBrowserEntry": str(COURSE_ROOT / "knowledge-map.html"),
+        "singleBrowserEntry": Path(
+            os.path.relpath(COURSE_ROOT / "knowledge-map.html", start=ROOT)
+        ).as_posix(),
         "modules": MODULES,
         "lessons": lessons,
         "labs": [
@@ -499,4 +511,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

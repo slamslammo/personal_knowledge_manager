@@ -3,7 +3,15 @@
 
 from __future__ import annotations
 
-from build_first_batch import COMMON_SETUP, LABS, NOTEBOOKS, code, md, write_notebook
+from build_first_batch import (
+    COMMON_SETUP,
+    LABS,
+    NOTEBOOKS,
+    code,
+    course_href,
+    md,
+    write_notebook,
+)
 
 
 PACKAGES = {
@@ -26,7 +34,7 @@ def source_note(number: int, title: str, data_note: str) -> str:
 
 本 Notebook 对应「365 天量化金融」第 {number} 课。课程方法来自本地完整视频、课件截图和本地 Whisper 口播整理；这里把它重建为可运行、可验证的量化工程教学实现。
 
-- 图文口播：`/Users/mojiawen/Documents/pam-video-captures/365-days-quant-finance/{PACKAGES[number]}/index.html`
+- 图文口播：[打开课程原始材料]({course_href(PACKAGES[number])})
 - 环境：`pkm-quant`
 - 数据：{data_note}
 - 状态：可运行学习稿；不代表生产交易系统
@@ -761,7 +769,7 @@ probe = subprocess.run(
 )
 repository_root = probe.stdout.strip() if probe.returncode == 0 else None
 print("Git:", git_version)
-print("仓库根:", repository_root or "当前 P2 目录不在 Git 仓库中")
+print("仓库:", Path(repository_root).name if repository_root else "当前 P2 目录不在 Git 仓库中")
 """),
         md("""
 ## 2. 实验引用由四部分组成
@@ -1013,7 +1021,7 @@ hash_first = hashlib.sha256(html_first.encode()).hexdigest()
 hash_second = hashlib.sha256(html_second.encode()).hexdigest()
 report_path = OUTPUT_DIR / "59_monthly_report.html"
 report_path.write_text(html_first, encoding="utf-8")
-print("报告:", report_path)
+print("报告:", report_path.relative_to(PROJECT_ROOT))
 assert hash_first == hash_second
 assert report_path.exists() and chart_path.exists()
 """),

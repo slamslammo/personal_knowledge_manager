@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>个人知识梳理 · 总入口</title>
+<style>
+  :root{--bg:#f7f7f4;--panel:#fff;--ink:#23211c;--sub:#6b6860;--line:#e3e0d8;--accent:#2f74d0;--ok:#1d9e75;--todo:#b9791a;--shadow:0 1px 3px rgba(0,0,0,.06)}
+  @media (prefers-color-scheme:dark){:root{--bg:#1c1b18;--panel:#26241f;--ink:#ece9e1;--sub:#a39e93;--line:#3a372f;--shadow:0 1px 3px rgba(0,0,0,.3)}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  header{padding:14px 24px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  header h1{margin:0;font-size:19px;font-weight:600}
+  header .note{font-size:12.5px;color:var(--sub)}
+  header .total{margin-left:auto;font-size:12.5px;color:var(--sub)}
+  main{max-width:1080px;margin:0 auto;padding:26px 24px 60px}
+  section.md h2{font-size:17px;margin:1.6em 0 .4em}
+  section.md p{margin:.6em 0}
+  section.md ul{margin:.4em 0;padding-left:1.4em}
+  section.md li{margin:.3em 0}
+  section.md code{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.92em}
+  section.md strong{font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 8px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column}
+  .cardhead{display:flex;align-items:center;gap:10px}
+  .card h3{margin:0;font-size:16px}
+  .pill{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--sub)}
+  .pill.ok{color:var(--ok);border-color:var(--ok);background:rgba(29,158,117,.08)}
+  .pill.todo{color:var(--todo);border-color:var(--todo);background:rgba(185,121,26,.08)}
+  .blurb{margin:.6em 0 .2em;font-size:14px}
+  .meta{margin:.2em 0 .6em;font-size:12.5px;color:var(--sub)}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+  .chip{font-size:11.5px;line-height:1.3;border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--bg);color:var(--sub)}
+  .actions{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .btn{display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;text-decoration:none;color:#fff;background:var(--accent);border-radius:8px;padding:7px 14px}
+  .lnk{font-size:12.5px;color:var(--sub);text-decoration:none;border-bottom:1px dotted var(--line)}
+  .lnk:hover,.btn:hover{opacity:.88}
+  footer{border-top:1px solid var(--line);margin-top:30px;padding-top:14px;font-size:12.5px;color:var(--sub);display:flex;flex-wrap:wrap;gap:14px}
+  footer a{color:var(--sub)}
+</style>
+</head>
+<body>
+<header>
+  <h1>个人知识梳理</h1>
+  <span class="note">personal_knowledge_manager</span>
+  <span class="total">4 个板块 · 139 个知识节点</span>
+</header>
+<main>
+  <section class="md" id="intro"></section>
+  <div class="grid"><article class="card"><div class="cardhead"><h3>Agent 工程</h3><span class="pill ok">进行中</span></div><p class="blurb">以 Hello-Agents 为核心材料，按知识逻辑梳理智能体的运行机制、工具与协议、上下文与记忆、框架、评估与应用形态。</p><p class="meta">22 个知识节点 · 8 个一级分区 · 最近更新 2026-11-11</p><div class="chips"><span class="chip">🧭 智能体是什么</span><span class="chip">🔁 运行机制</span><span class="chip">🛠️ 工具与协议</span><span class="chip">🧠 上下文、记忆与检索</span><span class="chip">🏗️ 框架与多智能体</span><span class="chip">📏 评估与训练</span><span class="chip">🧩 应用形态</span><span class="chip">📚 参考资料</span></div><div class="actions"><a class="btn" href="Agent工程/知识地图.html">打开知识地图</a><a class="lnk" href="Agent工程/README.md">板块说明</a><a class="lnk" href="Agent工程/项目管理/01-迭代记录.md">迭代记录</a></div></article><article class="card"><div class="cardhead"><h3>深度学习</h3><span class="pill todo">打磨中</span></div><p class="blurb">第一个实验板块，从数学基础、机器学习基础到深度学习核心模型，直至注意力与 Transformer。</p><p class="meta">26 个知识节点 · 5 个一级分区 · 最近更新 2026-09-02</p><div class="chips"><span class="chip">📚 参考资料</span><span class="chip">🧮 数学基础</span><span class="chip">🤖 机器学习基础</span><span class="chip">🧠 深度学习</span><span class="chip">🧪 实验</span></div><div class="actions"><a class="btn" href="深度学习/知识地图.html">打开知识地图</a><a class="lnk" href="深度学习/README.md">板块说明</a></div></article><article class="card"><div class="cardhead"><h3>机器学习</h3><span class="pill ok">进行中</span></div><p class="blurb">以西瓜书为中文主线，沿数据、特征、模型、损失、优化、评估与泛化建立完整框架，并与深度学习板块衔接。</p><p class="meta">38 个知识节点 · 8 个一级分区 · 最近更新 2026-09-02</p><div class="chips"><span class="chip">🧭 知识地图</span><span class="chip">📚 资料清单</span><span class="chip">🧩 基本框架</span><span class="chip">🔎 数据与特征</span><span class="chip">📏 模型评估</span><span class="chip">🎯 监督学习</span><span class="chip">🧱 无监督学习</span><span class="chip">🧪 实验实践</span></div><div class="actions"><a class="btn" href="机器学习/知识地图.html">打开知识地图</a><a class="lnk" href="机器学习/README.md">板块说明</a><a class="lnk" href="机器学习/项目管理/01-迭代记录.md">迭代记录</a></div></article><article class="card"><div class="cardhead"><h3>量化交易</h3><span class="pill ok">进行中</span></div><p class="blurb">两条课程主线承载学习笔记，九章自有体系覆盖市场数据、策略研究、回测、风险、组合与执行。</p><p class="meta">53 个知识节点 · 11 个一级分区 · 最近更新 2026-11-11</p><div class="chips"><span class="chip">🧭 学习路线图</span><span class="chip">📚 资料清单</span><span class="chip">🧩 量化研究框架</span><span class="chip">🏛️ 市场与交易基础</span><span class="chip">📊 数据与收益</span><span class="chip">🎯 策略与信号</span><span class="chip">🧪 回测与评估</span><span class="chip">🛡️ 风险与组合</span><span class="chip">⚙️ 执行与系统</span><span class="chip">🚀 进阶专题</span><span class="chip">🔬 实验实践</span></div><div class="actions"><a class="btn" href="量化交易/知识地图.html">打开知识地图</a><a class="lnk" href="量化交易/README.md">板块说明</a><a class="lnk" href="量化交易/项目管理/01-迭代记录.md">迭代记录</a><a class="lnk" href="量化交易/365天量化课程.html">365天量化课程</a></div></article></div>
+  <section class="md" id="tail"></section>
+  <footer>
+    <a href="项目管理/02-迭代记录.md">项目迭代记录</a>
+    <a href="项目管理/01-项目维护指南.md">维护指南</a>
+    <a href="工具轨backlog.md">工具轨 backlog</a>
+    <a href="README.md">README</a>
+  </footer>
+</main>
+<script type="text/markdown" id="intro-src">这是一个面向长期学习的个人知识管理项目。目标不是收集资料，而是把学习过程沉淀为可复用的知识库构建范式：用 AI 协作完成资料筛选、主线梳理、可视化解释、实验验证与阶段迭代。
+
+每个知识领域作为一个独立板块维护。板块内部用结构化 Markdown 维护内容源，用 `build.py` 生成可直接打开的知识地图；正文由项目自己组织和编写，不堆外链，也不只做资料索引。</script>
+<script type="text/markdown" id="tail-src">## 怎么读
+
+每个板块的知识地图都是同一套结构：左侧是知识树，右侧是正文，正文内部用 `#node=` 链接互相跳转，可以用浏览器的前进后退回到来源。
+
+知识点正文尽量按四层组织，可以只读到自己需要的深度：先说明这一节回答什么问题、在体系中的位置，再给 2–5 分钟能读完的核心解释，然后是机制深挖，最后是实验与原文位置。
+
+## 约定
+
+- **内容源与展示分离**：内容源是各板块 `知识库/` 下的 Markdown，`知识地图.html` 由 `build.py` 生成，不手工编辑。
+- **来源可追溯**：正文以转述和分析为主，关键结论标明依据位置；未经核实的结论显式标注，未运行的实验不写成可复现结论。
+- **工具想法单独记**：展示、交互、复习类的工具构想写入 `工具轨backlog.md`，不混进知识正文。
+
+公式渲染依赖联网加载 MathJax。离线打开时正文与图片正常显示，公式会暂时呈现为 LaTeX 源码。</script>
+<script>
+function inline(t){return t
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2">$1</a>');}
+function md(src){
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const out=[];let list=false,para=[];
+  const fp=()=>{if(para.length){out.push('<p>'+inline(esc(para.join(' ')))+'</p>');para=[]}};
+  const cl=()=>{if(list){out.push('</ul>');list=false}};
+  src.replace(/\r/g,'').split('\n').forEach(function(line){
+    const t=line.trim();let m;
+    if(t===''){fp();cl();return;}
+    if(m=t.match(/^(#{2,4})\s+(.*)/)){fp();cl();out.push('<h'+m[1].length+'>'+inline(esc(m[2]))+'</h'+m[1].length+'>');return;}
+    if(m=t.match(/^[-*]\s+(.*)/)){fp();if(!list){out.push('<ul>');list=true}out.push('<li>'+inline(esc(m[1]))+'</li>');return;}
+    para.push(t);
+  });
+  fp();cl();
+  return out.join('\n');
+}
+document.getElementById('intro').innerHTML=md(document.getElementById('intro-src').textContent);
+document.getElementById('tail').innerHTML=md(document.getElementById('tail-src').textContent);
+</script>
+</body>
+</html>

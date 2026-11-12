@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -15,6 +16,7 @@ COURSE_ROOT = (
     / "365-days-quant-finance"
 )
 ENTRY_HTML = COURSE_ROOT / "knowledge-map.html"
+ENTRY_REFERENCE = Path(os.path.relpath(ENTRY_HTML, start=PROJECT_ROOT)).as_posix()
 MANIFEST_PATH = PROJECT_ROOT / "artifact-manifest.json"
 EXPECTED_TITLE = "365 天量化金融课程学习整理"
 
@@ -118,7 +120,7 @@ def main() -> None:
     for notebook_path in lesson_notebooks + lab_notebooks:
         problems = check_notebook(notebook_path)
         if problems:
-            notebook_problems[str(notebook_path)] = problems
+            notebook_problems[str(notebook_path.relative_to(PROJECT_ROOT))] = problems
             failures.extend(f"{notebook_path.name}：{problem}" for problem in problems)
 
     entry_source = ENTRY_HTML.read_text(encoding="utf-8")
@@ -139,14 +141,16 @@ def main() -> None:
         if (target := resolve_local_href(href)) is not None
     }
     broken_links = sorted(
-        str(path) for path in local_targets if not path.exists()
+        os.path.relpath(path, start=PROJECT_ROOT)
+        for path in local_targets
+        if not path.exists()
     )
     failures.extend(f"入口本地链接失效：{path}" for path in broken_links)
 
     result = {
         "status": "passed" if not failures else "failed",
         "title": EXPECTED_TITLE,
-        "entry": str(ENTRY_HTML),
+        "entry": ENTRY_REFERENCE,
         "counts": {
             "knowledgeReports": len(lesson_reports),
             "lessonNotebooks": len(lesson_notebooks),

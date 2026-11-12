@@ -749,10 +749,9 @@ report_html = f\"\"\"<!doctype html><meta charset='utf-8'>
 \"\"\"
 report_path = OUTPUT_DIR / "29_strategy_report.html"
 report_path.write_text(report_html, encoding="utf-8")
-print("已生成:", report_path)
+print("已生成:", report_path.relative_to(ROOT))
 """,
             ),
         ],
     }
     return cells[number]
-

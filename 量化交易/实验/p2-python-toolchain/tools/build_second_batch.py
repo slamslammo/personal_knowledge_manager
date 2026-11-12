@@ -598,7 +598,7 @@ quality_report["基本面覆盖率"] = (
 report_path = OUTPUT_DIR / "L2_data_quality_report.csv"
 quality_report.to_csv(report_path, encoding="utf-8-sig")
 display(quality_report)
-print("已写入:", report_path)
+print("已写入:", report_path.relative_to(PROJECT_ROOT))
 
 assert report_path.exists()
 assert report_path.stat().st_size > 100

@@ -5,25 +5,25 @@
     {
       "symbol": "A",
       "status": "ok",
-      "elapsed_ms": 12.07041699990441,
+      "elapsed_ms": 11.08450000015182,
       "error": ""
     },
     {
       "symbol": "B",
       "status": "ok",
-      "elapsed_ms": 12.0690830001422,
+      "elapsed_ms": 11.085708000109662,
       "error": ""
     },
     {
       "symbol": "C",
       "status": "ok",
-      "elapsed_ms": 12.068832999830192,
+      "elapsed_ms": 11.084832999813443,
       "error": ""
     },
     {
       "symbol": "D",
       "status": "ok",
-      "elapsed_ms": 10.707125000180895,
+      "elapsed_ms": 10.853750000023865,
       "error": ""
     },
     {
@@ -35,7 +35,7 @@
     {
       "symbol": "E",
       "status": "ok",
-      "elapsed_ms": 10.770374999992782,
+      "elapsed_ms": 10.850791999928333,
       "error": ""
     }
   ],
