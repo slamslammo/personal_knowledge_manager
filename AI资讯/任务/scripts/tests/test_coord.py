@@ -498,6 +498,21 @@ class MultiAgentTest(unittest.TestCase):
         self.assertIn("GATE_STRUCTURE", p.stdout)
         self.assertIsNone(lab.show(a.info["report_path"]))
 
+    def test_stale_run_cannot_hide_a_missing_material(self):
+        # 组合场景：材料是旧的 + 缺 materials.json。先看新鲜度再看不存在的写法，
+        # 这里只剩一个可豁免的 GATE_STALE，缺产物被覆盖放过去
+        lab = Lab(self.root, week="2026-W43")
+        a = lab.agent("a")
+        a.info["mode"] = "backfill"
+        (a.work / "week.json").write_text(json.dumps(a.info, ensure_ascii=False))
+        a.start()
+        a.write_stale_fixture(title_suffix="（回溯版）")
+        (a.work / "materials.json").unlink()
+        action, p = a.coord("publish", "--quality", "full", "--allow-quality-override")
+        self.assertEqual((action, p.returncode), ("error", coord.EXIT_ERROR))
+        self.assertIn("GATE_INCOMPLETE", p.stdout)
+        self.assertIsNone(lab.show(a.info["report_path"]))
+
     def test_override_denied_when_artifacts_are_missing(self):
         # 「这轮没做」与「材料是旧的」不是一回事：缺产物同样不能被覆盖成 full
         lab = Lab(self.root, week="2026-W43")

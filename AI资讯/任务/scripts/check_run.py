@@ -78,11 +78,8 @@ def _fresh(path: pathlib.Path, start: float) -> tuple[str, str] | None:
     return None
 
 
-def _fresh_code(bad: tuple[str, str] | None) -> str | None:
-    """_fresh 的结果对应的错误码：只有「材料是旧的」可以豁免。"""
-    if bad is None:
-        return None
-    return "GATE_STALE" if bad[0] == "stale" else "GATE_INCOMPLETE"
+def _present(path: pathlib.Path) -> bool:
+    return _mtime(path) is not None
 
 
 def _fmt(ts: float) -> str:
@@ -119,19 +116,27 @@ def check(work_dir: pathlib.Path = WORK_DIR, out_dir: pathlib.Path = OUT_DIR) ->
     degraded = bool(draft.get("degraded"))
 
     # 第 1 步：采集
-    report = _read(work_dir / "collect_report.json")
-    why = _fresh(work_dir / "collect_report.json", start) or _fresh(work_dir / "materials.json", start)
+    # 判定顺序固定为「有没有文件 → 内容全不全 → 旧不旧」。反过来写（先看新鲜度）时，
+    # 一个「旧」的 collect_report 会挡住「materials.json 不在」，只剩 GATE_STALE——
+    # 而 GATE_STALE 是可以被回溯覆盖豁免的，缺产物就被藏起来了（2026-11-12 评审复现）。
+    collect_json, materials_json = work_dir / "collect_report.json", work_dir / "materials.json"
+    report = _read(collect_json)
     sources = (report or {}).get("sources") or {}
     trendshift = sources.get("trendshift", {}).get("status")
     missing = [k for k in SOURCES if (sources.get(k) or {}).get("status") not in TERMINAL]
+    absent = [p.name for p in (collect_json, materials_json) if not _present(p)]
+    stale = _fresh(collect_json, start) or _fresh(materials_json, start)
     if not report:
         steps.append(Step("第 1 步 采集", False, "collect_report.json 无效，先运行 collect_all.py",
                           "GATE_INCOMPLETE"))
-    elif why:
-        steps.append(Step("第 1 步 采集", False, why[1], _fresh_code(why)))
     elif missing:
         steps.append(Step("第 1 步 采集", False, f"没有 {'、'.join(missing)} 的采集结果：运行 collect_all.py（不加 --only）",
                           "GATE_INCOMPLETE"))
+    elif absent:
+        steps.append(Step("第 1 步 采集", False, f"缺少 {'、'.join(absent)}：这一轮没有产出，回溯也要有文件",
+                          "GATE_INCOMPLETE"))
+    elif stale:
+        steps.append(Step("第 1 步 采集", False, stale[1], "GATE_STALE"))
     else:
         skipped = [k for k, v in report["sources"].items() if v.get("status") in ("skipped", "not_ready")]
         detail = "本次采集完成" + (f"，跳过或未就绪：{'、'.join(skipped)}（已写入数据说明）" if skipped else "")
@@ -148,15 +153,18 @@ def check(work_dir: pathlib.Path = WORK_DIR, out_dir: pathlib.Path = OUT_DIR) ->
     elif trendshift != "ok":
         steps.append(Step(name, True, "周榜未就绪，不排名"))
     else:
-        jwhy = _fresh(work_dir / "judgments.json", start)
-        judgments = _read(work_dir / "judgments.json") if not jwhy else None
+        judgments_json = work_dir / "judgments.json"
+        jwhy = _fresh(judgments_json, start)
+        judgments = _read(judgments_json)
         data = _read(data_path)
-        if jwhy:
-            steps.append(Step(name, False, jwhy[1], _fresh_code(jwhy)))
+        if judgments is None:
+            steps.append(Step(name, False, "没有 judgments.json：先运行 rank_github.py 做 AI 判定", "GATE_INCOMPLETE"))
         elif not isinstance(judgments, dict) or any(k not in judgments for k in JUDGMENT_KEYS):
             steps.append(Step(name, False, f"judgments.json 应包含 {', '.join(JUDGMENT_KEYS)}", "GATE_INCOMPLETE"))
         elif data is None:
             steps.append(Step(name, False, f"没有 {data_path}，rank_github.py 没有运行", "GATE_INCOMPLETE"))
+        elif jwhy:
+            steps.append(Step(name, False, jwhy[1], "GATE_STALE"))
         else:
             try:
                 generated = dt.datetime.fromisoformat(data.get("generated_at", "")).timestamp()
@@ -178,12 +186,15 @@ def check(work_dir: pathlib.Path = WORK_DIR, out_dir: pathlib.Path = OUT_DIR) ->
     else:
         steps.append(Step("第 1 步 联网搜索", True, f"{n} 次（{cfg['min']}–{cfg['max']}）" + ("，降级版" if degraded else "")))
 
-    # 第 2 步：草稿与写作
-    dwhy = _fresh(work_dir / "draft.json", start)
-    if dwhy:
-        steps.append(Step("第 2 步 草稿与写作", False, f"{dwhy[1]}：先运行 draft.py 生成草稿", _fresh_code(dwhy)))
+    # 第 2 步：草稿与写作（同样先看有没有，再看旧不旧）
+    draft_json = work_dir / "draft.json"
+    dwhy = _fresh(draft_json, start)
+    if not _present(draft_json):
+        steps.append(Step("第 2 步 草稿与写作", False, "没有 draft.json：先运行 draft.py 生成草稿", "GATE_INCOMPLETE"))
     elif not text:
         steps.append(Step("第 2 步 草稿与写作", False, f"没有周报 {report_path}", "GATE_INCOMPLETE"))
+    elif dwhy:
+        steps.append(Step("第 2 步 草稿与写作", False, f"{dwhy[1]}：先运行 draft.py 生成草稿", "GATE_STALE"))
     else:
         steps.append(Step("第 2 步 草稿与写作", True, "降级版" if degraded else "草稿已生成，周报在本次运行中写过"))
 
