@@ -316,8 +316,9 @@ def _sync_via_search(cli: str, week: str, test: bool, title: str,
             if r.get("action") == "retry" and attempt < MAX_ATTEMPTS - 1:
                 time.sleep(2 * 2 ** attempt)
                 continue
-            if r.get("document_id") is None and "url" not in r:
-                r["url"] = cands[0].get("url")
+            if "url" not in r and cands[0].get("url"):
+                # overwrite 成功不带 url，用候选里的补全（第 6 步通知链接要用）
+                r["url"] = cands[0]["url"]
             return r
         return _create(cli, title, content_file, folder)  # create 不重试（见函数注释）
     return {"action": "failed"}

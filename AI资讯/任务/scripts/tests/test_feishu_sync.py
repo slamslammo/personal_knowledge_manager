@@ -240,6 +240,8 @@ class SyncTest(Base):
         self.assertEqual(code, 0)
         self.assertIn("SYNC=updated", out)
         self.assertEqual(calls, ["doc1"])
+        result = json.loads((self.work / feishu_sync.RESULT_FILE).read_text(encoding="utf-8"))
+        self.assertEqual(result["url"], "u")  # overwrite 成功也要带回 url（通知链接用）
 
     def test_multi_candidates_refused(self):
         with self.candidates([{"token": "a", "title": H1, "url": "u"},
