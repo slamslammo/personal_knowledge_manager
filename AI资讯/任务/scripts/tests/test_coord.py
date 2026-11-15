@@ -708,3 +708,19 @@ class PublishGateTest(unittest.TestCase):
         self.assertEqual(out["produced"]["gates"]["check_run"], "fail")
         self.assertEqual(out["produced"]["gates"]["codes"], ["GATE_NUMBERS"])
         self.assertEqual(out["phase"], "produced")
+
+
+class ClassifyPushErrorTest(unittest.TestCase):
+    """push() 的 stderr 分类：认证失败必须归 denied（2026-11-12 云端误报 network 的回归）。"""
+
+    def test_auth_errors_are_denied(self):
+        for err in (
+            "fatal: could not read Username for 'https://github.com': terminal prompts disabled",
+            "remote: Invalid username or password.\nfatal: Authentication failed for 'https://github.com/x/y.git/'",
+        ):
+            self.assertEqual(coord.classify_push_error(err), "denied")
+
+    def test_rejected_and_network_unchanged(self):
+        self.assertEqual(coord.classify_push_error("! [remote rejected] main (non-fast-forward)"), "rejected")
+        self.assertEqual(coord.classify_push_error("ssh: connect to host github.com port 22: Connection timed out"),
+                         "network")

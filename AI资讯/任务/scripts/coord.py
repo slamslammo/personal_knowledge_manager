@@ -214,17 +214,28 @@ def make_commit(ctx: Ctx, base: str, files: dict[str, bytes], message: str) -> s
     return out_text(git(ctx, "commit-tree", tree, "-p", base, data=message.encode("utf-8"), env=env))
 
 
+def classify_push_error(stderr: str) -> str:
+    """按 stderr 文本把推送失败分类为 rejected / denied / network。
+
+    认证失败（无凭据、凭据错误、禁止交互输入）归入 denied：重试无意义，
+    2026-11-12 云端运行就因为 "could not read Username" 落到 network 白重试 6 次。
+    """
+    err = stderr.lower()
+    if any(k in err for k in ("rejected", "fetch first", "non-fast-forward", "cannot lock ref", "stale info")):
+        return "rejected"
+    if any(k in err for k in ("permission", "denied", "403", "not allowed", "protected branch",
+                              "could not read username", "authentication failed",
+                              "terminal prompts disabled", "invalid username or password")):
+        return "denied"
+    return "network"
+
+
 def push(ctx: Ctx, sha: str) -> str:
     """推送提交到远端分支。返回 ok / rejected / denied / network。"""
     p = git(ctx, "push", "-q", ctx.remote, f"{sha}:refs/heads/{ctx.branch}", check=False)
     if p.returncode == 0:
         return "ok"
-    err = p.stderr.decode("utf-8", "replace").lower()
-    if any(k in err for k in ("rejected", "fetch first", "non-fast-forward", "cannot lock ref", "stale info")):
-        return "rejected"
-    if any(k in err for k in ("permission", "denied", "403", "not allowed", "protected branch")):
-        return "denied"
-    return "network"
+    return classify_push_error(p.stderr.decode("utf-8", "replace"))
 
 
 def sync_local(ctx: Ctx, sha: str) -> None:
