@@ -51,6 +51,18 @@ ERROR_CODES = {
     "GATE_OVERRIDE": "发布时显式覆盖了门槛结果（回溯或测试），质量以声明为准",
     "GATE_OVERRIDE_DENIED": "不允许覆盖门槛结果：非回溯运行，或失败项不属于可豁免范围（只有 GATE_STALE）",
     "GATE_OVERRIDE_CONFLICT": "覆盖成 full 但周报是降级版：只过了宽松校验，需重跑",
+    # 飞书交付（feishu_sync.py；均为降级类，不阻塞 git 发布）
+    "FEISHU_CONFIG_MISSING": "config/feishu.yaml 缺失或不可读，飞书交付整体降级",
+    "FEISHU_CLI_NOT_FOUND": "未找到 lark-cli，飞书交付整体降级",
+    "FEISHU_UNREACHABLE": "飞书接口不可达（auth status 重试后仍失败）",
+    "FEISHU_AUTH_INVALID": "飞书 user 与 bot 身份均不可用，需重新授权",
+    "FEISHU_USER_INVALID": "飞书 user 身份不可用：跳过文档同步，通知照常（git 链接）",
+    "FEISHU_BOT_INVALID": "飞书 bot 身份不可用：跳过飞书通知，文档照常同步",
+    "FEISHU_WEEK_UNKNOWN": "无法确定周编号",
+    "FEISHU_SOURCE_MISSING": "git 已发布内容读取失败（git show <ref>:<path>）",
+    "FEISHU_AMBIGUOUS_DOC": "同周飞书文档多于一篇，拒绝覆盖，需人工定夺",
+    "FEISHU_SYNC_FAILED": "飞书文档同步失败（重试后仍失败或 create 不可重试失败）",
+    "FEISHU_NOTIFY_FAILED": "飞书通知发送失败（含精简版重试）",
     # 协调与提交
     "LOCK_LOST": "锁已被其他运行接管，放弃推送",
     "PUSH_REJECTED": "推送被拒（远端已有新提交），重试用尽",

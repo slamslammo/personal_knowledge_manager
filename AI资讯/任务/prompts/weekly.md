@@ -30,8 +30,20 @@
 rm -rf /tmp/ai-weekly && mkdir -p /tmp/ai-weekly && S=AI资讯/任务/scripts
 python3 $S/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > /tmp/ai-weekly/week.json
 eval "$(python3 $S/weeks.py [同上参数] --format env)"
+python3 $S/feishu_sync.py preflight
 python3 $S/coord.py start --platform <平台名> [--test]
 ```
+
+- `preflight` 只检查飞书环境（秒级），输出后照常继续，**不做 git 检查**——git 可写性由 `coord.py start` 的现有写状态覆盖。按输出确认本次运行的飞书形态：
+
+| 输出 | 含义 | 影响 |
+| --- | --- | --- |
+| `PREFLIGHT=ok` | user 与 bot 都可用 | 第 5.5 步与第 6 步正常执行 |
+| `PREFLIGHT=degraded:no_doc` | user 不可用 | 跳过文档同步；通知带 GitHub 链接并注明 |
+| `PREFLIGHT=degraded:no_notify` | bot 不可用 | 文档照常同步；通知退化为最后原样输出 |
+| `PREFLIGHT=degraded:off` / `disabled` | 飞书整体不可用 | 两者都跳过，周报照常发 git |
+
+降级不是失败：周报照常生成、校验、发布，通知里如实注明降级原因；修复后用第 5.5 步的补交付命令单独补同步，不重跑整周。
 
 - 先清空 `/tmp/ai-weekly/`：`week.json` 的生成时间就是本次运行的开始时间，完整性检查据此判断各步是否在本次运行中做过。
 - 回溯模式把参数原样传给 `weeks.py`；正式模式不带参数，脚本按北京时间推算上一周。不要自己另算日期。
@@ -180,16 +192,39 @@ python3 $S/coord.py publish
 
 - **不要传 `--quality`**：产出质量由 `coord.py` 在推送前跑 `check_run.py`（含 `validate.py` 全部门槛）推导——门槛通过是 `full`，未通过是 `check_failed`，周报是降级版则是 `degraded`。传了期望值且与推导结果不一致会被拒绝（`GATE_MISMATCH`），这时按第 4 步返工，不要绕过。
 - `--allow-quality-override` 只在回溯（`week.json` 的 `mode=backfill`）时可用，正式运行加它会被拒绝（`GATE_OVERRIDE_DENIED`），不要试图绕过；而且它只豁免 `GATE_STALE`（材料早于本次运行），出现结构错误、缺材料、搜索次数不够时照样拒绝。声明值还要与周报元数据一致（降级版不能声明 `full`，否则 `GATE_OVERRIDE_CONFLICT`）。
-- 门槛没过**不会阻止推送**，只会让这次发布带 `check_failed` 标记（标题带「检查未通过」）。通知里要如实写这次没达标，不要写成「已完成、质量合格」。
+- 门槛没过**不会阻止推送**，只会让这次发布带 `check_failed` 标记（**git 提交说明**带「检查未通过」，通知首句同样标记；报告 H1 不变）。通知里要如实写这次没达标，不要写成「已完成、质量合格」。
 - 如果远端周报被人工改过，本次不会覆盖它，只提交数据和状态，`quality` 按 `check_failed` 记录（`gates.check_run=skipped`）——门槛检的是你这次写的候选，不是提交的那份，别把它说成「已通过」。
 - `coord.py` 只提交 `/tmp/ai-weekly/out/` 下白名单内的文件，连同状态文件放在同一个提交里，推送到 `main`。远端有新提交时它会自行重新读取、重试，不需要你处理。
-- 输出 `ACTION=published`：记下提交号，第 6 步要用。
+- 输出 `ACTION=published`：记下提交号，第 5.5 步要用。
 - 输出 `ACTION=lost`：运行锁已被其他运行接管（本次超时太久），产出没有推送。通知首句标"未提交"，正文说明锁被接管。
 - 输出 `ACTION=error`：按"失败处理"处理，通知里附上错误码（如 `PUSH_DENIED` 表示没有推送权限）。
 
+## 第 5.5 步：飞书同步
+
+```
+python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交号>
+```
+
+- 同步的是**已发布提交里的周报**（`git show`），不是 `/tmp` 下的候选稿——候选稿可能因远端人工修改保护而没有入库。
+- 同周文档只保留一篇：按「AI 周报 + 周编号」查重，命中唯一才覆盖（回溯版会覆盖普通版）；查到多篇时报 `FEISHU_AMBIGUOUS_DOC`，不盲目覆盖。
+- 读 `/tmp/ai-weekly/feishu.json` 得 `document_id` 与 `url`（第 6 步的飞书链接）。
+- 输出 `SYNC=created` 或 `SYNC=updated`：成功。
+- 输出 `SYNC=skipped`：预检已降级（no_doc/off），第 6 步通知用 GitHub 链接并注明。
+- 输出 `SYNC=error`：**不阻塞**，照常进入第 6 步，通知用 GitHub 链接并注明错误码。修复飞书环境后用下面的命令补交付，**不重跑整周**：
+  ```
+  python3 $S/feishu_sync.py sync --from-published --week $WEEK
+  ```
+- 回溯运行同样执行本步。
+
 ## 第 6 步：通知
 
-先把通知内容写入 `/tmp/ai-weekly/notification.txt`，再用所在平台的通知方式发出，各平台的做法见 `../部署指南.md` 第 4 节。平台没有通知能力时，把通知内容作为本次运行的最后输出，由调度方转发。测试模式只写文件，并在最后原样输出，不发通知。
+先把通知内容写入 `/tmp/ai-weekly/notification.txt`，另写一份去掉全文和表格的精简版 `/tmp/ai-weekly/notification-short.txt`（发送失败时兜底）。然后运行：
+
+```
+python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallback-file /tmp/ai-weekly/notification-short.txt
+```
+
+预检为 no_notify/off、notify 输出 `NOTIFY=skipped`，或平台没有 lark-cli 时，把通知内容作为本次运行的最后输出，由调度方转发。测试模式只写文件，并在最后原样输出，不发通知。
 
 通知全部用纯文本（不用表格和 Markdown 链接语法，URL 直接写完整）：
 - **首句**：格式固定为 `【AI周报 W{WNUM}】<本周最重要的一件事>。`，不超过 40 个汉字。
@@ -203,7 +238,7 @@ python3 $S/coord.py publish
   - `校验：通过（N 个警告）` 或列出未通过的错误码；
   - `完整性：全部完成，联网搜索 N 次` 或列出未完成的步骤；
   - `提交：已推送到 main（提交号前 7 位）`，或写明未提交的原因。
-- **结尾**：周报全文链接，路径中的中文要做百分号编码。可以用 `python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"` 生成，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败时，去掉全文，只发精简版重试一次。
+- **结尾**：周报全文链接。第 5.5 步成功时用 `feishu.json` 里的飞书文档链接；同步失败或跳过时用 GitHub 链接并注明「飞书同步失败：<错误码>」或「飞书未同步：<预检模式>」，GitHub 链接路径中的中文要做百分号编码（`python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"`，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面）。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败时由 `feishu_sync.py notify` 自动改用精简版重发一次。
 
 ## 校验流程（`ACTION=verify`）
 
@@ -229,6 +264,8 @@ python3 $S/verify.py --record
 2. 无法提交的：运行 `python3 $S/coord.py fail --code <错误码> --detail "<停在哪一步、原因>"`，释放锁，并把执行记录推送到状态文件。错误码见 `python3 $S/tracelog.py codes`。
 3. 按入口提示词发失败通知：写清停在哪一步、已经完成了什么、错误码。
 4. 测试模式同样执行，只是不发通知，把通知内容在最后原样输出。
+
+飞书同步或飞书通知失败**不算**无法恢复的错误：周报已照常发布。修复飞书环境后补交付（`python3 $S/feishu_sync.py sync --from-published --week $WEEK`），必要时补发通知，不需要重跑整周。
 
 ## 执行记录
 
