@@ -1,0 +1,19 @@
+{
+  "repo": "/Users/mojiawen/Documents/个人知识梳理/personal_knowledge_manager",
+  "remote": "/tmp/ai-weekly/sandbox.git",
+  "branch": "main",
+  "week": "2026-W45",
+  "mode": "backfill",
+  "report_path": "AI资讯/周报/2026/2026-W45.md",
+  "data_path": "AI资讯/数据/github-weekly/2026-W45.json",
+  "state_path": "AI资讯/数据/运行记录/2026-W45.json",
+  "run_id": "workbuddy-20261115-121516-ponk",
+  "platform": "workbuddy",
+  "test": true,
+  "started_at": "2026-11-15T12:15:16+08:00",
+  "merged_seq": 45,
+  "purpose": "run",
+  "run_mode": "backfill",
+  "acquired_commit": "920490506ae406651e8b00c021c49ff3108494b0",
+  "published_commit": "a0543ddcae1b4ee8eea7b0497bff6af1192f4de1"
+}
