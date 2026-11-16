@@ -14,8 +14,25 @@
   可能还没进索引，search 0 候选会导致重复 create。因此同步前先看上次结果文件
   feishu.json 里记录的本周 document_id：能 fetch 到就直接 overwrite，不经过 search。
 - 降级不阻塞：飞书失效（off/no_doc/no_notify）时周报照常发 git，事后补交付。
-- 测试隔离：TEST_RUN=1 时 sync 用 [测试] 标题前缀查重（不碰正式文档），notify 直接跳过。
-  注意 overwrite 会以内容 H1 重置文档标题，因此测试模式把前缀同时写进内容 H1。
+- 测试隔离：TEST_RUN=1 或 coord.json 的 test 标记（coord --test 不导出环境变量，
+  交付脚本必须两个来源都认，评审 P1-1）。测试模式 sync 用 [测试] 标题前缀查重，
+  notify 直接跳过。注意 overwrite 会以内容 H1 重置文档标题，因此测试模式把前缀
+  同时写进内容 H1。
+
+2026-11-16 按外部评审（提案《2026-11-15 飞书实现与 W45 重跑评审》及其附件）第二轮修复：
+
+- P1-2 查重：标题改为结构匹配（去 [测试] 后以「AI 周报」开头 + 周编号边界检查），
+  「关于 AI 周报…问题汇总」不再命中；search 遍历 has_more/page_token 翻页后再判唯一。
+- P1-3 成功判定：update 的 data.result 必须是 success（partial_success/failed 按
+  写入不完整走幂等重试）；create 必须拿到非空 document_id。
+- P2-4 包装层：run_cli 解析 stderr 的结构化错误信封，network 类型保留可重试。
+- P2-5 失败语义：sync/notify 每次现场刷新 preflight（旧 no_doc/off 缓存不短路补
+  交付）；缓存文档 fetch 区分 missing/unknown，unknown 不落到 create；create 网络
+  失败记 action=unknown，下次 0 候选时拒绝盲目重建（FEISHU_CREATE_UNKNOWN）。
+- P2-6 notify：网络类失败（结果不明）用同一幂等键重试，只有确定拒绝才换键发
+  fallback，避免双发。
+- P2-7 身份与代理：docs 命令显式 --as user；删除 LARK_CLI_NO_PROXY 全局开关
+  （会把另一个仍有效的代理一起禁掉），只移除探测失败的回环代理变量本身。
 """
 from __future__ import annotations
 
@@ -76,6 +93,8 @@ def adapt_proxy_env(env: dict | None = None) -> tuple[dict, list]:
     只移除「回环地址 + 连续两次探测无监听」的代理变量：这是本机 WorkBuddy 注入
     动态死端口的特征。非回环地址一律保留——云端代理通常是远端主机，TCP 探测
     本身可能瞬断，一次（甚至两次）失败都不能作为清除依据。
+    不设 LARK_CLI_NO_PROXY 全局开关：混合代理场景下它会把另一个仍有效的代理
+    一起禁掉（评审 P2-7）；移除失效变量本身即可，剩余有效代理继续生效。
     """
     env = dict(env if env is not None else os.environ)
     removed = []
@@ -90,13 +109,28 @@ def adapt_proxy_env(env: dict | None = None) -> tuple[dict, list]:
             removed.append(var)
     for var in removed:
         env.pop(var, None)
-    if removed:
-        env["LARK_CLI_NO_PROXY"] = "1"
     return env, removed
 
 
+def _parse_envelope(text: str) -> dict | None:
+    """从 stdout/stderr 文本解析 CLI JSON 信封；解析不了返回 None。"""
+    text = (text or "").strip()
+    if not text:
+        return None
+    try:
+        out = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return out if isinstance(out, dict) else None
+
+
 def run_cli(cli: str, *args: str, timeout: int = 60) -> dict:
-    """执行 lark-cli 并解析 JSON 输出；网络层异常包装为 type=network 的统一结构。"""
+    """执行 lark-cli 并解析 JSON 信封；网络层异常包装为 type=network 的统一结构。
+
+    官方 CLI 的失败信封可能写在 stderr（评审 P2-4）：stdout 解析不到时必须再试
+    stderr，否则 network/timeout 会被错标成 cli/bad_output，重试分支失效、
+    权限 code/hint 丢失。
+    """
     env, removed = adapt_proxy_env()
     try:
         p = subprocess.run([cli, *args], capture_output=True, text=True, env=env, timeout=timeout)
@@ -106,14 +140,17 @@ def run_cli(cli: str, *args: str, timeout: int = 60) -> dict:
     except OSError as e:
         return {"ok": False, "error": {"type": "network", "subtype": type(e).__name__, "detail": str(e),
                                        "_removed_proxies": removed}}
-    try:
-        out = json.loads(p.stdout) if p.stdout.strip() else {}
-    except json.JSONDecodeError:
-        out = {}
-    if not isinstance(out, dict):
-        out = {}
-    if "error" not in out and (p.returncode != 0 or not out):
-        out["error"] = {"type": "cli", "subtype": "bad_output", "detail": (p.stderr or p.stdout)[:300]}
+    out = _parse_envelope(p.stdout)
+    if out is None:
+        out = _parse_envelope(p.stderr)
+    if out is None:
+        out = {"error": {"type": "cli", "subtype": "bad_output", "detail": (p.stderr or p.stdout)[:300]}}
+    if "error" not in out and p.returncode != 0:
+        out["error"] = {"type": "cli", "subtype": "exit_code",
+                        "detail": f"rc={p.returncode} {(p.stderr or '')[:200]}"}
+    if "error" not in out and out.get("ok") is False:
+        out["error"] = {"type": "cli", "subtype": "not_ok",
+                        "detail": json.dumps(out, ensure_ascii=False)[:200]}
     if "error" in out:
         out["ok"] = False
         out["error"]["_removed_proxies"] = removed
@@ -171,17 +208,38 @@ def report_h1(content: str) -> str:
 
 
 def is_test() -> bool:
-    return os.environ.get("TEST_RUN") == "1"
+    """测试模式判定：TEST_RUN=1，或本次运行 coord.json 的 test 标记（评审 P1-1）。
+
+    coord --test 只写运行状态文件，不导出环境变量；手册里 TEST_RUN=1 写在单条
+    命令前也不会影响后续独立命令。交付脚本必须两个来源都认，否则未导出时会
+    匹配正式文档、发送真实通知。任一来源为真即按测试处理（宁可误判为测试，
+    不可漏判为正式——前者最坏多一篇 [测试] 文档，后者会覆盖正式文档/发真实通知）。
+    """
+    if os.environ.get("TEST_RUN") == "1":
+        return True
+    try:
+        return bool(read_json(WORK_DIR / "coord.json").get("test"))
+    except Exception:
+        return False
 
 
 def title_matches(title: str, week: str, test: bool) -> bool:
-    """查重命中条件：标题含栏目「AI 周报」与 ISO 周编号（H1 实际是「AI 周报 · 2026-W45…」，
+    """查重命中条件：标题结构匹配（评审 P1-2）。
 
-    带间隔号与可变后缀，不能前缀匹配）；测试模式额外要求 [测试] 前缀。
+    去掉 [测试] 前缀后必须以栏目「AI 周报」开头且含本周编号（带词边界）：
+    「包含」匹配会把「关于 AI 周报 · 2026-W45 的问题汇总」当成覆盖对象；
+    前缀匹配开头即可，间隔号与「（回溯版）」等可变后缀不受影响。
     """
-    if "AI 周报" not in title or week not in title:
+    t = (title or "").strip()
+    if test:
+        if not t.startswith("[测试]"):
+            return False
+        t = t[len("[测试]"):].strip()
+    elif t.startswith("[测试]"):
         return False
-    return title.startswith("[测试]") if test else not title.startswith("[测试]")
+    if not t.startswith("AI 周报"):
+        return False
+    return re.search(rf"(?<![\w-]){re.escape(week)}(?![\w-])", t) is not None
 
 
 # ---------------------------------------------------------------- preflight
@@ -245,38 +303,72 @@ def cmd_preflight(_args) -> int:
     return 0
 
 
-def ensure_mode() -> str:
-    m = read_mode()
-    if m is None:
+def ensure_mode(refresh: bool = False) -> str:
+    """读降级模式。refresh=True 时重新跑 preflight：sync/notify 必须以现场状态为准，
+
+    旧 no_doc/off 缓存会把已修复授权的补交付短路掉（评审 P2-5）。
+    """
+    if refresh or read_mode() is None:
         cmd_preflight(None)
-        m = read_mode() or "off"
-    return m
+    return read_mode() or "off"
 
 
 # ---------------------------------------------------------------- sync
 
-def search_candidates(cli: str, week: str, test: bool) -> list[dict] | None:
-    """按周编号搜索并过滤出本周文档候选。search 调用失败返回 None（与 0 候选区分）。"""
-    out = run_cli(cli, "docs", "+search", "--query", week)
-    if out.get("error"):
-        return None
-    cands = []
-    for r in ((out.get("data") or {}).get("results") or []):
-        meta = r.get("result_meta") or {}
-        if meta.get("doc_types") != "DOCX":
-            continue
-        title = strip_highlight(r.get("title_highlighted"))
-        if title_matches(title, week, test):
-            cands.append({"token": meta.get("token"), "title": title, "url": meta.get("url")})
+def search_candidates(cli: str, week: str, test: bool, max_pages: int = 10) -> list[dict] | None:
+    """按周编号翻页搜索并过滤出本周文档候选。search 调用失败返回 None（与 0 候选区分）。
+
+    只取首页无法证明唯一（评审 P1-2）：目标在第二页会重复 create，跨页两篇
+    也不会报歧义。遍历 has_more/page_token 后再判断候选集合。
+    """
+    cands: list[dict] = []
+    page_token = ""
+    for _ in range(max_pages):
+        argv = ["docs", "+search", "--query", week, "--as", "user", "--page-size", "20"]
+        if page_token:
+            argv += ["--page-token", page_token]
+        out = run_cli(cli, *argv)
+        if out.get("error"):
+            return None
+        data = out.get("data") or {}
+        for r in data.get("results") or []:
+            meta = r.get("result_meta") or {}
+            if meta.get("doc_types") != "DOCX":
+                continue
+            title = strip_highlight(r.get("title_highlighted"))
+            if title_matches(title, week, test):
+                cands.append({"token": meta.get("token"), "title": title, "url": meta.get("url")})
+        if not data.get("has_more"):
+            return cands
+        page_token = data.get("page_token") or ""
+        if not page_token:
+            return cands
     return cands
 
 
+def _business_failure(out: dict) -> str | None:
+    """业务层未完整成功的原因；完整成功（或无 result 字段的命令）返回 None。
+
+    update/create 的 data.result ∈ success|partial_success|failed（评审 P1-3）：
+    partial_success 表示写入不完整（warnings 里有失败块），不能记 updated/created。
+    """
+    data = out.get("data") or {}
+    result = data.get("result")
+    if result in (None, "success"):
+        return None
+    warnings = "; ".join(str(w) for w in (data.get("warnings") or []))[:200]
+    return f"result={result}" + (f" warnings={warnings}" if warnings else "")
+
+
 def _overwrite(cli: str, token: str, content_file: pathlib.Path) -> dict:
-    """覆盖已有文档。幂等，网络失败可重试。"""
+    """覆盖已有文档。幂等：网络失败与写入不完整（partial_success/failed）都可重试。"""
     out = run_cli(cli, "docs", "+update", "--doc", token, "--command", "overwrite",
-                  "--doc-format", "markdown", "--content", f"@{content_file}")
+                  "--doc-format", "markdown", "--content", f"@{content_file}", "--as", "user")
     if out.get("error"):
         return {"action": "retry" if (out["error"].get("type") == "network") else "failed", "error": out["error"]}
+    why = _business_failure(out)
+    if why:
+        return {"action": "retry", "error": {"type": "business", "subtype": "partial_write", "detail": why}}
     return {"action": "updated", "document_id": token}
 
 
@@ -284,20 +376,34 @@ def _create(cli: str, title: str, content_file: pathlib.Path, folder: str) -> di
     """创建文档。超时/网络失败不重试：响应丢失时文档可能已建，而索引有延迟，
 
     重搜为空不能证明未创建；盲目再 create 会产生重复文档（评审修正点 2）。
+    网络类失败返回 action=unknown（结果不明），写入 feishu.json 供下次补交付收敛，
+    不能像普通失败一样丢弃（评审 P2-5）。
     """
-    argv = ["docs", "+create", "--doc-format", "markdown", "--content", f"@{content_file}", "--title", title]
+    argv = ["docs", "+create", "--doc-format", "markdown", "--content", f"@{content_file}",
+            "--title", title, "--as", "user"]
     if folder:
         argv += ["--parent-token", folder]
     out = run_cli(cli, *argv)
     if out.get("error"):
-        return {"action": "failed", "error": out["error"]}
+        err = out["error"]
+        return {"action": "unknown" if err.get("type") == "network" else "failed", "error": err}
+    why = _business_failure(out)
+    if why:
+        return {"action": "failed", "error": {"type": "business", "subtype": "partial_write", "detail": why}}
     doc = (out.get("data") or {}).get("document") or {}
-    return {"action": "created", "document_id": doc.get("document_id"), "url": doc.get("url")}
+    if not doc.get("document_id"):
+        return {"action": "failed", "error": {"type": "business", "subtype": "no_document_id",
+                                              "detail": "create 返回缺少 document_id"}}
+    return {"action": "created", "document_id": doc["document_id"], "url": doc.get("url")}
 
 
 def _sync_via_search(cli: str, week: str, test: bool, title: str,
-                     content_file: pathlib.Path, folder: str) -> dict:
-    """搜索查重路径：>1 候选拒绝覆盖、1 候选 overwrite、0 候选 create。"""
+                     content_file: pathlib.Path, folder: str, forbid_create: bool = False) -> dict:
+    """搜索查重路径：>1 候选拒绝覆盖、1 候选 overwrite、0 候选 create。
+
+    forbid_create：上次 create 结果不明（action=unknown）时，0 候选不能证明未创建
+    （可能已建但索引未收录），拒绝盲目重建，报 FEISHU_CREATE_UNKNOWN 人工核查（评审 P2-5）。
+    """
     for attempt in range(MAX_ATTEMPTS):
         cands = search_candidates(cli, week, test)
         if cands is None:
@@ -320,6 +426,12 @@ def _sync_via_search(cli: str, week: str, test: bool, title: str,
                 # overwrite 成功不带 url，用候选里的补全（第 6 步通知链接要用）
                 r["url"] = cands[0]["url"]
             return r
+        if forbid_create:
+            tracelog.log("飞书", "同步", "error", "FEISHU_CREATE_UNKNOWN",
+                         "上次 create 结果不明且搜索 0 候选：文档可能已建但索引未收录，拒绝盲目重建")
+            return {"action": "failed",
+                    "error": {"type": "business", "subtype": "create_unknown",
+                              "detail": "上次 create 结果不明，搜索 0 候选不能证明未创建，人工核查后重试"}}
         return _create(cli, title, content_file, folder)  # create 不重试（见函数注释）
     return {"action": "failed"}
 
@@ -329,22 +441,31 @@ def _cached_result(week: str, test: bool) -> dict | None:
 
     create 成功后搜索索引有延迟（实测数十秒内查不到），立刻重跑会因 0 候选
     重复 create；用结果文件里的 document_id 直接 overwrite 可避开索引窗口。
+    week/test 匹配即返回（含 action=unknown 的无 document_id 记录，评审 P2-5）。
     """
     try:
         d = read_json(WORK_DIR / RESULT_FILE)
     except Exception:
         return None
-    if d.get("week") == week and bool(d.get("test")) == test and d.get("document_id"):
+    if d.get("week") == week and bool(d.get("test")) == test:
         return d
     return None
 
 
-def _doc_exists(cli: str, token: str) -> bool:
-    return not run_cli(cli, "docs", "+fetch", "--doc", token).get("error")
+def _doc_state(cli: str, token: str) -> str:
+    """缓存文档状态：exists / missing / unknown（评审 P2-5）。
+
+    网络类失败是 unknown——临时读失败被当成不存在，叠加搜索索引延迟会重复 create。
+    """
+    out = run_cli(cli, "docs", "+fetch", "--doc", token, "--as", "user")
+    err = out.get("error")
+    if not err:
+        return "exists"
+    return "unknown" if err.get("type") == "network" else "missing"
 
 
 def cmd_sync(args) -> int:
-    mode = ensure_mode()
+    mode = ensure_mode(refresh=True)
     if mode in ("off", "no_doc"):
         print(f"SYNC=skipped mode={mode}")
         return 0
@@ -379,19 +500,32 @@ def cmd_sync(args) -> int:
 
     result = None
     cached = _cached_result(week, test)
-    if cached and _doc_exists(cli, cached["document_id"]):
-        # 命中同机缓存：直接 overwrite，绕开搜索索引延迟窗口
-        for attempt in range(MAX_ATTEMPTS):
-            r = _overwrite(cli, cached["document_id"], content_file)
-            if r.get("action") == "retry" and attempt < MAX_ATTEMPTS - 1:
-                time.sleep(2 * 2 ** attempt)
-                continue
-            if "url" not in r and cached.get("url"):
-                r["url"] = cached["url"]
-            result = r
-            break
+    if cached and cached.get("document_id"):
+        state = _doc_state(cli, cached["document_id"])
+        if state == "exists":
+            # 命中同机缓存：直接 overwrite，绕开搜索索引延迟窗口
+            for attempt in range(MAX_ATTEMPTS):
+                r = _overwrite(cli, cached["document_id"], content_file)
+                if r.get("action") == "retry" and attempt < MAX_ATTEMPTS - 1:
+                    time.sleep(2 * 2 ** attempt)
+                    continue
+                if "url" not in r and cached.get("url"):
+                    r["url"] = cached["url"]
+                result = r
+                break
+        elif state == "unknown":
+            # 临时读失败不能当不存在：宁可失败也不落到搜索 0 候选 create（评审 P2-5）
+            tracelog.log("飞书", "同步", "error", "FEISHU_SYNC_FAILED",
+                         f"缓存文档 {cached['document_id']} 读取结果不明，为避免重复创建终止")
+            result = {"action": "failed",
+                      "error": {"type": "network", "subtype": "fetch_unknown",
+                                "detail": f"缓存文档 {cached['document_id']} 读取结果不明，人工核查后重试"}}
+        # missing → 落入搜索路径
     if result is None:
-        result = _sync_via_search(cli, week, test, title, content_file, folder)
+        forbid_create = bool(cached and cached.get("action") == "unknown"
+                             and not cached.get("document_id"))
+        result = _sync_via_search(cli, week, test, title, content_file, folder,
+                                  forbid_create=forbid_create)
 
     result = result or {"action": "failed"}
     out_obj = {"week": week, "test": test, "title": title, **{k: v for k, v in result.items() if k != "error"}}
@@ -402,9 +536,8 @@ def cmd_sync(args) -> int:
                      document_id=result.get("document_id"), url=result.get("url"))
         print(f"SYNC={action} document_id={result.get('document_id')}")
         return 0
-    code = "FEISHU_AMBIGUOUS_DOC" if action == "ambiguous" else "FEISHU_SYNC_FAILED"
-    if action == "failed":
-        tracelog.log("飞书", "同步", "error", code, json.dumps(result.get("error") or {}, ensure_ascii=False)[:200])
+    code = {"ambiguous": "FEISHU_AMBIGUOUS_DOC", "unknown": "FEISHU_SYNC_UNKNOWN"}.get(action, "FEISHU_SYNC_FAILED")
+    tracelog.log("飞书", "同步", "error", code, json.dumps(result.get("error") or {}, ensure_ascii=False)[:200])
     print(f"SYNC=error CODE={code}")
     return 1
 
@@ -415,7 +548,7 @@ def cmd_notify(args) -> int:
     if is_test():
         print("NOTIFY=skipped test=1")
         return 0
-    mode = ensure_mode()
+    mode = ensure_mode(refresh=True)
     if mode in ("off", "no_notify"):
         print(f"NOTIFY=skipped mode={mode}")
         return 0
@@ -428,11 +561,26 @@ def cmd_notify(args) -> int:
     text = pathlib.Path(args.file).read_text(encoding="utf-8")
     week = week_from_weekjson() or "unknown"
     key = f"ai-weekly-{week}-{hashlib.md5(text.encode('utf-8')).hexdigest()[:8]}"
-    out = run_cli(cli, "im", "+messages-send", "--as", "bot", "--user-id", uid,
-                  "--markdown", f"@{args.file}", "--idempotency-key", key)
-    if out.get("error") and args.fallback_file and pathlib.Path(args.fallback_file).exists():
-        out = run_cli(cli, "im", "+messages-send", "--as", "bot", "--user-id", uid,
-                      "--markdown", f"@{args.fallback_file}", "--idempotency-key", key + "-fb")
+
+    def send(file: str, k: str) -> dict:
+        return run_cli(cli, "im", "+messages-send", "--as", "bot", "--user-id", uid,
+                       "--markdown", f"@{file}", "--idempotency-key", k)
+
+    out = send(args.file, key)
+    err = out.get("error")
+    if err and err.get("type") == "network":
+        # 结果不明：首条可能已送达，换键重发会双发（评审 P2-6）。
+        # 用同一幂等键重试一次（服务端按幂等键去重），仍不明则报 unknown 人工核对。
+        out = send(args.file, key)
+        if out.get("error"):
+            e = out["error"]
+            tracelog.log("飞书", "通知", "error", "FEISHU_NOTIFY_UNKNOWN",
+                         (e.get("detail") or e.get("subtype") or "")[:200])
+            print("NOTIFY=unknown CODE=FEISHU_NOTIFY_UNKNOWN")
+            return 1
+    elif err and args.fallback_file and pathlib.Path(args.fallback_file).exists():
+        # 确定拒绝（业务/权限类）：首条未发出，可安全换键发精简版
+        out = send(args.fallback_file, key + "-fb")
     if out.get("error"):
         err = out["error"]
         tracelog.log("飞书", "通知", "error", "FEISHU_NOTIFY_FAILED",

@@ -22,6 +22,12 @@
 | `TARGET_START=YYYY-MM-DD`（某个周一）或 `TARGET_WEEK=YYYY-Www` | 回溯 | 报告周由参数指定；标题后加"（回溯版）"；已存档的榜单数据直接复用 |
 | `TEST_RUN=1` | 测试 | 开发会话或新平台验收用：`coord.py start` 加 `--test`，远端换成本地模拟仓库，锁、提交、推送完整走一遍但不碰 GitHub；不发通知，通知内容在最后原样输出 |
 
+> 测试模式的隔离由两层保证，不依赖操作者记得导出环境变量：`coord.py start --test` 会把
+> `test: true` 写进 `/tmp/ai-weekly/coord.json`，`feishu_sync.py` 的 sync/notify 同时认
+> `TEST_RUN=1` 环境变量和 coord.json 的 test 标记（任一即按测试处理）；测试模式的文档
+> 查重与创建都带 `[测试]` 标题前缀，不会命中正式文档。手工单跑 `feishu_sync.py` 时仍以
+> coord.json 为准；要覆盖，显式 `export TEST_RUN=1`（作用于整个会话，不要只写在单条命令前）。
+
 ## 第 0 步：准备与协调
 
 在仓库根目录执行，后文的 `$S` 指脚本目录：
