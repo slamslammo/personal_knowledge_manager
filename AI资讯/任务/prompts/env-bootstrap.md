@@ -46,7 +46,11 @@ Git 写入身份优先复用平台已有授权；缺失时由用户在平台秘�
 
 ## 三、飞书初始化与实际读写
 
-1. **复用已有应用，不创建新应用。** 当前激活配置已是「小龙虾1号」`cli_a92390bc96f9dbb4` 时直接复用。配置缺失时，用 `lark-cli config init --app-id cli_a92390bc96f9dbb4 --app-secret-stdin --brand feishu --name pkm-feishu-test`，由平台安全设置提供现有应用的 App Secret，经标准输入注入，不把值拼进命令、聊天或报告。保持固定 profile，核对当前激活 appId，不完整回显配置。**禁止使用 `config init --new`，该选项会创建新应用，不是绑定现有应用。** 缺少现有应用凭据时报告所需的安全配置；不要运行无参数的交互初始化去选择创建应用，也不要用创建新应用绕过缺项。若 Agent 工作区限制 init，报告绑定来源与身份策略需求，不加 `--force-init` 绕过。
+1. **优先扫码选择已有应用。** 当前激活配置已是「小龙虾1号」`cli_a92390bc96f9dbb4` 时直接复用。配置缺失时，按官方一键配置流程运行 `lark-cli config init --new --brand feishu --name pkm-feishu-test`；使用可持续的后台/执行会话，及时提取并展示确认 URL 或二维码，由本人在飞书页面选择已有的“小龙虾1号”。CLI 会轮询配置结果并保存返回的 App ID/App Secret，不要求用户先手填凭据。不要一直阻塞工具等待而不把入口交给用户，也不承诺自动弹出用户本机浏览器。
+   - `--new` 在 CLI 1.0.100 中跳过本地模式菜单、进入一键配置；浏览器流程仍可选择已有应用，不能只凭参数名认定必定创建新应用。页面默认可能提供新建选项，本项目授权范围仅为选择已有目标应用，不代用户确认新建；目标应用不可选时停止并报告。
+   - 配置回调完成后，核对当前激活 App ID 必须精确等于 `cli_a92390bc96f9dbb4`，再继续 user 授权或任何文档操作。保持固定 profile；配置到其他应用时停止并报告，不删除应用或改用它继续交付。只展示 App ID 和脱敏状态，不完整回显配置。
+   - 手动 `--app-id ... --app-secret-stdin` 仅保留为无法扫码时的可选兼容路径：用户选择该路径时才通过平台安全设置及标准输入注入 App Secret，不把值拼进命令、聊天或报告。不能把缺少手填 Secret 当作扫码配置的前置阻塞项。
+   - 若自动审批仍拒绝此入口，说明“仅由用户在浏览器选择已有应用”的范围并提供下面的官方依据；不隐藏命令、改用底层接口或加 `--force-init` 绕过拒绝。若 CLI 因 Agent 工作区限制 init，也报告具体绑定来源和身份策略需求，不强制绕过。
 2. **配置完成后才启动 user 授权。** 安装 CLI 本身不会向用户弹出二维码。user 缺失时运行 `lark-cli auth login --no-wait --json --scope "docx:document:create docx:document:readonly docx:document:write_only search:docs:read offline_access"`，立即取得工具返回的用户确认 URL、设备码和有效期；不要把普通阻塞 `auth login` 挂在后台等待，以免确认入口始终未送到用户。以上权限对应本项目文档创建、读取、编辑、搜索与续期，已在既有授权中核对；如目标应用缺少其中权限，报告缺项，不退回 CLI 默认的全部业务域授权。
    - 将确认 URL 和有效期作为当前回复的可见内容发给本人。需要二维码时，使用 `lark-cli auth qrcode "<本次确认URL>" --output /tmp/ai-weekly/feishu-auth.png`，并通过平台图片/文件输出能力展示生成文件；不能只打印云端路径。平台无法展示图片时直接给可点击 URL，不承诺弹出本机浏览器或系统授权窗。
    - 设备码仅保存到当前任务允许的临时目录，文件权限 600；不回显设备码，不写入 Git 或部署报告。本人在有效期内确认后，先在**同一执行环境**运行 `lark-cli auth login --device-code <本次设备码>`，完成换取并保存凭据，再实际读取验证；不要先重新启动会清空临时目录的整套周报流程。
@@ -54,6 +58,8 @@ Git 写入身份优先复用平台已有授权；缺失时由用户在平台秘�
 3. 运行 `python3 AI资讯/任务/scripts/env_check.py check --require-delivery`，确认核心 Git 写入初筛、工具、绑定及 user/bot 服务端鉴权通过。首次验收的新生成必须在它成功后开始；失败停在部署并报告缺项，不进入采集和写稿。正式运行的 Git 周报仍按飞书降级规则执行；C9 观察不由此命令宣称通过。
 4. 文档始终显式使用 **user**：由本次沙箱周报同步创建/更新 `[测试]` 文档，再实际读回核对标题和正文。保留测试文档。bot 仅负责通知；此前 bot 建文档的 99991672 是旧权限观察，**不是必须持续失败的验收条件**，不再为验证失败而创建 bot 文档。
 5. 执行 `python3 AI资讯/任务/scripts/credential_probe.py --doc <测试文档ID>`（本次同步成功后可省略 `--doc` 从结果文件读取）。它执行真实 user 文档读取，记录必要的过期时间和实例观察，不输出正文或凭据。重复本地 `auth status` 不能证明自动续期。
+
+扫码选已有应用的核对依据：飞书[官方安装使用指南](https://www.feishu.cn/content/article/7623291503305083853)明确说明配置时可选择已有应用；固定版本 [`init.go`](https://github.com/larksuite/cli/blob/v1.0.100/cmd/config/init.go)、[`init_interactive.go`](https://github.com/larksuite/cli/blob/v1.0.100/cmd/config/init_interactive.go)展示一键配置与返回凭据保存流程；[`app_registration.go`](https://github.com/larksuite/cli/blob/v1.0.100/internal/auth/app_registration.go)的 begin 请求与确认 URL 没有“仅新建”参数。应用扫码配置与后续 `auth login` 的用户文档授权分开核验，已有有效 user 身份时不重复要求授权。
 
 ## 四、跨任务状态与续期
 

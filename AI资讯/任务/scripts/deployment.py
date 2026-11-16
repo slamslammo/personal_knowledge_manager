@@ -189,6 +189,13 @@ def resume(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
             return result, 0
         evidence = sandbox_evidence(work)
         result.update(resume="pending", sandbox_commit=evidence["commit"], week=evidence["week"])
+        # 扫码配置页面可选择不同应用；核对本项目指定身份后才允许任何补写入。
+        import env_check
+        cli = fs.find_cli(fs.cfg_load() or {})
+        if not cli or env_check.check_binding(True, cli)[0] != "PASS":
+            result["reason"] = "当前 CLI 尚未绑定指定应用；扫码选择小龙虾1号并核对 App ID 后再恢复"
+            write_json(work / "resume.json", result)
+            return result, 1
         # 在补同步可能触发刷新之前先观察，不能让恢复路径丢掉自然到期证据。
         import credential_probe
         observed, _ = credential_probe.run_probe(resume=True)

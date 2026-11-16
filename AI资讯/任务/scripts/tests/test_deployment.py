@@ -144,6 +144,8 @@ class SandboxAcceptanceTest(unittest.TestCase):
         before = (self.work / "searches.txt").read_bytes()
         context = json.loads((self.work / "coord.json").read_text())
         with mock.patch.object(d, "_sync_published", return_value=0) as sync, \
+                mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
+                mock.patch.object(env_check, "check_binding", return_value=("PASS", "应用绑定", "")), \
                 mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
                 mock.patch.object(d, "finish", return_value=({"acceptance": "passed", "c9": "pending"}, 0)):
             result, code = d.resume(self.work)
@@ -156,6 +158,8 @@ class SandboxAcceptanceTest(unittest.TestCase):
     def test_resume_failure_preserves_existing_artifacts(self):
         saved = (self.work / "feishu.json").read_bytes()
         with mock.patch.object(d, "_sync_published", return_value=1), \
+                mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
+                mock.patch.object(env_check, "check_binding", return_value=("PASS", "应用绑定", "")), \
                 mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
                 mock.patch.object(d, "finish", side_effect=AssertionError("同步失败不能假装完成")):
             result, code = d.resume(self.work)
@@ -163,6 +167,16 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual((self.work / "feishu.json").read_bytes(), saved)
         self.assertTrue((self.work / "out" / fixture.REPORT_REL).is_file())
+
+    def test_wrong_app_from_scan_cannot_write_documents(self):
+        with mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
+                mock.patch.object(env_check, "check_binding", return_value=("NEEDS_HUMAN", "应用绑定", "")), \
+                mock.patch.object(d, "_sync_published", side_effect=AssertionError("错误应用不能写入")), \
+                mock.patch.object(credential_probe, "run_probe", side_effect=AssertionError("不应继续")):
+            result, code = d.resume(self.work)
+        self.assertEqual(result["resume"], "pending")
+        self.assertEqual(code, 1)
+        self.assertIn("指定应用", result["reason"])
 
     def test_production_does_not_resume_old_sandbox(self):
         with mock.patch.object(d, "run_mode", return_value="production"), \
