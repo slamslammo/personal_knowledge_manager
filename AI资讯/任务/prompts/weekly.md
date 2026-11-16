@@ -41,7 +41,7 @@ python3 $S/feishu_sync.py preflight
 python3 $S/coord.py start --platform <平台名> [--test]
 ```
 
-- `env_check.py ensure` 是**环境就绪门**：环境侧就绪标记（`~/.ai-weekly-env.json`）有效就直接通过（不重复检查）；标记缺失、版本落后才做全量检查，通过后自动写标记。总结行不是 `ENV=ok` 就**停止做周报**，按"失败处理"通知，注明缺项与含义（`missing:`=可安装、`needs_human:`=需授权、`fail:`=环境问题），并把 `AI资讯/任务/prompts/env-bootstrap.md` 指给用户做一次性部署。周报运行本身不安装任何东西；部署完成会写好标记，下次运行直接通过。
+- `env_check.py ensure` 是**环境就绪门**：环境侧就绪标记（`~/.ai-weekly-env.json`）有效就直接通过（不重复检查）；标记缺失、版本落后才做全量检查，通过后自动写标记。总结行不是 `ENV=ok` 就按仓库内 `AI资讯/任务/prompts/env-bootstrap.md` 的阶段一至阶段三做环境部署（安装授权见该文件的授权段）：装好缺项、完成能自动做的配置后重跑 `ensure`；出现 `NEEDS_HUMAN`（git PAT、飞书 user 授权、凭据持久卷）时按"失败处理"通知我完成对应项，本次不继续做周报；下次运行 `ensure` 通过后，**在同一次运行里继续做周报**，不需要人工再介入。
 - 环境升级：环境要求变化时项目会提升 `env_check.py` 的 `ENV_VERSION`，各环境的标记版本随之落后，下次运行自动重做全量检查并刷新标记。
 
 - `preflight` 只检查飞书环境（秒级），输出后照常继续，**不做 git 检查**——git 可写性由 `coord.py start` 的现有写状态覆盖。按输出确认本次运行的飞书形态：
