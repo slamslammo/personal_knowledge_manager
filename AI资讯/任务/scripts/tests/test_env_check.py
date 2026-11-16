@@ -210,5 +210,70 @@ class RunChecksTest(unittest.TestCase):
         self.assertEqual(code, 1)
 
 
+class EnsureMarkerTest(unittest.TestCase):
+    """就绪标记：fast path、全量检查写标记、不通过不写、版本落后触发重验。"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.marker = pathlib.Path(self.tmp.name) / "env.json"
+        patcher = mock.patch.object(env_check, "MARKER", self.marker)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def write_marker(self, version=env_check.ENV_VERSION, status="ok"):
+        import json
+        self.marker.write_text(json.dumps({"env_version": version, "status": status,
+                                           "checked_at": "t"}), encoding="utf-8")
+
+    def ok_checks(self, **kw):
+        results = [item("PASS")] * 8 + env_check.MANUAL_ITEMS
+        return mock.patch.object(env_check, "run_checks",
+                                 return_value=(results, "ENV=ok", 0))
+
+    def test_valid_marker_short_circuits(self):
+        self.write_marker()
+        with mock.patch.object(env_check, "run_checks",
+                              side_effect=AssertionError("标记有效不应重查")):
+            code = env_check.cmd_ensure()
+        self.assertEqual(code, 0)
+
+    def test_missing_marker_runs_checks_and_writes(self):
+        with self.ok_checks():
+            code = env_check.cmd_ensure()
+        self.assertEqual(code, 0)
+        import json
+        d = json.loads(self.marker.read_text(encoding="utf-8"))
+        self.assertEqual(d["env_version"], env_check.ENV_VERSION)
+        self.assertEqual(d["status"], "ok")
+
+    def test_failed_checks_do_not_write_marker(self):
+        results = [item("MISSING", "lark-cli")] + [item("PASS")] * 7 + env_check.MANUAL_ITEMS
+        with mock.patch.object(env_check, "run_checks",
+                               return_value=(results, "ENV=missing:lark-cli", 1)):
+            code = env_check.cmd_ensure()
+        self.assertEqual(code, 1)
+        self.assertFalse(self.marker.exists())
+
+    def test_version_mismatch_triggers_recheck(self):
+        self.write_marker(version=env_check.ENV_VERSION - 1)
+        with self.ok_checks():
+            code = env_check.cmd_ensure()
+        self.assertEqual(code, 0)
+        import json
+        self.assertEqual(json.loads(self.marker.read_text(encoding="utf-8"))["env_version"],
+                         env_check.ENV_VERSION)
+
+    def test_reset_deletes_marker(self):
+        self.write_marker()
+        self.assertEqual(env_check.cmd_reset(), 0)
+        self.assertFalse(self.marker.exists())
+
+    def test_main_dispatch(self):
+        self.assertEqual(env_check.main(["reset"]), 0)
+        self.assertEqual(env_check.main(["bogus"]), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

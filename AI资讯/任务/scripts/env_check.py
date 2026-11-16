@@ -1,21 +1,32 @@
-"""定时任务环境自检：部署指南 4.9 清单（C1–C9）的机器化检查。
+"""定时任务环境自检与就绪标记：部署指南 4.9 清单（C1–C9）的机器化检查。
 
-只检查、不安装、不授权：安装与授权由部署提示词 prompts/env-bootstrap.md 引导
+只检查、不安装、不授权：安装与授权由部署引导 prompts/env-bootstrap.md 承担
 （那里的授权仅限 git、Node.js、lark-cli、PyYAML 四项；周报运行不获得安装授权）。
-输出逐项状态与总结行：
 
-    ENV=ok                全部通过（MANUAL 项除外，逐项状态仍会打印）
-    ENV=missing:<编号>     有缺失，装好对应项后重跑
-    ENV=needs_human:<编号> 需用户完成（git 凭据、user 授权、持久卷）
-    ENV=fail:<编号>        环境网络/配置问题，看该项的 detail
-    多类并存时按 missing → needs_human → fail 顺序合并。
+子命令：
 
-状态含义：PASS 过；MISSING 缺失可安装；NEEDS_HUMAN 需用户操作；FAIL 环境问题；
-MANUAL 单次运行判不了，按部署指南人工执行。
+    check（缺省）  全量检查，输出逐项状态与总结行，不读写标记。
+    ensure         周报第 0 步用：标记有效（版本一致且 status=ok）直接 ENV=ok，
+                   不重复检查；标记缺失/版本落后才做全量检查，通过后写标记。
+    reset          删除标记（环境重建或强制重验时用）。
+
+标记在环境侧 ~/.ai-weekly-env.json（不在 /tmp，不被周报起手清空；随凭据所在的
+持久卷存活）。ENV_VERSION 是环境要求版本：环境要求变化（Node/lark-cli 最低版本、
+appId、检查项增减）时改本文件的常量并 +1，所有环境下次 ensure 会因版本不一致
+重做全量检查并刷新标记——这就是环境升级的触发机制。
+
+总结行与状态：
+    ENV=ok / ENV=missing:<编号> / ENV=needs_human:<编号> / ENV=fail:<编号>
+    PASS 过；MISSING 缺失可安装；NEEDS_HUMAN 需用户操作；FAIL 环境问题；
+    MANUAL 单次运行判不了，按部署指南人工执行。
+退出码 0=就绪，1=有未过项。
 """
 from __future__ import annotations
 
+import datetime as dt
+import json
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -24,6 +35,8 @@ from common import REPO_DIR, SCRIPTS_DIR
 import feishu_sync
 
 APP_ID = "cli_a92390bc96f9dbb4"
+ENV_VERSION = 1
+MARKER = pathlib.Path.home() / ".ai-weekly-env.json"
 AUTH_DENIED_HINTS = ("could not read username", "authentication failed",
                      "terminal prompts disabled", "invalid username or password")
 NODE_MIN = 18
@@ -169,14 +182,71 @@ def run_checks() -> tuple[list[tuple[str, str, str]], str, int]:
     return results, summary, 0 if summary == "ENV=ok" else 1
 
 
-def main() -> int:
-    results, summary, code = run_checks()
-    label = {"PASS": "PASS", "MISSING": "MISSING", "NEEDS_HUMAN": "NEEDS_HUMAN",
-             "FAIL": "FAIL", "MANUAL": "MANUAL"}
+def read_marker() -> dict | None:
+    try:
+        d = json.loads(MARKER.read_text(encoding="utf-8"))
+        return d if isinstance(d, dict) else None
+    except Exception:
+        return None
+
+
+def write_marker(results: list[tuple[str, str, str]]) -> None:
+    versions = {name: detail for _, name, detail in results if name in ("python+PyYAML", "Node.js", "lark-cli", "应用绑定")}
+    MARKER.write_text(json.dumps({
+        "env_version": ENV_VERSION,
+        "status": "ok",
+        "checked_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+        "versions": versions,
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def print_results(results: list[tuple[str, str, str]]) -> None:
     for status, name, detail in results:
-        print(f"[{label[status]}] {name}：{detail}")
+        print(f"[{status}] {name}：{detail}")
+
+
+def cmd_check() -> int:
+    results, summary, code = run_checks()
+    print_results(results)
     print(summary)
     return code
+
+
+def cmd_ensure() -> int:
+    """周报第 0 步的就绪门：标记有效直接过；否则全量检查，通过才写标记。"""
+    m = read_marker()
+    if m and m.get("env_version") == ENV_VERSION and m.get("status") == "ok":
+        print(f"ENV=ok（就绪标记有效：env_version={ENV_VERSION}，"
+              f"checked_at={m.get('checked_at', '?')}）")
+        return 0
+    why = "标记缺失" if not m else f"标记版本落后（标记 {m.get('env_version')}，要求 {ENV_VERSION}）"
+    print(f"ENV_CHECK={why}，做全量检查")
+    results, summary, code = run_checks()
+    print_results(results)
+    if code == 0:
+        write_marker(results)
+        print(f"{summary}（已写就绪标记：{MARKER}）")
+    else:
+        print(summary)
+    return code
+
+
+def cmd_reset() -> int:
+    MARKER.unlink(missing_ok=True)
+    print(f"已删除就绪标记：{MARKER}")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    cmd = (argv or sys.argv[1:])[0] if (argv or sys.argv[1:]) else "check"
+    if cmd == "check":
+        return cmd_check()
+    if cmd == "ensure":
+        return cmd_ensure()
+    if cmd == "reset":
+        return cmd_reset()
+    print(f"未知子命令：{cmd}（可用：check / ensure / reset）", file=sys.stderr)
+    return 2
 
 
 if __name__ == "__main__":
