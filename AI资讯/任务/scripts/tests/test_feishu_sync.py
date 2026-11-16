@@ -56,6 +56,8 @@ class Base(unittest.TestCase):
         patchers = [
             mock.patch.object(feishu_sync, "WORK_DIR", self.work),
             mock.patch.object(feishu_sync.tracelog, "log", lambda *a, **k: {}),
+            # 此测试组默认模拟已经明确进入 production 的项目。
+            mock.patch.object(feishu_sync, "_project_test_mode", return_value=False),
         ]
         for p in patchers:
             p.start()
@@ -484,6 +486,30 @@ class IsTestTest(Base):
     def test_neither_source(self):
         (self.work / "coord.json").write_text(json.dumps({"test": False}), encoding="utf-8")
         self.assertFalse(feishu_sync.is_test())
+
+
+class ProjectIsolationTest(unittest.TestCase):
+    """即使在启动协调前失败，项目验收模式也不能发送真实通知。"""
+
+    def test_project_acceptance_skips_notify_before_coord_exists(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(feishu_sync, "WORK_DIR", pathlib.Path(tmp)), \
+                mock.patch.dict(os.environ, TEST_RUN=""), \
+                mock.patch.object(feishu_sync, "load_config", return_value={"mode": "acceptance"}), \
+                mock.patch.object(feishu_sync, "run_cli", side_effect=AssertionError("不应发请求")), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            code = feishu_sync.cmd_notify(types.SimpleNamespace(file="unused", fallback_file=None))
+            self.assertEqual(code, 0)
+            self.assertIn("NOTIFY=skipped test=1", out.getvalue())
+
+    def test_missing_or_invalid_mode_is_conservative(self):
+        for config in (None, {}, {"mode": "typo"}, {"mode": "acceptance"}):
+            with self.subTest(config=config), mock.patch.object(feishu_sync, "load_config", return_value=config):
+                self.assertTrue(feishu_sync._project_test_mode())
+        with mock.patch.object(feishu_sync, "load_config", side_effect=ValueError):
+            self.assertTrue(feishu_sync._project_test_mode())
+        with mock.patch.object(feishu_sync, "load_config", return_value={"mode": "production"}):
+            self.assertFalse(feishu_sync._project_test_mode())
 
 
 class RunCliEnvelopeTest(Base):

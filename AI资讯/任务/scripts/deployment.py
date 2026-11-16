@@ -1,0 +1,184 @@
+"""项目内的调度运行方式与沙箱验收，不改任务保存的提示词。
+
+plan/start 每次读取项目 deployment.yaml，非法配置拒绝运行；TEST_RUN=1 只可
+向验收降级，不能越过项目配置进入生产。finish 检查实际沙箱提交、质量门槛与
+飞书读回，不把一次成功等同跨任务凭据或通知验收通过，也不自动启用生产。
+"""
+from __future__ import annotations
+
+import argparse
+import html
+import json
+import os
+import pathlib
+import re
+import subprocess
+import sys
+
+from common import REPO_DIR, SCRIPTS_DIR, WORK_DIR, load_config, read_json, write_json
+import feishu_sync as fs
+
+
+def run_mode() -> str:
+    try:
+        config = load_config("deployment")
+    except Exception as exc:
+        raise ValueError("项目运行方式配置无法读取") from exc
+    mode = config.get("mode") if isinstance(config, dict) else None
+    if mode not in ("acceptance", "production"):
+        raise ValueError("config/deployment.yaml 的 mode 必须为 acceptance 或 production")
+    return "acceptance" if os.environ.get("TEST_RUN") == "1" else mode
+
+
+def plan() -> dict:
+    mode = run_mode()
+    result = {"mode": mode, "test": mode == "acceptance", "auto_activate": False}
+    write_json(WORK_DIR / "deployment.json", result)
+    return result
+
+
+def start(platform: str) -> int:
+    # 不信任旧的 /tmp 计划；启动时再次读取项目配置。
+    current = plan()
+    argv = [sys.executable, str(SCRIPTS_DIR / "coord.py"), "start", "--platform", platform]
+    if current["test"]:
+        argv.append("--test")
+    return subprocess.run(argv).returncode
+
+
+def normalized_markdown(text: str) -> str:
+    """仅折叠常见 Markdown 排版差异，保留文字、数字和链接。
+
+    飞书转换超出此范围时按待核对处理，不用宽松关键词匹配宣称正文一致。
+    """
+    text = html.unescape(text).replace("\r\n", "\n")
+    lines = []
+    for line in text.splitlines():
+        if re.fullmatch(r"\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*", line):
+            continue
+        line = re.sub(r"^\s*#{1,6}\s+", "", line)
+        line = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 \2", line)
+        line = line.replace("**", "").replace("`", "")
+        line = re.sub(r"\s*\|\s*", "|", line).strip().strip("|")
+        if line:
+            lines.append(re.sub(r"\s+", " ", line))
+    return "\n".join(lines)
+
+
+def _git(repo: pathlib.Path, *args: str) -> str:
+    p = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=30)
+    if p.returncode:
+        raise ValueError("无法核对沙箱提交")
+    return p.stdout
+
+
+def sandbox_evidence(work: pathlib.Path) -> dict:
+    """从真实提交和真实质量门槛验证沙箱，不信任单独的 passed 标记。"""
+    import check_run
+
+    ctx, week = read_json(work / "coord.json"), read_json(work / "week.json")
+    if ctx.get("test") is not True or ctx.get("week") != week.get("week"):
+        raise ValueError("缺少本次沙箱协调记录")
+    remote = pathlib.Path(str(ctx.get("remote", "")))
+    if not remote.is_absolute() or not remote.is_dir():
+        raise ValueError("验收远端必须为本地沙箱仓库")
+    sha = ctx.get("published_commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", sha):
+        raise ValueError("没有实际发布的沙箱提交")
+    branch = ctx.get("branch", "main")
+    if not re.fullmatch(r"[A-Za-z0-9/_-]+", branch):
+        raise ValueError("沙箱分支无效")
+    repo = pathlib.Path(ctx.get("repo", str(REPO_DIR)))
+    tip = _git(remote, "rev-parse", f"refs/heads/{branch}").strip()
+    if tip != sha:
+        raise ValueError("沙箱远端没有本次发布提交")
+    steps = check_run.check(work, work / "out")
+    if not steps or not all(s.ok for s in steps):
+        raise ValueError("本次完整性或质量门槛未通过")
+    state = json.loads(_git(repo, "show", f"{sha}:{ctx['state_path']}"))
+    produced = state.get("produced") or {}
+    if produced.get("quality") != "full" or produced.get("run_id") != ctx.get("run_id"):
+        raise ValueError("实际发布结果不是本次 full 周报")
+    content = _git(repo, "show", f"{sha}:{ctx['report_path']}")
+    return {"week": week["week"], "commit": sha, "content": content}
+
+
+def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
+    result = {"acceptance": "failed", "auto_activate": False,
+              "c9": "pending", "notification_delivery": "pending"}
+    try:
+        evidence = sandbox_evidence(work)
+        result.update(week=evidence["week"], sandbox_commit=evidence["commit"], quality="full")
+        synced = read_json(work / "feishu.json")
+        if (synced.get("test") is not True or synced.get("week") != evidence["week"]
+                or synced.get("action") not in ("created", "updated") or not synced.get("document_id")):
+            raise ValueError("测试文档未完整同步，不能认定验收通过")
+        cfg = fs.cfg_load() or {}
+        cli = fs.find_cli(cfg)
+        if not cli:
+            raise ValueError("未找到飞书 CLI，无法读回测试文档")
+        # 此 probe 先读，确保自然到期后的第一次 API 调用留有证据。
+        import credential_probe
+        probe, code = credential_probe.run_probe(synced["document_id"])
+        result["c9"] = probe.get("c9", "pending")
+        if code:
+            raise ValueError("实际 user 文档读取失败")
+        fetched = fs.run_cli(cli, "docs", "+fetch", "--doc", synced["document_id"], "--as", "user")
+        if fetched.get("error") or fs._business_failure(fetched):
+            raise ValueError("正文读回失败")
+        document = (fetched.get("data") or {}).get("document") or {}
+        actual = document.get("content")
+        if not isinstance(actual, str) or not actual:
+            raise ValueError("正文读回为空")
+        (work / "feishu-readback.md").write_text(actual, encoding="utf-8")
+        expected = re.sub(r"(?m)^# ", "# [测试] ", evidence["content"], count=1)
+        result.update(document_id=synced["document_id"], url=synced.get("url"),
+                      notification="skipped", api_read="ok")
+        if normalized_markdown(actual) != normalized_markdown(expected):
+            result.update(acceptance="pending", content_match="manual_review",
+                          reason="读回正文与发布稿存在转换差异，请对照 feishu-content.md 与 feishu-readback.md")
+        else:
+            result.update(acceptance="passed", content_match="normalized_equal")
+        if not (work / "notification.txt").is_file():
+            raise ValueError("缺少本次通知预览")
+        # 再实际调用一次通知入口，验证其脚本级隔离，绝不借验收发真实消息。
+        notify_env = dict(os.environ, AI_WEEKLY_TMP=str(work), TEST_RUN="1")
+        notice = subprocess.run([sys.executable, str(SCRIPTS_DIR / "feishu_sync.py"), "notify",
+                                 "--file", str(work / "notification.txt")],
+                                capture_output=True, text=True, env=notify_env, timeout=30)
+        if notice.returncode or "NOTIFY=skipped test=1" not in notice.stdout:
+            raise ValueError("通知隔离未通过")
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        # 不输出子进程 stderr、CLI 错误或配置原文。
+        result["reason"] = "沙箱提交、质量门槛或飞书正文未完成验收；查看本次非敏感运行产物定位"
+        result["acceptance"] = "failed"
+    write_json(work / "acceptance.json", result)
+    return result, 0 if result["acceptance"] == "passed" else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description=__doc__)
+    commands = p.add_subparsers(dest="command", required=True)
+    commands.add_parser("plan")
+    s = commands.add_parser("start")
+    s.add_argument("--platform", required=True)
+    commands.add_parser("finish")
+    args = p.parse_args(argv)
+    try:
+        if args.command == "start":
+            return start(args.platform)
+        if args.command == "finish":
+            result, code = finish()
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            print(f"ACCEPTANCE={result['acceptance']} C9={result['c9']} AUTO_ACTIVATE=no")
+            return code
+        result = plan()
+        print(f"RUN_MODE={result['mode']} COORD_TEST={int(result['test'])} AUTO_ACTIVATE=no")
+        return 0
+    except (OSError, ValueError, TypeError):
+        print("DEPLOYMENT=error：项目运行方式配置无效，未启动任务", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

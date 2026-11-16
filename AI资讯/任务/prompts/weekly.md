@@ -14,61 +14,67 @@
 
 ## 运行模式
 
-由本次指令里的参数决定，可以组合：
+运行模式由项目 `config/deployment.yaml` 维护，定时任务入口保持不变。`deployment.py plan` 输出本次模式，`deployment.py start` 据此调用协调脚本；不要跳过这个入口，也不要在运行中改配置。
 
-| 参数 | 模式 | 与正式运行的区别 |
-| --- | --- | --- |
-| 无 | 正式 | 报告周为上一周；提交推送到 `main`；发送通知 |
-| `TARGET_START=YYYY-MM-DD`（某个周一）或 `TARGET_WEEK=YYYY-Www` | 回溯 | 报告周由参数指定；标题后加"（回溯版）"；已存档的榜单数据直接复用 |
-| `TEST_RUN=1` | 测试 | 开发会话或新平台验收用：`coord.py start` 加 `--test`，远端换成本地模拟仓库，锁、提交、推送完整走一遍但不碰 GitHub；不发通知，通知内容在最后原样输出 |
+| 项目模式或本次参数 | 行为 |
+| --- | --- |
+| `mode: acceptance`（项目配置，当前默认） | 完整生成周报；协调提交和推送走本地沙箱；飞书文档带 `[测试]`；真实通知跳过；最后出具本次验收结果，不自动切正式 |
+| `mode: production`（项目配置） | 正式运行，报告周为上一周；提交推送到 `main`；按交付状态同步飞书并通知 |
+| `TARGET_START=YYYY-MM-DD`（周一）或 `TARGET_WEEK=YYYY-Www` | 指定回溯周，标题加“（回溯版）”，已有榜单数据可复用；验收/正式隔离仍由部署模式决定 |
+| 显式 `TEST_RUN=1` | 开发会话的测试覆盖，优先使用沙箱；定时任务首次验收不需要临时加这个参数 |
 
-> 测试模式的隔离由两层保证，不依赖操作者记得导出环境变量：`coord.py start --test` 会把
-> `test: true` 写进 `/tmp/ai-weekly/coord.json`，`feishu_sync.py` 的 sync/notify 同时认
-> `TEST_RUN=1` 环境变量和 coord.json 的 test 标记（任一即按测试处理）；测试模式的文档
-> 查重与创建都带 `[测试]` 标题前缀，不会命中正式文档。手工单跑 `feishu_sync.py` 时仍以
-> coord.json 为准；要覆盖，显式 `export TEST_RUN=1`（作用于整个会话，不要只写在单条命令前）。
+测试判定有三处来源：项目部署模式、显式 `TEST_RUN=1`、`coord.json` 的 `test: true`，任一为真即按测试隔离。`deployment.py start` 在验收模式自动给 `coord.py` 传 `--test`；交付脚本还直接读取项目模式，配置缺失或非法时也按测试保护，即便协调尚未启动也不发真实通知。必须经部署启动入口建立本地沙箱，不能只让交付脚本处于测试而将协调提交到正式远端。测试文档保留为验收证据，不删除。
 
 ## 第 0 步：准备与协调
 
-在仓库根目录执行，后文的 `$S` 指脚本目录：
+在仓库根目录执行，后文 `$S` 指脚本目录。先观察上次保存的凭据，再做核心依赖检查：
 
 ```
 rm -rf /tmp/ai-weekly && mkdir -p /tmp/ai-weekly && S=AI资讯/任务/scripts
+python3 $S/credential_probe.py --resume
 python3 $S/env_check.py ensure
+python3 $S/deployment.py plan
+```
+
+- `credential_probe.py --resume` 没有历史观察记录时只报 pending；有记录时先实际读取保存的测试文档，以观察自然到期后的首次 API 调用及刷新。它失败不得阻断 Git 周报，不回显凭据，也不能用本地标记证明跨任务状态可用。
+- `ensure` 只对 Python/PyYAML、git 核心生产依赖设门槛。非 `ENV=ok` 时按 `env-bootstrap.md` 补齐核心缺项后重跑；核心凭据或平台操作需用户完成时报告具体阻塞项。
+- 核心标记是 `core_ready`，不是“部署验收通过”。标记有效时仍检查本地核心依赖；Git 实际写权限由协调脚本的真实推送验证。`DELIVERY=unchecked/degraded`、`ACCEPTANCE=pending` 不阻断正式 Git 周报。
+- `RUN_MODE=acceptance` 时，按 `env-bootstrap.md` 尝试补齐交付层，可用 `env_check.py check --require-delivery` 严格检查本次交付依赖。需要人工授权时报告确认入口与缺项；不要无限等待。可继续完成能执行的 Git 沙箱部分，但飞书未验收不得宣称完整通过。
+- `RUN_MODE=production` 时，飞书依赖或授权失效只记录交付降级，不因这些缺项停止 Git 周报。环境要求升级也遵循这个边界。
+- `plan` 报模式配置错误时停止并报告，不能自行猜成正式模式或修改配置。
+
+核心就绪、模式确定后继续：
+
+```
 python3 $S/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > /tmp/ai-weekly/week.json
 eval "$(python3 $S/weeks.py [同上参数] --format env)"
 python3 $S/feishu_sync.py preflight
-python3 $S/coord.py start --platform <平台名> [--test]
+python3 $S/deployment.py start --platform <平台名>
 ```
 
-- `env_check.py ensure` 是**环境就绪门**：环境侧就绪标记（`~/.ai-weekly-env.json`）有效就直接通过（不重复检查）；标记缺失、版本落后才做全量检查，通过后自动写标记。总结行不是 `ENV=ok` 就按仓库内 `AI资讯/任务/prompts/env-bootstrap.md` 的阶段一至阶段三做环境部署（安装授权见该文件的授权段）：装好缺项、完成能自动做的配置后重跑 `ensure`；出现 `NEEDS_HUMAN`（git PAT、飞书 user 授权、凭据持久卷）时按"失败处理"通知我完成对应项，本次不继续做周报；下次运行 `ensure` 通过后，**在同一次运行里继续做周报**，不需要人工再介入。
-- 环境升级：环境要求变化时项目会提升 `env_check.py` 的 `ENV_VERSION`，各环境的标记版本随之落后，下次运行自动重做全量检查并刷新标记。
+- `preflight` 的普通授权状态只决定交付降级，不能替代服务端鉴权或文档实际读写验收；部署联网检查另用 `auth status --verify` 和真实文档读取。
+- 回溯参数原样传给 `weeks.py`；无回溯参数时，脚本按北京时间推算上一周，不自行另算日期。
+- `--platform` 为所在平台的小写英文名称，只用于运行记录。
+- `OUT_REPORT`、`OUT_DATA` 是本次周报和数据的临时产出路径。
 
-- `preflight` 只检查飞书环境（秒级），输出后照常继续，**不做 git 检查**——git 可写性由 `coord.py start` 的现有写状态覆盖。按输出确认本次运行的飞书形态：
+| preflight 输出 | 交付行为 |
+| --- | --- |
+| `PREFLIGHT=ok` | 正常尝试文档同步和通知；本次实际结果仍以调用返回为准 |
+| `PREFLIGHT=degraded:no_doc` | 跳过文档同步；正式通知带 GitHub 链接并注明 |
+| `PREFLIGHT=degraded:no_notify` | 文档照常同步；通知落平台最后输出 |
+| `PREFLIGHT=degraded:off` / `disabled` | 跳过飞书交付；Git 周报继续 |
 
-| 输出 | 含义 | 影响 |
-| --- | --- | --- |
-| `PREFLIGHT=ok` | user 与 bot 都可用 | 第 5.5 步与第 6 步正常执行 |
-| `PREFLIGHT=degraded:no_doc` | user 不可用 | 跳过文档同步；通知带 GitHub 链接并注明 |
-| `PREFLIGHT=degraded:no_notify` | bot 不可用 | 文档照常同步；通知退化为最后原样输出 |
-| `PREFLIGHT=degraded:off` / `disabled` | 飞书整体不可用 | 两者都跳过，周报照常发 git |
+验收模式下无论 preflight 结果如何都不发真实通知。正式交付降级不是周报生成失败；修复后单独补交付，不重跑整周。
 
-降级不是失败：周报照常生成、校验、发布，通知里如实注明降级原因；修复后用第 5.5 步的补交付命令单独补同步，不重跑整周。
-
-- 先清空 `/tmp/ai-weekly/`：`week.json` 的生成时间就是本次运行的开始时间，完整性检查据此判断各步是否在本次运行中做过。
-- 回溯模式把参数原样传给 `weeks.py`；正式模式不带参数，脚本按北京时间推算上一周。不要自己另算日期。
-- `--platform` 填所在平台的名称，用小写英文（如所在产品的名字），只用于记录是谁跑的。
-- 环境变量里的 `OUT_REPORT`、`OUT_DATA` 是本次产出的周报和数据文件路径。
-
-按 `coord.py` 输出的第一行分流：
+按协调输出的 `ACTION=` 分流：
 
 | 输出 | 做什么 |
 | --- | --- |
-| `ACTION=run` | 本次运行持有运行锁：做第 1–6 步 |
-| `ACTION=verify` | 本次运行持有校验锁：转到本手册末尾的"校验流程" |
-| `ACTION=wait` | 有其他运行持锁：反复运行 `python3 $S/coord.py wait`，直到输出不再是 `wait`，再按新的输出处理 |
-| `ACTION=exit` | 本周已完成，或别人在校验，或已标为需人工：直接结束。不读后面的内容，不发通知 |
-| `ACTION=error` | 记下输出的错误码，按"失败处理"通知我 |
+| `ACTION=run` | 本次持有运行锁，执行后续生成、发布与交付 |
+| `ACTION=verify` | 转到末尾“校验流程” |
+| `ACTION=wait` | 运行 `python3 $S/coord.py wait` 等待，直到不再是 wait，再按新输出处理 |
+| `ACTION=exit` | 本周已完成、其他运行在校验或需人工；结束，不发通知 |
+| `ACTION=error` | 记录错误码，按失败处理报告 |
 
 ## 第 1 步：采集数据
 
@@ -247,8 +253,20 @@ python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallba
 - **运行结果**：固定三行，取自 `/tmp/ai-weekly/checks.txt` 和第 5 步的输出：
   - `校验：通过（N 个警告）` 或列出未通过的错误码；
   - `完整性：全部完成，联网搜索 N 次` 或列出未完成的步骤；
-  - `提交：已推送到 main（提交号前 7 位）`，或写明未提交的原因。
-- **结尾**：周报全文链接。第 5.5 步成功时用 `feishu.json` 里的飞书文档链接；同步失败或跳过时用 GitHub 链接并注明「飞书同步失败：<错误码>」或「飞书未同步：<预检模式>」，GitHub 链接路径中的中文要做百分号编码（`python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"`，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面）。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败时由 `feishu_sync.py notify` 自动改用精简版重发一次。
+  - 正式模式写 `提交：已推送到 main（提交号前 7 位）`，或写明未提交原因；验收模式写 `提交：已推送到本地沙箱（提交号前 7 位），未写入 GitHub`，不能声称推送 main。
+- **结尾**：周报全文链接。第 5.5 步成功时用 `feishu.json` 里的飞书文档链接；同步失败或跳过时用 GitHub 链接并注明「飞书同步失败：<错误码>」或「飞书未同步：<预检模式>」，GitHub 链接路径中的中文要做百分号编码（`python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"`，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面）。验收模式飞书未同步时，不生成指向生产 main 的本轮假链接，改给出本地沙箱提交号与临时产出路径，并在最后输出正文。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败按同步脚本实际错误类型与幂等策略处理，不盲目换键重发。
+
+## 第 7 步：验收结果（仅验收模式）
+
+通知文件已生成且测试通知已跳过后运行：
+
+```
+python3 $S/deployment.py finish
+```
+
+该命令核对本次真实检查、沙箱发布、测试文档及实际 user 读取结果。`ACCEPTANCE=passed/pending/failed` 只描述本次沙箱验收，不等于完整上线批准；完整性失败、飞书未交付或读回差异不得写成通过。保留输出中的报告位置、沙箱提交号、测试文档链接，便于用户核对正文。
+
+跨任务凭据状态另以 `credential_probe.py` 观察：同一实例重跑不等于独立任务；自然过期后的 API 调用和新状态被后续任务继承要分别有证据。bot 通知到达在验收模式仍未验证，不能因 `NOTIFY=skipped` 标为通过。未完成项写入最后输出，**不自行切 `production`、不自行启用长期调度**。
 
 ## 校验流程（`ACTION=verify`）
 

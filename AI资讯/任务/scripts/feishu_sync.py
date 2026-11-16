@@ -207,8 +207,17 @@ def report_h1(content: str) -> str:
     return ""
 
 
+def _project_test_mode() -> bool:
+    """初始化之前也适用项目隔离；配置缺失或非法时保守跳过真实通知。"""
+    try:
+        cfg = load_config("deployment")
+        return not isinstance(cfg, dict) or cfg.get("mode") != "production"
+    except Exception:
+        return True
+
+
 def is_test() -> bool:
-    """测试模式判定：TEST_RUN=1，或本次运行 coord.json 的 test 标记（评审 P1-1）。
+    """测试模式判定：项目验收模式、TEST_RUN=1、coord.json 任一为真。
 
     coord --test 只写运行状态文件，不导出环境变量；手册里 TEST_RUN=1 写在单条
     命令前也不会影响后续独立命令。交付脚本必须两个来源都认，否则未导出时会
@@ -218,9 +227,11 @@ def is_test() -> bool:
     if os.environ.get("TEST_RUN") == "1":
         return True
     try:
-        return bool(read_json(WORK_DIR / "coord.json").get("test"))
+        if read_json(WORK_DIR / "coord.json").get("test"):
+            return True
     except Exception:
-        return False
+        pass
+    return _project_test_mode()
 
 
 def title_matches(title: str, week: str, test: bool) -> bool:

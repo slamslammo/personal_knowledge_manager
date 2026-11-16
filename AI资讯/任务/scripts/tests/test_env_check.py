@@ -50,6 +50,17 @@ class GitCheckTest(unittest.TestCase):
             status, name, _ = env_check.check_git()
         self.assertEqual(status, "PASS")
 
+    def test_push_dry_run_has_explicit_destination(self):
+        with mock.patch.object(env_check, "sh", side_effect=[(0, "git version"), (0, "")]) as run:
+            env_check.check_git()
+        self.assertEqual(run.call_args_list[1].args[0][-3:], ["--dry-run", "origin", "HEAD:main"])
+
+    def test_git_error_does_not_expose_url_credentials(self):
+        with mock.patch.object(env_check, "sh", side_effect=[
+                (0, "git version"), (128, "remote: https://secret@github.com denied")]):
+            result = env_check.check_git()
+        self.assertNotIn("secret@", str(result))
+
     def test_no_credential_needs_human(self):
         with mock.patch.object(env_check, "sh", side_effect=[
                 (0, "git version 2.45"),
@@ -103,6 +114,18 @@ class BindingIdentityCheckTest(unittest.TestCase):
             status, name, _ = env_check.check_binding(True, "/bin/lark-cli")
         self.assertEqual(status, "PASS")
 
+    def test_inactive_app_occurrence_does_not_match(self):
+        with mock.patch.object(env_check.feishu_sync, "run_cli", return_value={
+                "appId": "cli_other", "profiles": [{"appId": env_check.APP_ID}]}):
+            self.assertEqual(env_check.check_binding(True, "/bin/lark-cli")[0], "NEEDS_HUMAN")
+
+    def test_actual_root_shape(self):
+        with mock.patch.object(env_check.feishu_sync, "run_cli", return_value={
+                "appId": env_check.APP_ID, "appSecret": "do-not-log"}):
+            result = env_check.check_binding(True, "/bin/lark-cli")
+        self.assertEqual(result[0], "PASS")
+        self.assertNotIn("do-not-log", str(result))
+
     def test_binding_wrong_app(self):
         with mock.patch.object(env_check.feishu_sync, "run_cli",
                                return_value={"ok": True, "data": {"app_id": "cli_other"}}):
@@ -140,23 +163,35 @@ class BindingIdentityCheckTest(unittest.TestCase):
 
 
 class OutboundCheckTest(unittest.TestCase):
-    def preflight(self, out="PREFLIGHT=ok"):
-        return mock.patch.object(env_check.subprocess, "run",
-                                 return_value=proc(stdout=out))
+    def verified(self):
+        return {"verified": True, "identities": {
+            name: {"available": True, "verified": True} for name in ("bot", "user")}}
+
+    def call(self, response):
+        with mock.patch.object(env_check.feishu_sync, "find_cli", return_value="/bin/lark-cli"), \
+             mock.patch.object(env_check.feishu_sync, "run_cli", return_value=response) as run:
+            result = env_check.check_outbound(True)
+            run.assert_called_once_with("/bin/lark-cli", "auth", "status", "--verify")
+            return result
 
     def test_cli_missing(self):
-        status, name, _ = env_check.check_outbound(False)
-        self.assertEqual(status, "MISSING")
+        self.assertEqual(env_check.check_outbound(False)[0], "MISSING")
 
-    def test_preflight_ok(self):
-        with self.preflight():
-            status, name, _ = env_check.check_outbound(True)
-        self.assertEqual(status, "PASS")
+    def test_verified_server_identities_pass(self):
+        self.assertEqual(self.call(self.verified())[0], "PASS")
 
-    def test_preflight_degraded(self):
-        with self.preflight(out="PREFLIGHT=degraded:off CODE=FEISHU_UNREACHABLE"):
-            status, name, _ = env_check.check_outbound(True)
-        self.assertEqual(status, "FAIL")
+    def test_local_status_is_not_network_evidence(self):
+        self.assertEqual(self.call({"identities": {"user": {"available": True}}})[0], "FAIL")
+
+    def test_failed_identity_is_not_verified(self):
+        response = self.verified()
+        response["identities"]["user"]["verified"] = False
+        self.assertEqual(self.call(response)[0], "FAIL")
+
+    def test_error_detail_is_not_exposed(self):
+        result = self.call({"error": {"detail": "secret-token-in-url"}})
+        self.assertEqual(result[0], "FAIL")
+        self.assertNotIn("secret-token-in-url", str(result))
 
 
 class RunChecksTest(unittest.TestCase):
@@ -195,19 +230,39 @@ class RunChecksTest(unittest.TestCase):
     def test_missing_first_in_summary(self):
         results, summary, code = self.run_with(
             cli=item("MISSING", "lark-cli"), git=item("NEEDS_HUMAN", "git推送凭据"))
-        self.assertEqual(summary, "ENV=missing:lark-cli")
+        self.assertEqual(summary, "ENV=needs_human:git推送凭据")
         self.assertEqual(code, 1)
 
     def test_needs_human(self):
         results, summary, code = self.run_with(git=item("NEEDS_HUMAN", "git推送凭据"),
                                                user=item("NEEDS_HUMAN", "user身份"))
-        self.assertEqual(summary, "ENV=needs_human:git推送凭据,user身份")
+        self.assertEqual(summary, "ENV=needs_human:git推送凭据")
         self.assertEqual(code, 1)
 
     def test_fail(self):
         results, summary, code = self.run_with(outbound=item("FAIL", "飞书出站", "timeout"))
-        self.assertEqual(summary, "ENV=fail:飞书出站")
-        self.assertEqual(code, 1)
+        self.assertEqual(summary, "ENV=ok")
+        self.assertEqual(code, 0)
+        self.assertIn("DELIVERY=degraded", env_check.delivery_summary(results))
+
+    def test_only_user_missing_does_not_stop_git(self):
+        results, summary, code = self.run_with(user=item("NEEDS_HUMAN", "user身份"))
+        self.assertEqual((summary, code), ("ENV=ok", 0))
+        self.assertEqual(env_check.delivery_summary(results), "DELIVERY=degraded:user身份")
+
+    def test_missing_cli_does_not_stop_git(self):
+        results, summary, code = self.run_with(cli=item("MISSING", "lark-cli"))
+        self.assertEqual((summary, code), ("ENV=ok", 0))
+
+    def test_core_python_failure_is_blocking(self):
+        _, summary, code = self.run_with(python=item("FAIL", "python"))
+        self.assertEqual((summary, code), ("ENV=fail:python", 1))
+
+    def test_require_delivery_blocks_acceptance_only(self):
+        rows, summary, code = self.run_with(user=item("NEEDS_HUMAN", "user身份"))
+        with mock.patch.object(env_check, "run_checks", return_value=(rows, summary, code)):
+            self.assertEqual(env_check.cmd_check(), 0)
+            self.assertEqual(env_check.cmd_check(require_delivery=True), 1)
 
 
 class EnsureMarkerTest(unittest.TestCase):
@@ -222,7 +277,7 @@ class EnsureMarkerTest(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def write_marker(self, version=env_check.ENV_VERSION, status="ok"):
+    def write_marker(self, version=env_check.ENV_VERSION, status="core_ready"):
         import json
         self.marker.write_text(json.dumps({"env_version": version, "status": status,
                                            "checked_at": "t"}), encoding="utf-8")
@@ -246,12 +301,13 @@ class EnsureMarkerTest(unittest.TestCase):
         import json
         d = json.loads(self.marker.read_text(encoding="utf-8"))
         self.assertEqual(d["env_version"], env_check.ENV_VERSION)
-        self.assertEqual(d["status"], "ok")
+        self.assertEqual(d["status"], "core_ready")
+        self.assertEqual(d["acceptance"], "pending")
 
     def test_failed_checks_do_not_write_marker(self):
-        results = [item("MISSING", "lark-cli")] + [item("PASS")] * 7 + env_check.MANUAL_ITEMS
+        results = [item("MISSING", "PyYAML")] + [item("PASS")] * 7 + env_check.MANUAL_ITEMS
         with mock.patch.object(env_check, "run_checks",
-                               return_value=(results, "ENV=missing:lark-cli", 1)):
+                               return_value=(results, "ENV=missing:PyYAML", 1)):
             code = env_check.cmd_ensure()
         self.assertEqual(code, 1)
         self.assertFalse(self.marker.exists())
@@ -264,6 +320,35 @@ class EnsureMarkerTest(unittest.TestCase):
         import json
         self.assertEqual(json.loads(self.marker.read_text(encoding="utf-8"))["env_version"],
                          env_check.ENV_VERSION)
+
+    def test_valid_marker_cannot_hide_deleted_python_dependency(self):
+        self.write_marker()
+        with mock.patch.object(env_check, "check_python", return_value=item("MISSING", "PyYAML")), \
+             mock.patch.object(env_check, "check_git_binary", return_value=item("PASS", "git")):
+            self.assertEqual(env_check.cmd_ensure(), 1)
+
+    def test_valid_marker_cannot_hide_deleted_git(self):
+        self.write_marker()
+        with mock.patch.object(env_check, "check_git_binary", return_value=item("MISSING", "git")):
+            self.assertEqual(env_check.cmd_ensure(), 1)
+
+    def test_old_ok_marker_is_not_production_acceptance(self):
+        self.write_marker(status="ok")
+        with self.ok_checks() as checks:
+            self.assertEqual(env_check.cmd_ensure(), 0)
+            checks.assert_called_once()
+        import json
+        marker = json.loads(self.marker.read_text())
+        self.assertEqual(marker["status"], "core_ready")
+        self.assertEqual(marker["acceptance"], "pending")
+
+    def test_manual_items_do_not_become_passed_in_marker(self):
+        with self.ok_checks():
+            env_check.cmd_ensure()
+        import json
+        marker = json.loads(self.marker.read_text())
+        self.assertEqual(marker["acceptance"], "pending")
+        self.assertNotIn("身份边界", marker["versions"])
 
     def test_reset_deletes_marker(self):
         self.write_marker()
