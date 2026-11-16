@@ -40,6 +40,13 @@ def plan() -> dict:
 def start(platform: str) -> int:
     # 不信任旧的 /tmp 计划；启动时再次读取项目配置。
     current = plan()
+    if current["test"]:
+        # 首次集成验收先完成依赖、现有应用绑定及服务端授权，再做昂贵的生成。
+        # 这与 production 的飞书故障降级不同；C9 需要后续多次观察，暂不设门。
+        import env_check
+        if env_check.cmd_check(require_delivery=True):
+            print("ACTION=blocked：首次验收环境或授权未就绪；先完成部署，不开始采集、搜索和写稿")
+            return 1
     argv = [sys.executable, str(SCRIPTS_DIR / "coord.py"), "start", "--platform", platform]
     if current["test"]:
         argv.append("--test")

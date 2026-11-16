@@ -12,6 +12,7 @@ SCRIPTS = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 import deployment as d
 import credential_probe
+import env_check
 import fixture
 from test_coord import Lab
 
@@ -40,11 +41,28 @@ class ModeTest(unittest.TestCase):
     def test_start_ignores_stale_production_plan(self):
         with tempfile.TemporaryDirectory() as td, mock.patch.object(d, "WORK_DIR", pathlib.Path(td)), \
                 mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
+                mock.patch.object(env_check, "cmd_check", return_value=0), \
                 mock.patch.object(d.subprocess, "run", return_value=mock.Mock(returncode=0)) as run:
             (pathlib.Path(td) / "deployment.json").write_text('{"mode":"production"}')
             self.assertEqual(d.start("codex"), 0)
             self.assertIn("--test", run.call_args.args[0])
             self.assertFalse(json.loads((pathlib.Path(td) / "deployment.json").read_text())["auto_activate"])
+
+    def test_incomplete_first_acceptance_never_starts_coordination(self):
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(d, "WORK_DIR", pathlib.Path(td)), \
+                mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
+                mock.patch.object(env_check, "cmd_check", return_value=1) as check, \
+                mock.patch.object(d.subprocess, "run", side_effect=AssertionError("未就绪不能启动")):
+            self.assertEqual(d.start("codex"), 1)
+            check.assert_called_once_with(require_delivery=True)
+
+    def test_production_keeps_feishu_degradation_policy(self):
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(d, "WORK_DIR", pathlib.Path(td)), \
+                mock.patch.object(d, "load_config", return_value={"mode": "production"}), \
+                mock.patch.object(env_check, "cmd_check", side_effect=AssertionError("生产不设交付硬门槛")), \
+                mock.patch.object(d.subprocess, "run", return_value=mock.Mock(returncode=0)) as run:
+            self.assertEqual(d.start("codex"), 0)
+            self.assertNotIn("--test", run.call_args.args[0])
 
     def test_no_prior_context_needs_no_config_or_api(self):
         with tempfile.TemporaryDirectory() as tmp, \
@@ -63,9 +81,10 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.agent = self.lab.agent("codex")
         # 用新的项目入口真实启动，确认不必靠提示词传 --test。
         self.origin_before = self.lab.log("%H")
-        p = subprocess.run([sys.executable, str(SCRIPTS / "deployment.py"), "start", "--platform", "codex"],
-                           env=self.agent.env(), capture_output=True, text=True)
-        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        # 身份验证由 env_check 专测覆盖；这里使用已通过门槛的边界，协调与提交仍跑真 Git。
+        with mock.patch.dict(os.environ, self.agent.env()), mock.patch.object(d, "WORK_DIR", self.agent.work), \
+                mock.patch.object(env_check, "cmd_check", return_value=0):
+            self.assertEqual(d.start("codex"), 0)
         self.work = self.agent.work
         self.ctx = json.loads((self.work / "coord.json").read_text())
         self.assertTrue(self.ctx["test"])

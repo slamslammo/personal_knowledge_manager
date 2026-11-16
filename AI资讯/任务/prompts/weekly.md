@@ -61,7 +61,7 @@ python3 $S/deployment.py plan
 - `credential_probe.py --resume` 没有历史观察记录时只报 pending；有记录时先实际读取保存的测试文档，以观察自然到期后的首次 API 调用及刷新。它失败不得阻断 Git 周报，不回显凭据，也不能用本地标记证明跨任务状态可用。
 - `ensure` 只对 Python/PyYAML、git 核心生产依赖设门槛。非 `ENV=ok` 时按 `env-bootstrap.md` 补齐核心缺项后重跑；核心凭据或平台操作需用户完成时报告具体阻塞项。
 - 核心标记是 `core_ready`，不是“部署验收通过”。标记有效时仍检查本地核心依赖；Git 实际写权限由协调脚本的真实推送验证。`DELIVERY=unchecked/degraded`、`ACCEPTANCE=pending` 不阻断正式 Git 周报。
-- `RUN_MODE=acceptance` 时，按 `env-bootstrap.md` 尝试补齐交付层，可用 `env_check.py check --require-delivery` 严格检查本次交付依赖。需要人工授权时报告确认入口与缺项；不要无限等待。可继续完成能执行的 Git 沙箱部分，但飞书未验收不得宣称完整通过。
+- `RUN_MODE=acceptance` 时，先按 `env-bootstrap.md` 补齐部署与授权，并运行 `env_check.py check --require-delivery`。**严格机器检查成功后才开始新一轮完整生成**：核心 Git 写入初筛、Node/CLI、现有应用及 user/bot 服务端身份都需通过。需要人工配置或浏览器确认时先报告并停止，不先进行搜索、采集或写完整周报。C9 依赖多次真实运行，保持单独 pending，不是首次生成的前置条件；已有沙箱可按上面的恢复分支只补交付。
 - `RUN_MODE=production` 时，飞书依赖或授权失效只记录交付降级，不因这些缺项停止 Git 周报。环境要求升级也遵循这个边界。
 - `plan` 报模式配置错误时停止并报告，不能自行猜成正式模式或修改配置。
 
@@ -96,6 +96,7 @@ python3 $S/deployment.py start --platform <平台名>
 | `ACTION=verify` | 转到末尾“校验流程” |
 | `ACTION=wait` | 运行 `python3 $S/coord.py wait` 等待，直到不再是 wait，再按新输出处理 |
 | `ACTION=exit` | 本周已完成、其他运行在校验或需人工；结束，不发通知 |
+| `ACTION=blocked` | 首次验收的部署或授权未通过；停在环境部署，报告缺项或确认入口，不进入采集、搜索和写稿 |
 | `ACTION=error` | 记录错误码，按失败处理报告 |
 
 ## 第 1 步：采集数据
