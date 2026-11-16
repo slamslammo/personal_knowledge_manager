@@ -105,10 +105,11 @@ def sandbox_evidence(work: pathlib.Path) -> dict:
 
 def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
     result = {"acceptance": "failed", "auto_activate": False,
-              "c9": "pending", "notification_delivery": "pending"}
+              "sandbox": "pending", "github_production": "not_run_acceptance_mode",
+              "document_delivery": "pending", "c9": "pending", "notification_delivery": "pending"}
     try:
         evidence = sandbox_evidence(work)
-        result.update(week=evidence["week"], sandbox_commit=evidence["commit"], quality="full")
+        result.update(week=evidence["week"], sandbox_commit=evidence["commit"], quality="full", sandbox="passed")
         synced = read_json(work / "feishu.json")
         if (synced.get("test") is not True or synced.get("week") != evidence["week"]
                 or synced.get("action") not in ("created", "updated") or not synced.get("document_id")):
@@ -133,12 +134,12 @@ def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
         (work / "feishu-readback.md").write_text(actual, encoding="utf-8")
         expected = re.sub(r"(?m)^# ", "# [测试] ", evidence["content"], count=1)
         result.update(document_id=synced["document_id"], url=synced.get("url"),
-                      notification="skipped", api_read="ok")
+                      notification="skipped", api_read="ok", document_delivery="read_back")
         if normalized_markdown(actual) != normalized_markdown(expected):
             result.update(acceptance="pending", content_match="manual_review",
                           reason="读回正文与发布稿存在转换差异，请对照 feishu-content.md 与 feishu-readback.md")
         else:
-            result.update(acceptance="passed", content_match="normalized_equal")
+            result.update(acceptance="passed", content_match="normalized_equal", document_delivery="passed")
         if not (work / "notification.txt").is_file():
             raise ValueError("缺少本次通知预览")
         # 再实际调用一次通知入口，验证其脚本级隔离，绝不借验收发真实消息。
@@ -156,6 +157,46 @@ def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
     return result, 0 if result["acceptance"] == "passed" else 1
 
 
+def _sync_published(work: pathlib.Path, context: dict) -> int:
+    """只补交付已发布的沙箱稿；不重跑采集、写稿或协调发布。"""
+    env = dict(os.environ, AI_WEEKLY_TMP=str(work), TEST_RUN="1")
+    p = subprocess.run([sys.executable, str(SCRIPTS_DIR / "feishu_sync.py"), "sync",
+                        "--from-published", "--sha", context["published_commit"],
+                        "--week", context["week"], "--report", context["report_path"]],
+                       capture_output=True, text=True, env=env, timeout=300)
+    for line in p.stdout.splitlines():
+        if line.startswith("SYNC="):
+            print(line)
+    return p.returncode
+
+
+def resume(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
+    """在清理临时目录之前恢复已有验收，不丢弃本轮产物和创建结果记录。"""
+    result = {"resume": "not_available", "auto_activate": False}
+    context_file = work / "coord.json"
+    if not context_file.is_file():
+        return result, 0
+    try:
+        context = read_json(context_file)
+        if run_mode() != "acceptance" or context.get("test") is not True or not context.get("published_commit"):
+            return result, 0
+        evidence = sandbox_evidence(work)
+        result.update(resume="pending", sandbox_commit=evidence["commit"], week=evidence["week"])
+        # 在补同步可能触发刷新之前先观察，不能让恢复路径丢掉自然到期证据。
+        import credential_probe
+        observed, _ = credential_probe.run_probe(resume=True)
+        result["c9"] = observed.get("c9", "pending")
+        if _sync_published(work, context):
+            result["reason"] = "飞书补交付未成功；按部署报告补齐现有应用配置与 user 授权后再恢复"
+        else:
+            accepted, code = finish(work)
+            result.update(resume="completed" if code == 0 else "pending", acceptance=accepted)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        result.update(resume="pending", reason="已有沙箱验收恢复未完成；保留临时产物，核对配置和本地提交后再恢复")
+    write_json(work / "resume.json", result)
+    return result, 0 if result["resume"] == "completed" else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     commands = p.add_subparsers(dest="command", required=True)
@@ -163,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     s = commands.add_parser("start")
     s.add_argument("--platform", required=True)
     commands.add_parser("finish")
+    commands.add_parser("resume")
     args = p.parse_args(argv)
     try:
         if args.command == "start":
@@ -171,6 +213,11 @@ def main(argv: list[str] | None = None) -> int:
             result, code = finish()
             print(json.dumps(result, ensure_ascii=False, indent=2))
             print(f"ACCEPTANCE={result['acceptance']} C9={result['c9']} AUTO_ACTIVATE=no")
+            return code
+        if args.command == "resume":
+            result, code = resume()
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            print(f"RESUME={result['resume']} AUTO_ACTIVATE=no")
             return code
         result = plan()
         print(f"RUN_MODE={result['mode']} COORD_TEST={int(result['test'])} AUTO_ACTIVATE=no")

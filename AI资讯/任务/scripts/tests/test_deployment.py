@@ -46,6 +46,14 @@ class ModeTest(unittest.TestCase):
             self.assertIn("--test", run.call_args.args[0])
             self.assertFalse(json.loads((pathlib.Path(td) / "deployment.json").read_text())["auto_activate"])
 
+    def test_no_prior_context_needs_no_config_or_api(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(d, "load_config", side_effect=AssertionError("首次尚未安装依赖")), \
+                mock.patch.object(d, "_sync_published", side_effect=AssertionError("不应调API")):
+            result, code = d.resume(pathlib.Path(tmp))
+        self.assertEqual(result["resume"], "not_available")
+        self.assertEqual(code, 0)
+
 
 class SandboxAcceptanceTest(unittest.TestCase):
     def setUp(self):
@@ -112,6 +120,37 @@ class SandboxAcceptanceTest(unittest.TestCase):
         (self.work / "notification.txt").unlink()
         result, code = self.finish()
         self.assertEqual(result["acceptance"], "failed")
+
+    def test_resume_only_delivers_existing_commit_and_preserves_materials(self):
+        before = (self.work / "searches.txt").read_bytes()
+        context = json.loads((self.work / "coord.json").read_text())
+        with mock.patch.object(d, "_sync_published", return_value=0) as sync, \
+                mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
+                mock.patch.object(d, "finish", return_value=({"acceptance": "passed", "c9": "pending"}, 0)):
+            result, code = d.resume(self.work)
+        self.assertEqual(code, 0, result)
+        self.assertEqual(result["resume"], "completed")
+        self.assertEqual(sync.call_args.args[1]["published_commit"], context["published_commit"])
+        self.assertEqual((self.work / "searches.txt").read_bytes(), before)
+        self.assertEqual(self.lab.log("%H"), self.origin_before)
+
+    def test_resume_failure_preserves_existing_artifacts(self):
+        saved = (self.work / "feishu.json").read_bytes()
+        with mock.patch.object(d, "_sync_published", return_value=1), \
+                mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
+                mock.patch.object(d, "finish", side_effect=AssertionError("同步失败不能假装完成")):
+            result, code = d.resume(self.work)
+        self.assertEqual(result["resume"], "pending")
+        self.assertEqual(code, 1)
+        self.assertEqual((self.work / "feishu.json").read_bytes(), saved)
+        self.assertTrue((self.work / "out" / fixture.REPORT_REL).is_file())
+
+    def test_production_does_not_resume_old_sandbox(self):
+        with mock.patch.object(d, "run_mode", return_value="production"), \
+                mock.patch.object(d, "_sync_published", side_effect=AssertionError("不应调用")):
+            result, code = d.resume(self.work)
+        self.assertEqual(result["resume"], "not_available")
+        self.assertEqual(code, 0)
 
 
 if __name__ == "__main__":
