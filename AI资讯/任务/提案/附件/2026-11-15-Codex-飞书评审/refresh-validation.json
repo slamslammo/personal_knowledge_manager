@@ -1,0 +1,30 @@
+{
+  "checked_at_utc": "2026-11-15T05:30:26.427926+00:00",
+  "before_read": {
+    "exit": 0,
+    "identity": "user",
+    "token_status": "needs_refresh",
+    "available": true,
+    "expires_at": "2026-11-15T03:53:30Z",
+    "refresh_expires_at": "2026-11-22T01:53:30Z",
+    "dpop_key_status": "available",
+    "error": null
+  },
+  "known_doc_read": {
+    "exit": 0,
+    "ok": true,
+    "revision": 8,
+    "error": null
+  },
+  "after_read": {
+    "exit": 0,
+    "identity": "user",
+    "token_status": "valid",
+    "available": true,
+    "expires_at": "2026-11-15T07:30:23Z",
+    "refresh_expires_at": "2026-11-22T05:30:23Z",
+    "dpop_key_status": "available",
+    "error": null
+  },
+  "access_expiry_advanced": true
+}

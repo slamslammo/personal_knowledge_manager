@@ -1,0 +1,146 @@
+# [测试] AI 周报 · 2026-W45（11/2–11/8）（回溯版）
+
+---
+
+## week: 2026-W45  
+range: 2026-11-02/2026-11-08  
+topics: [智能体, AI 编程, 开源模型, 图像与视频生成, AI 安全]  
+orgs: [OpenAI, Anthropic, Google DeepMind, Moonshot AI, DeepSeek, Vercel]  
+repos: [morluto/rea, storytold/craft-anything, pingdotgg/t3code, deepseek-ai/dsh-superagent-prototype, vercel-labs/agent-desktop]
+
+## ① 本周概览
+
+- **开放权重**：Moonshot AI 放出 Kimi K3.1 Pro 完整权重（2.8T MoE、1M 上下文），Ricursive 以 3200 万美元成本开源 65B 编码模型。
+- **Agent 基建**：GitHub 周榜 Top 5 全是智能体工具链——逆向、复刻、控制面、协作原型、桌面操作各占一席。
+- **信任危机**：Claude Code 邮箱泄露与 Postman 自装插件同周引爆 HN，编码智能体的出站行为与配置变更权成为焦点。
+- **视频生成降价**：Google 发布 Gemini Omni 1.2 Flash（15 秒、降价 30%），OpenAI Images 2.6 提速 50% 并支持 GIF。
+
+## 洞察
+
+### 洞察 1：智能体的竞争焦点，正从单次会话能力转向持续协作的基础设施
+
+- **依据**：③ t3code 把各家编码智能体收进统一控制面、dsh-superagent 探索常驻协作的任务授权模型、agent-desktop 补齐桌面操作；⑤ 话题 3 中 OpenAI 收购 Pierre 并自研 Git 后端 Pando，同一周向代码协作底层下沉。
+- **必读**：[DeepSeek Super-agent 架构解读](https://deepseekv4pro.com/guides/deepseek-superagent-architecture)：看懂 Ticket/Mandate 授权与 Router/Worker 分层如何解决长期任务的上下文归属；[OpenAI 收购 Pierre 公告](https://openai.com/index/openai-to-acquire-pierre/)：看智能体并行生产时代 Git 工作流的改造方向。
+
+### 洞察 2：「读懂软件」正在被自动化——逆向、复刻、权重读写三线并进
+
+- **依据**：③ REA 把逆向工程封装成 MCP 工具、craft-anything 用净室模式复刻任意软件；② MIT CSAIL 的权重空间编程让模型直接读写另一模型的权重；④ IEEE 文章指出 AI 正在强制行业偿还 40 年技术债。
+- **必读**：[Weight-Space Programming 原文](https://rikiyat.github.io/blog/weight-space-programming/)：了解编辑 0.016% 权重修复推理死循环的完整方法；[独立审计](https://aitecharchive.com/articles/weight-space-programming-qwen-weight-edit-audit)：对照看「编辑可复现、阅读声明未通过」的冷静结论。
+
+### 洞察 3：智能体时代的信任开始要求「可验证」
+
+- **依据**：④ Claude Code 把用户邮箱写进 User-Agent、Postman 给竞品智能体装插件并自批准钩子；② OpenAI 的漏洞流水线用 120 万美元 API 费用产出 948 个 Linux 提权补丁；Anthropic 的 FlashProve 用零知识证明回答「回答来自哪个模型」。
+- **必读**：[Progress on provable inference](https://www.anthropic.com/research/provable-inference)：了解推理可验证性的首个高性能开源原型；[Your AI Agent Now Takes Orders From Your Vendors](https://www.emilingemarkarlsson.com/blog/ai-agent-configuration-change-control-vendor-plugins)：学会把智能体配置当作需要变更控制的生产代码。
+
+## ② 新发布与技术 Top 5
+
+### Moonshot AI 放出 Kimi K3.1 Pro 完整模型权重
+
+- **是什么**：K3.1 Pro 的完整开放权重上架 Hugging Face，2.8 万亿总参数 MoE、单 token 激活 1040 亿、100 万 token 上下文、原生多模态，MXFP4 量化后 1.56TB。
+- **新在哪里**：从「只能调 API」变成可自部署、可微调；架构延续 K3，能力提升来自数百个领域的大规模联合强化学习，老用户迁移成本低。
+- **对谁有影响**：有算力的企业与研究者可本地化部署（仅加载权重约需 12 张 141GB 加速卡）；同日昇腾宣布 0Day 推理适配。
+- **原文**：[moonshotai/Kimi-K3.1-Pro](https://huggingface.co/moonshotai/Kimi-K3.1-Pro)；[HN 讨论 641 分](https://news.ycombinator.com/item?id=50366999)；规格与价格见 [Yotta Labs 分析](https://www.yottalabs.ai/post/kimi-k3-1-pro-specs-price-open-weights-benchmarks)
+
+### Google 发布 Gemini Omni 1.2 Flash 视频模型
+
+- **是什么**：Gemini Omni 视频模型升级，原生生成与编辑延长至 15 秒，正式在 Gemini API 与 Google Cloud 商用开放（GA）。
+- **新在哪里**：支持多轮对话式编辑（换背景、换产品、改比例不必重生成）；720p 价格降 30% 至每秒 0.07 美元；可先生成低清草稿再升到 1080p/4K。
+- **对谁有影响**：广告与电商视频工作流（Flow、Vids、Ads 全线接入）；输出带 SynthID 水印。
+- **原文**：[Introducing Gemini Omni 1.2 Flash](https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemini-omni-1-2-flash/)；[HN 讨论 369 分](https://news.ycombinator.com/item?id=50392118)
+
+### OpenAI 发布 Images 2.6（GPT-Image-2.6 Flare / Sunburst）
+
+- **是什么**：ChatGPT、Codex 与 API 的图像生成升级，新增 GIF 生成、引用图复用、图片批注与 API 的 SVG 输出。
+- **新在哪里**：生成提速 50%，Flare 低质量档最快 6 秒出图；Sunburst 主打多轮编辑的一致性。官方称周生成量已达 40 亿张。
+- **对谁有影响**：营销素材与社媒内容生产者；API 开发者注意开发者社区指出低/中档计费倍率上升的争议。
+- **原文**：[Introducing Images 2.6](https://openai.com/index/introducing-images-2-6/)；[HN 讨论 384 分](https://news.ycombinator.com/item?id=50372945)；计费争议见 [OpenAI 开发者社区](https://community.openai.com/t/images-upgraded-introducing-chatgpt-images-2-6)
+
+### Ricursive 开源 Ripple-65B Preview 编码模型
+
+- **是什么**：芯片设计公司 Ricursive 开源 65B dense 模型，从零预训练 12T token、支持 1M 上下文，Apache 2.0 许可，含 BF16 与 NVFP4 三个检查点。
+- **新在哪里**：自报 Terminal-Bench 2.1 得 80.52，称超越参数大 8–15 倍的美国开放权重对手；全研发成本自称仅 3200 万美元、RL 仅 140 万次 rollout。
+- **对谁有影响**：关注训练效率与本地部署的团队（NVFP4 版可在单台 DGX Spark 运行）；所有分数均为自报，尚无独立复测。
+- **原文**：[Ripple-65B Preview 官方页](https://www.ricursive.com/ripple)；[HN 讨论 343 分](https://news.ycombinator.com/item?id=50369925)；成本与架构细节见 [Times of AI](https://timesof.ai/2026/11/ricursive-ripple-65b-preview-apache-open-weights-coding)
+
+### MIT CSAIL 提出「权重空间编程」：GPT-6 Astra 直接读写模型权重
+
+- **是什么**：MIT CSAIL 团队让 GPT-6 Astra 以文本形式读取神经网络权重并直接编辑，不训练、不求导；修复 Qwen3.5-0.8B 的推理死循环后 MATH-500 从 7.9% 升到 48.1%（仅改 0.016% 权重）。
+- **新在哪里**：把「改模型」从优化器搜索变成自然语言指定的编程行为；公开了全部日志与编辑后检查点，第三方已完成字节级复现。
+- **对谁有影响**：可解释性与模型修复研究；但独立审计确认「编辑」可复现的同时，「读权重推断训练内容」的更强声明未通过验证，宜按定向调试工具理解。
+- **原文**：[Weight-Space Programming 官方博客](https://rikiyat.github.io/blog/weight-space-programming/)；[HN 讨论 2967 分](https://news.ycombinator.com/item?id=50341174)；审计见 [AI Tech Archive](https://aitecharchive.com/articles/weight-space-programming-qwen-weight-edit-audit)、复现见 [Simon Willison](https://simonwillison.net/2026/Nov/3/qwen-can-interpret-model-weights/)
+
+## ③ GitHub AI 项目热度 Top 5
+
+> 口径：Trendshift 2026-W45 周榜中的 AI 项目，按报告周 7 天每日新增 star 之和排序。每日数据按 UTC 日期累计，比北京时间的报告周晚 8 小时。
+
+### 1. [morluto/rea](https://github.com/morluto/rea)
+
+总 star 443,809（本周 +25,051）｜把逆向工程封装成 MCP 与 CLI、让编码智能体「逆向一切」的工具链。
+
+- **本周为什么火**：10 月初的病毒式演示（重建 DX-Ball 音效函数、4 分钟复刻 Obsidian 快速切换器排序）持续发酵，本周仍居周榜首位。
+- **传播分析**：YouTube 教程密集（[Eric Tech](https://www.youtube.com/watch?v=FnB9tHKBJXQ)、[kintu](https://www.youtube.com/watch?v=Ae4wsTTLNRI)）；[GitTested 对照评测](http://mp.weixin.qq.com/s?__biz=Mzg2NTIxMzcyOQ==&mid=2247493391&idx=1&sn=b97d67273abf606913adf3f60cd7aaa6&chksm=cfacea10bddea0ef7c0fbf27fa8cb523a2c5fa5f2bc8bc1d45c2d14a9bd7cda5dd80240a4a8d#rd)指出小目标上不用 REA 反而更省 token；[10 个实战案例汇编](http://mp.weixin.qq.com/s?__biz=MzkzNTY0NzkyNA==&mid=2247484162&idx=1&sn=4b229b91516c9fbb9d76169b8d85ee11&chksm=c3a1f244ed97ac2b9336529ee60b625670cfbe467ca783bf265de75d5c5b26426a41668957dd#rd)讨论证据与成本。
+- **我们的判断**：适合安全研究、竞品功能分析与教学；迭代极快但版权边界需自律（官方免责声明明确责任在使用者），逆向大目标的成本不低。
+
+### 2. [storytold/craft-anything](https://github.com/storytold/craft-anything)
+
+总 star 22,566（本周 +21,575）｜纯 Rust 开源引擎，研究任意网站/应用/游戏后驱动 Claude Code 复刻出可编译的新项目。
+
+- **本周为什么火**：10 月 31 日上线即爆，「丢进链接就复刻一个软件」的演示一周内冲上趋势榜。
+- **传播分析**：[dev.to 实测](https://dev.to/rainytechlab/i-pointed-craft-anything-at-hacker-news-claude-code-rebuilt-it-91-without-me-writing-a-line-4ce8)复刻 HN 达 91% 相似度、耗 1760 万 token（约 7.5 美元），视频见 [YouTube](https://youtu.be/t-GX0THhZfo)；[The Coding Kitty](https://thecodingkitty.com/videos/craft-anything) 拆解净室/深度双模式；多篇中文报道关注版权与 token 成本。
+- **我们的判断**：定位学习与原型工具；官方自称 early alpha，Deep 模式有串项目的 bug；复刻他人界面与内容前必须确认授权。
+
+### 3. [pingdotgg/t3code](https://github.com/pingdotgg/t3code)
+
+总 star 52,497（本周 +14,593）｜「智能体控制面」：把本机已登录的 Claude Code、Codex、Cursor 等收进手机、Web、桌面三端统一调度。
+
+- **本周为什么火**：Theo（T3 Stack 作者）团队出品，「手机遥控家里的编码智能体」的卖点持续出圈，发版密集（Release 已近 800 个）。
+- **传播分析**：[YouTube 深度评测](https://tubrief.io/en/videos/6x7hh6Qzm9U)肯定性能与 PR 工作流；[InfoQ 整理的播客](https://news.qq.com/rain/a/20261110A09X8Y00)讨论多模型用户的适配度；[mattcullerton 的纠错文](https://www.mattcullerton.com/tokdocs/the-vps-in-this-video-costs-about-10-month-not-the-5-mo-on-screen-and-the-xfce-d)指出部分自托管教程的成本误导。
+- **我们的判断**：同时订阅多家模型的重度用户收益最大；pre-1.0、迭代快，官方明确不接受大部分贡献；它不替代模型订阅，只替代控制层。
+
+### 4. [deepseek-ai/dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype)
+
+总 star 21,200（本周 +14,022）｜DeepSeek Harness 团队开源的常驻协作智能体研究原型：监听 GitHub/飞书事件，按授权规则自动开工并回交 PR。
+
+- **本周为什么火**：10 月 31 日随《Super-agent 设计探索》技术文章发布，「AI 指挥 AI 干活」的 Router/Worker 双层架构引发大量解读。
+- **传播分析**：[官方架构长文（微信）](http://mp.weixin.qq.com/s?__biz=Mzk0MDY3MDMyOA==&mid=2247486839&idx=1&sn=5fc70265c1d2e42bb4e6673c6dc35987&chksm=c306e95a45acd07d2cb1b9958a0b1f494a952a78210d39971333cc6131362cd0e06d5d2f40f4#rd)详解 Ticket/Mandate/Thread 模型；[崔添翼知乎解读（腾讯新闻转载）](https://news.qq.com/rain/a/20261112A0BNSL00)谈会话拆分的取舍；[findarepo](https://findarepo.com/repo/deepseek-ai/dsh-superagent-prototype/) 提示其提交活动低、无 open issue。
+- **我们的判断**：架构参考价值大于直接部署价值——它是研究原型而非产品，且依赖 DeepSeek Harness 运行时；授权分层（off/observe/auto）的设计值得同类系统借鉴。
+
+### 5. [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop)
+
+总 star 19,656（本周 +12,848）｜Vercel Labs 开源的桌面 computer-use CLI：读操作系统无障碍树操作应用，不截图、不抢鼠标。
+
+- **本周为什么火**：10 月 31 日发布（作者 Chris Tate 称「agent-browser 搬到整台电脑」），11 月 5 日的 1.2.0 版新增 MCP server，持续霸榜。
+- **传播分析**：[Flavio Copes 深度文](https://flaviocopes.com/agent-desktop/)逐版本拆解；[yumiok](https://www.yumiok.com/archives/6991.html)报道其三智能体并行演示与 78–96% token 节省；[agmazon](https://agmazon.com/blog/articles/technology/202611/vercel-agent-desktop-computer-use-guide-en.html)追问节省数据的验证方法；[头条实测](https://www.toutiao.com/article/7705273371064140322)记录 Finder 操作体验。
+- **我们的判断**：桌面自动化的新基元，macOS 体验最完整；能力边界清楚（画布/游戏类不可见）；辅助功能权限一旦放出，安全护栏要自己搭（作者本人用法是关在虚拟机里）。
+
+## ④ 传播文章 Top 5
+
+| # | 文章 | 摘要 | 传播原因 | 分数 | 评论 | 讨论 |
+|-|-|-|-|-|-|-|
+| 1 | [Claude Code sends your email address to websites](https://github.com/anthropics/claude-code/issues/107757) | Claude Code 把账户邮箱写进 curl 的 User-Agent 发给网站；官方称 2.1.317 起内置拦截（原文未能读取，据搜索整理） | 隐私敏感 + 同类问题 7 月已报未修，引发对「供应商响应靠热搜」的讨论 | 1616 | 535 | [HN](https://news.ycombinator.com/item?id=50385272) |
+| 2 | [Postman silently auto-installs AI plugins and attempts to share all API data](https://github.com/postmanlabs/postman-app-support/issues/14370) | Postman 桌面版自动给 Claude Code/Codex 装插件并试图自我信任启动钩子；11 月 5 日宣布回滚（原文未能读取） | 「桌面软件改动我的智能体」触碰信任边界，多团队连夜换 Bruno/Insomnia | 1533 | 500 | [HN](https://news.ycombinator.com/item?id=50354960) |
+| 3 | [AI is forcing us to pay off 40 years of technical debt](https://spectrum.ieee.org/ai-in-cybersecurity-php2shell-vulnerability) | IEEE Spectrum 以 PHP2Shell 等老漏洞为例：AI 找漏洞的速度迫使行业偿还 40 年技术债，防御方必须用同样的速度打补丁 | 与 OpenAI 同周公布的 948 个内核提权补丁互为印证，安全圈共鸣强 | 1309 | 753 | [HN](https://news.ycombinator.com/item?id=50364336) |
+| 4 | [Goodbye Claude, hello Pi](https://caleb.software/posts/claude-to-pi.html) | 开发者记录从 Claude Code 迁到 Pi（OpenRouter 系）的完整过程与取舍 | 邮箱泄露事件直接引发的迁移潮代表样本，评论区成替代方案清单 | 831 | 493 | [HN](https://news.ycombinator.com/item?id=50410107) |
+| 5 | [Tell HN: Gemini trains on chat history, even for subscribers (personal accounts)](https://news.ycombinator.com/item?id=50363461) | 用户发现个人账号即使订阅也默认用聊天记录训练 Gemini，引发对默认开启条款的质疑 | 与 Claude Code、Postman 事件同周叠加，「默认收集」议题集中爆发 | 737 | 201 | [HN](https://news.ycombinator.com/item?id=50363461) |
+
+## ⑤ 热点话题 Top 5
+
+| 话题 | 起因 | 发展与争议 | 代表链接 |
+|-|-|-|-|
+| 编码智能体的信任边界 | Claude Code 邮箱进 User-Agent、Postman 自装插件并自批准钩子，同周爆发 | Anthropic 推 cc-plugin-privacy（2.1.317）但仍有机型漏网；Postman 回滚；「智能体配置即生产代码」成共识 | [issue #107757](https://github.com/anthropics/claude-code/issues/107757)、[issue #14370](https://github.com/postmanlabs/postman-app-support/issues/14370)、[配置变更控制](https://www.emilingemarkarlsson.com/blog/ai-agent-configuration-change-control-vendor-plugins) |
+| 「AI 逆向一切」冲击闭源护城河 | REA 与 craft-anything 连续霸榜，权重空间编程同周刷屏 | 演示效果惊人但对照评测显示简单目标未必需要；版权与授权边界成为讨论焦点 | [REA](https://github.com/morluto/rea)、[craft-anything](https://github.com/storytold/craft-anything)、[权重空间编程](https://rikiyat.github.io/blog/weight-space-programming/) |
+| 智能体基础设施军备赛 | t3code、dsh-superagent、agent-desktop 同周占据周榜三席 | OpenAI 收购 Pierre 并公开自研 Git 后端 Pando；协作层、控制面、操作层同时被重造 | [OpenAI 收购 Pierre](https://openai.com/index/openai-to-acquire-pierre/)、[t3code](https://github.com/pingdotgg/t3code)、[dsh-superagent](https://github.com/deepseek-ai/dsh-superagent-prototype) |
+| 开放权重模型集中交付 | Kimi K3.1 Pro 权重上架、Ripple-65B 开源，Llama-modchip 演示 64GB 内存跑 284B | 自部署门槛成新焦点：K3.1 Pro 仅加载权重约需 12 张加速卡；量化与端侧方案受追捧 | [Kimi-K3.1-Pro](https://huggingface.co/moonshotai/Kimi-K3.1-Pro)、[Ripple-65B](https://www.ricursive.com/ripple)、[llama-modchip HN](https://news.ycombinator.com/item?id=50411961) |
+| AI 资本与估值拉锯 | Anthropic IPO 估值预期低至 1.1 万亿美元、OpenAI 以 1.25 万亿美元估值再融资 110 亿 | Apollo 经济学家称多数企业 AI「零财务回报」；选举后纳指一度跌 5%，多空对垒加剧 | [Bloomberg](https://www.bloomberg.com/news/articles/2026-11-06/anthropic-ipo-valuation-expectations-pressured-after-ai-rout)、[247 Wall St.](https://247wallst.com/investing/2026/11/07/openai-just-raised-11-billion-at-a-1-25-trillion-valuation-below-the-1-4-trillion-it-first-sought/)、[TechCrunch](https://techcrunch.com/2026/10/25/ai-delivers-zero-financial-payoff-to-most-companies-according-to-apollo-economist/) |
+
+## 数据说明
+
+- Trendshift 周榜：回溯，复用已存档的榜单数据文件；周榜和每日数据按 UTC 划分，与北京时间的报告周相差 8 小时。
+- 每日 star 数据：Top 5 均覆盖 7 天。
+- OSS Insight：请求 17 个，失败 0 个。
+- HN：469 条（不低于 100 分的 304 条）。
+- Hugging Face 论文：失败，已跳过（SRC_TIMEOUT：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>）。
+- 原文读取：28/40 篇成功，官方来源 0 篇，不可读 12 篇。
+- 联网搜索：22 次（下限 20，上限 40）。
+- 降级与缺失：Hugging Face 论文源失败已跳过；回溯复用已存档榜单数据；12 篇原文未能读取，涉及条目已分别注明。
+- 可疑内容：无

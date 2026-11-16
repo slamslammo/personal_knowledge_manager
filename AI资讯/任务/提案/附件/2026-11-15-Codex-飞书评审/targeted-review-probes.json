@@ -1,0 +1,41 @@
+{
+  "stderr_error": {
+    "error": {
+      "type": "cli",
+      "subtype": "bad_output",
+      "detail": "{\"ok\": false, \"error\": {\"type\": \"network\", \"subtype\": \"timeout\"}}",
+      "_removed_proxies": []
+    },
+    "ok": false
+  },
+  "partial_update": {
+    "action": "updated",
+    "document_id": "doc"
+  },
+  "unrelated_title_matches": true,
+  "unread_next_page": {
+    "action": "created",
+    "document_id": "duplicate"
+  },
+  "search_calls_before_create": 1,
+  "repaired_but_cached_mode": {
+    "exit": 0,
+    "output": "SYNC=skipped mode=no_doc",
+    "preflight_calls": 0
+  },
+  "coord_test_without_export": {
+    "exit": 0,
+    "output": "NOTIFY=sent",
+    "mock_send_calls": 1
+  },
+  "mixed_proxy": {
+    "env": {
+      "HTTPS_PROXY": "http://proxy.corp:8080",
+      "LARK_CLI_NO_PROXY": "1"
+    },
+    "removed": [
+      "HTTP_PROXY"
+    ]
+  },
+  "evidence_source_matches_feishu_after_transport_normalization": true
+}
