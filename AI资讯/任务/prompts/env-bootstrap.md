@@ -10,7 +10,7 @@
 - 验收状态默认为 `~/.local/state/ai-weekly/`（遵循 `XDG_STATE_HOME`），可由 `AI_WEEKLY_STATE_DIR` 指定。它只存非敏感观察结果，不是凭据备份。仓库提示词、脚本和配置均只读，不自行改部署模式。
 - 网络仅用于系统/npm 官方源及其必要发行下载主机、GitHub、飞书官方鉴权与文档接口。必要重定向域名由平台环境配置放行，不绕过网络策略。
 - 保留已有代理、CA 与 TLS 校验，不统一清理代理。
-- lark-cli 初始化允许 `config init/show`、`auth login/status`；文档验收使用 `docs +create/+fetch/+update`，日常交付使用项目脚本。禁止删除类命令；测试文档保留作证据。
+- lark-cli 初始化允许 `config init/show`、`auth login/status/qrcode`；`auth qrcode` 仅将本次飞书确认 URL 编码为本地二维码，不创建应用、不访问新服务。文档验收使用 `docs +create/+fetch/+update`，日常交付使用项目脚本。禁止删除类命令；测试文档保留作证据。
 - 凭据、token、密钥不写进仓库、不输出到报告；只报告配置项名称、必要的文件路径和脱敏状态。不要完整回显 `config show` 或授权状态中的敏感字段。
 
 ## 一、自检与分流
@@ -44,8 +44,11 @@ Git 写入身份优先复用平台已有授权；缺失时由用户在平台秘�
 
 ## 三、飞书初始化与实际读写
 
-1. 已有可用配置时直接复用。配置缺失才运行 `lark-cli config init --new`，绑定应用「小龙虾1号」`cli_a92390bc96f9dbb4`。保持固定 profile，核对当前激活 appId，不完整回显配置；App Secret 如需提供，只通过平台安全设置或工具安全输入。
-2. user 缺失时运行 `lark-cli auth login`；把工具输出的用户确认 URL 交给本人。设备码只用于本次授权，不写进仓库或部署报告。定时任务不能完成浏览器确认时，报告后结束当前授权阶段，用户完成后再触发任务。
+1. **复用已有应用，不创建新应用。** 当前激活配置已是「小龙虾1号」`cli_a92390bc96f9dbb4` 时直接复用。配置缺失时，用 `lark-cli config init --app-id cli_a92390bc96f9dbb4 --app-secret-stdin --brand feishu --name pkm-feishu-test`，由平台安全设置提供现有应用的 App Secret，经标准输入注入，不把值拼进命令、聊天或报告。保持固定 profile，核对当前激活 appId，不完整回显配置。**禁止使用 `config init --new`，该选项会创建新应用，不是绑定现有应用。** 缺少现有应用凭据时报告所需的安全配置；不要运行无参数的交互初始化去选择创建应用，也不要用创建新应用绕过缺项。若 Agent 工作区限制 init，报告绑定来源与身份策略需求，不加 `--force-init` 绕过。
+2. **配置完成后才启动 user 授权。** 安装 CLI 本身不会向用户弹出二维码。user 缺失时运行 `lark-cli auth login --no-wait --json --scope "docx:document:create docx:document:readonly docx:document:write_only search:docs:read offline_access"`，立即取得工具返回的用户确认 URL、设备码和有效期；不要把普通阻塞 `auth login` 挂在后台等待，以免确认入口始终未送到用户。以上权限对应本项目文档创建、读取、编辑、搜索与续期，已在既有授权中核对；如目标应用缺少其中权限，报告缺项，不退回 CLI 默认的全部业务域授权。
+   - 将确认 URL 和有效期作为当前回复的可见内容发给本人。需要二维码时，使用 `lark-cli auth qrcode "<本次确认URL>" --output /tmp/ai-weekly/feishu-auth.png`，并通过平台图片/文件输出能力展示生成文件；不能只打印云端路径。平台无法展示图片时直接给可点击 URL，不承诺弹出本机浏览器或系统授权窗。
+   - 设备码仅保存到当前任务允许的临时目录，文件权限 600；不回显设备码，不写入 Git 或部署报告。本人在有效期内确认后，在**同一执行环境**运行 `lark-cli auth login --device-code <本次设备码>`，完成换取并保存凭据，再实际读取验证。
+   - 不把本人点击链接当作已完成 CLI 登录；还必须完成设备码轮询及凭据落盘。若任务已结束、设备码过期，或下一次任务无法恢复原环境及临时状态，则重新生成授权入口，并明确报告跨任务状态问题，不能声称已免扫码。已有有效 user 身份直接复用，不重复要求授权。
 3. 运行 `python3 AI资讯/任务/scripts/env_check.py check --require-delivery`，确认服务端鉴权验证通过。该命令严格检查交付层；失败只表示交付验收未过，正式 Git 周报仍按降级规则执行。
 4. 文档始终显式使用 **user**：由本次沙箱周报同步创建/更新 `[测试]` 文档，再实际读回核对标题和正文。保留测试文档。bot 仅负责通知；此前 bot 建文档的 99991672 是旧权限观察，**不是必须持续失败的验收条件**，不再为验证失败而创建 bot 文档。
 5. 执行 `python3 AI资讯/任务/scripts/credential_probe.py --doc <测试文档ID>`（本次同步成功后可省略 `--doc` 从结果文件读取）。它执行真实 user 文档读取，记录必要的过期时间和实例观察，不输出正文或凭据。重复本地 `auth status` 不能证明自动续期。
