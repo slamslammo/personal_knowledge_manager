@@ -82,8 +82,11 @@ class SandboxAcceptanceTest(unittest.TestCase):
         # 用新的项目入口真实启动，确认不必靠提示词传 --test。
         self.origin_before = self.lab.log("%H")
         # 身份验证由 env_check 专测覆盖；这里使用已通过门槛的边界，协调与提交仍跑真 Git。
+        # 模式必须钉在 acceptance：项目切 production 后（2026-11-18），若读真实配置，
+        # start 会走 origin 而不是沙箱，用例会真的朝生产远端推送（CI 上直接失败）。
         with mock.patch.dict(os.environ, self.agent.env()), mock.patch.object(d, "WORK_DIR", self.agent.work), \
-                mock.patch.object(env_check, "cmd_check", return_value=0):
+                mock.patch.object(env_check, "cmd_check", return_value=0), \
+                mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}):
             self.assertEqual(d.start("codex"), 0)
         self.work = self.agent.work
         self.ctx = json.loads((self.work / "coord.json").read_text())
@@ -146,7 +149,8 @@ class SandboxAcceptanceTest(unittest.TestCase):
     def test_resume_only_delivers_existing_commit_and_preserves_materials(self):
         before = (self.work / "searches.txt").read_bytes()
         context = json.loads((self.work / "coord.json").read_text())
-        with mock.patch.object(d, "_sync_published", return_value=0) as sync, \
+        with mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
+                mock.patch.object(d, "_sync_published", return_value=0) as sync, \
                 mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
                 mock.patch.object(env_check, "check_binding", return_value=("PASS", "应用绑定", "")), \
                 mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
@@ -160,7 +164,8 @@ class SandboxAcceptanceTest(unittest.TestCase):
 
     def test_resume_failure_preserves_existing_artifacts(self):
         saved = (self.work / "feishu.json").read_bytes()
-        with mock.patch.object(d, "_sync_published", return_value=1), \
+        with mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
+                mock.patch.object(d, "_sync_published", return_value=1), \
                 mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
                 mock.patch.object(env_check, "check_binding", return_value=("PASS", "应用绑定", "")), \
                 mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
@@ -171,10 +176,9 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.assertEqual((self.work / "feishu.json").read_bytes(), saved)
         self.assertTrue((self.work / "out" / fixture.REPORT_REL).is_file())
 
-
-
     def test_wrong_app_from_scan_cannot_write_documents(self):
-        with mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
+        with mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
+                mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
                 mock.patch.object(env_check, "check_binding", return_value=("NEEDS_HUMAN", "应用绑定", "")), \
                 mock.patch.object(d, "_sync_published", side_effect=AssertionError("错误应用不能写入")), \
                 mock.patch.object(credential_probe, "run_probe", side_effect=AssertionError("不应继续")):
@@ -189,10 +193,6 @@ class SandboxAcceptanceTest(unittest.TestCase):
             result, code = d.resume(self.work)
         self.assertEqual(result["resume"], "not_available")
         self.assertEqual(code, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ReadbackMatchTest(unittest.TestCase):
@@ -285,3 +285,7 @@ range: 2026-11-02/2026-11-08
         """发布稿里可能有 `URLError: <urlopen error …>`，不能当成标签剥掉。"""
         text = self.MARKDOWN.replace("联网搜索：22 次", "联网搜索：<urlopen error Tunnel failed> 22 次")
         self.assertIn("<urlopen error Tunnel failed>", "\n".join(d.document_parts(text)[1]))
+
+
+if __name__ == "__main__":
+    unittest.main()
