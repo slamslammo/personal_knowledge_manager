@@ -4,6 +4,7 @@ import datetime as dt
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -787,3 +788,62 @@ class SetupSandboxTest(unittest.TestCase):
             # 已发布的沙箱 tip 不能被下一次 setup 重置回本地 HEAD。
             self.assertEqual(coord.setup_sandbox(repo, work, "main"), remote)
             self.assertEqual(self._git_dir(remote, "rev-parse", "refs/heads/main"), published)
+
+
+class LastSubjectRenameTest(unittest.TestCase):
+    """目录迁移是 R100 纯重命名，不能触发「人工改稿」保护（2026-11-18 验收回归）。"""
+
+    OLD = "AI资讯/周报/2026/2026-W45.md"
+    NEW = "资讯/AI/数据/周报/2026/2026-W45.md"
+
+    @staticmethod
+    def _git(repo, *args):
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True,
+                              check=True, env=env).stdout.strip()
+
+    def _repo(self, root):
+        repo = root / "repo"
+        repo.mkdir()
+        self._git(repo, "init", "-q")
+        p = repo / self.OLD
+        p.parent.mkdir(parents=True)
+        p.write_text("# W45\n", encoding="utf-8")
+        self._git(repo, "add", "-A")
+        self._git(repo, "commit", "-q", "-m", "AI 周报 2026-W45")
+        return repo
+
+    def _rename(self, repo):
+        q = repo / self.NEW
+        q.parent.mkdir(parents=True)
+        shutil.move(str(repo / self.OLD), str(q))
+        self._git(repo, "add", "-A")
+        self._git(repo, "commit", "-q", "-m", "AI 资讯：迁入 资讯/AI 四槽位")
+        return q
+
+    def test_pure_rename_is_not_manual(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            self._rename(repo)
+            ctx = ctx_for(repo=repo, report_path=self.NEW)
+            self.assertEqual(coord.last_subject(ctx, "HEAD", self.NEW), "AI 周报 2026-W45")
+            self.assertFalse(coord.report_is_manual(ctx, "HEAD"))
+
+    def test_real_content_edit_still_is_manual(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            q = self._rename(repo)
+            q.write_text("# W45\n我手工改的\n", encoding="utf-8")
+            self._git(repo, "add", "-A")
+            self._git(repo, "commit", "-q", "-m", "手工修改周报")
+            ctx = ctx_for(repo=repo, report_path=self.NEW)
+            self.assertEqual(coord.last_subject(ctx, "HEAD", self.NEW), "手工修改周报")
+            self.assertTrue(coord.report_is_manual(ctx, "HEAD"))
+
+    def test_missing_history_is_not_manual(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            ctx = ctx_for(repo=repo, report_path=self.NEW)
+            self.assertIsNone(coord.last_subject(ctx, "HEAD", self.NEW))
+            self.assertFalse(coord.report_is_manual(ctx, "HEAD"))

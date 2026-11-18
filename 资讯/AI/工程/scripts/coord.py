@@ -184,8 +184,26 @@ def read_at(ctx: Ctx, sha: str, path: str) -> bytes | None:
 
 
 def last_subject(ctx: Ctx, sha: str, path: str) -> str | None:
-    s = out_text(git(ctx, "log", "-1", "--format=%s", sha, "--", path, check=False))
-    return s or None
+    """最后一次真正改动周报**正文**的提交标题；纯重命名（R100）不算改动而跳过。
+
+    `git log -1 -- <路径>` 在目录迁移后会停在做重命名的那个提交上。若不跳过纯重命名，
+    report_is_manual() 会把一次目录整理误判成人工改稿，让回溯重跑被降级成 check_failed
+    （2026-11-18 验收复现：迁移提交 6c8d55b 对 2026-W45.md 的状态是 R100，正文零变化）。
+    人工编辑正文的提交状态是 M / A，仍会被识别，保护没有被削弱。
+    """
+    log = out_text(git(ctx, "log", "--follow", "--format=%H%x09%s", sha, "--", path, check=False))
+    basename = path.rsplit("/", 1)[-1]
+    for line in log.splitlines():
+        commit, _, subject = line.partition("\t")
+        if not commit:
+            continue
+        statuses = out_text(git(ctx, "diff-tree", "-r", "-M", "--no-commit-id", "--name-status",
+                               commit, check=False)).splitlines()
+        touched = [s for s in statuses if basename in s]
+        if touched and all(s.startswith("R100") for s in touched):
+            continue
+        return subject or None
+    return None
 
 
 def identity_env(ctx: Ctx) -> dict:
