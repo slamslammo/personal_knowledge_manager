@@ -358,8 +358,9 @@ def search_candidates(cli: str, week: str, test: bool, max_pages: int = 10) -> l
             return cands
         page_token = data.get("page_token") or ""
         if not page_token:
-            return cands
-    return cands
+            return None
+    # 搜索分页未完成，不能把已读取的部分当作零候选或唯一候选。
+    return None
 
 
 def _business_failure(out: dict) -> str | None:
@@ -516,6 +517,8 @@ def cmd_sync(args) -> int:
 
     result = None
     cached = _cached_result(week, test)
+    forbid_create = bool(cached and cached.get("action") == "unknown"
+                         and not cached.get("document_id"))
     if cached and cached.get("document_id"):
         state = _doc_state(cli, cached["document_id"])
         if state == "exists":
@@ -538,15 +541,17 @@ def cmd_sync(args) -> int:
                                 "detail": f"缓存文档 {cached['document_id']} 读取结果不明，人工核查后重试"}}
         # missing → 落入搜索路径
     if result is None:
-        forbid_create = bool(cached and cached.get("action") == "unknown"
-                             and not cached.get("document_id"))
         result = _sync_via_search(cli, week, test, title, content_file, folder,
                                   forbid_create=forbid_create)
 
     result = result or {"action": "failed"}
-    out_obj = {"week": week, "test": test, "title": title, **{k: v for k, v in result.items() if k != "error"}}
-    write_json(WORK_DIR / RESULT_FILE, out_obj)
     action = result.get("action")
+    out_obj = {"week": week, "test": test, "title": title, **{k: v for k, v in result.items() if k != "error"}}
+    if forbid_create and action not in ("created", "updated"):
+        # 本次错误照常报告。查不到、查不全或更新失败都不能证明上次创建未成功。
+        # 保留上次结果不明，后续补交付才会继续禁止新建。
+        out_obj["action"] = "unknown"
+    write_json(WORK_DIR / RESULT_FILE, out_obj)
     if action in ("created", "updated"):
         tracelog.log("飞书", "同步", "ok", detail=f"{action} {result.get('document_id')}",
                      document_id=result.get("document_id"), url=result.get("url"))

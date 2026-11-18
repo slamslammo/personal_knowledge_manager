@@ -1095,7 +1095,7 @@ def main(argv=None) -> int:
     p.add_argument("--quality", choices=["full", "degraded", "check_failed"], default=None,
                    help="期望的产出质量；实际值由 check_run.py 的门槛结果推导，不一致时拒绝发布")
     p.add_argument("--allow-quality-override", action="store_true",
-                   help="回溯或测试时按 --quality 直接发布，跳过与门槛结果的比对（记入 gates.override）")
+                   help="仅回溯可用：须指定与产物一致的 --quality，只可豁免 GATE_STALE（记入 gates.override）")
     p.add_argument("--codes", help="本次运行遇到的错误码，逗号分隔")
     v = sub.add_parser("verified")
     v.add_argument("--result", choices=["pass", "fail"], required=True)

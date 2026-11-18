@@ -1,6 +1,6 @@
 # AI 资讯工程
 
-本目录是 AI 资讯定时任务的**运行时执行文件集合**：定时任务按入口提示词读取这里的执行手册，再调用这里的脚本完成采集、校验、提交和交付。开发相关的方案与决策记录见 [../文档/README.md](../文档/README.md)。
+本目录是 AI 资讯任务的运行时文件集合。模式及平台状态见 [部署指南 4.1](../文档/部署指南.md#41-当前配置)。运行会话按固定入口读取执行手册；开发方案与决策见 [文档索引](../文档/README.md)。
 
 ## 文件
 
@@ -18,32 +18,26 @@
 
 ## 运行环境
 
-- Python ≥ 3.10 + PyYAML。本机验证请用 `/opt/homebrew/bin/python3.11`：WorkBuddy 自带的 Python 3.13 未装 PyYAML，Xcode 的 `/usr/bin/python3` 是 3.9，低于项目的语法基线。
+- Python ≥ 3.10 + PyYAML。平台专属的解释器、身份和网络配置见 [部署指南](../文档/部署指南.md#47-workbuddy-本机主运行者)。
 - 在**仓库根目录**运行，只依赖 Python 标准库和 PyYAML。中间文件默认写到 `/tmp/ai-weekly/`（可用 `AI_WEEKLY_TMP` 修改）。
 - 本地、CI 与部署环境使用同一份依赖清单：`python3 -m pip install -r 资讯/AI/工程/requirements.txt`。
 
-## 脚本顺序
+## 唯一推荐运行链路
 
-产出写在 `/tmp/ai-weekly/out/` 下与仓库相同的相对路径处，由 `coord.py` 统一提交，运行过程中不改动仓库工作区。
+按 [weekly.md](prompts/weekly.md) 执行：先判断是否恢复已有验收；新运行再检查核心依赖、读取实际模式、确定报告周，由 `deployment.py start` 决定运行、校验、等待或退出。只有取得运行锁后才采集、写作、检查、发布和交付。不要另拼一套 `coord.py start --test` 流程绕过项目入口。
+
+缺依赖或授权时转 [env-bootstrap.md](prompts/env-bootstrap.md)；已有沙箱只恢复交付，已发布生产稿只补交付或只读核对，均不重跑整周。具体分支和命令只在执行手册维护。
+
+`deployment.py plan` 只报告实际计划，不能替代启动；一次性测试覆盖及跨进程传递按执行手册处理，不改保存入口。
+
+产出写在 `/tmp/ai-weekly/out/` 下与仓库相同的相对路径处，由 `coord.py` 统一提交；运行会话只读工程文件。
+
+开发验证只运行测试与可移植性检查，不触发周报：
 
 ```bash
-S=资讯/AI/工程/scripts
-python3 $S/weeks.py --week 2026-W43 > /tmp/ai-weekly/week.json   # 报告周、路径、月报季报到期判定
-python3 $S/coord.py start --platform workbuddy --test            # 协调锁：决定运行、校验、等待或退出
-python3 $S/collect_all.py                                         # 全部采集，产出 digest.md、materials.json
-python3 $S/rank_github.py --week 2026-W43                        # 需要先写 /tmp/ai-weekly/judgments.json
-python3 $S/tracelog.py search "② 核实" "查询词"                    # 每次联网搜索都记录
-python3 $S/draft.py                                               # 生成周报草稿；--degraded 生成降级版
-python3 $S/finalize.py                                            # 刷新数据说明的事实部分
-python3 $S/check_run.py                                           # 完整性检查与质量门槛
-python3 $S/coord.py publish                                       # 提交推送
-python3 $S/verify.py --record                                     # 独立校验另一次运行的产出
-python3 $S/trace_view.py --week 2026-W43                          # 还原整周的执行过程
-python3 $S/check_portability.py                                   # 可移植性检查
-python3 -m unittest discover -s $S/tests -t $S/tests
+python3 -m unittest discover -s 资讯/AI/工程/scripts/tests -t 资讯/AI/工程/scripts/tests
+python3 资讯/AI/工程/scripts/check_portability.py
 ```
-
-> 验收模式请用 `deployment.py plan/start/finish` 走完整链路，不要手工逐条执行上面的命令；正式运行由执行手册调度。
 
 ## 维护约定
 

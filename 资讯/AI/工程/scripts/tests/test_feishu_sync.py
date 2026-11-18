@@ -485,9 +485,7 @@ class SyncTest(Base):
         self.assertIn("FEISHU_SYNC_FAILED", out)
 
     def test_create_unknown_then_backfill_refuses_blind_recreate(self):
-        # 评审 P2-5 跨两次调用回归：
-        # 第 1 次 create 网络超时（结果不明）→ 记 action=unknown；
-        # 第 2 次补交付搜索仍 0 候选（索引未收录）→ 拒绝盲目重建
+        # 新建超时后，即使连续多次搜索都没有命中，也要一直保留 unknown。
         with self.candidates([]), \
              mock.patch.object(feishu_sync, "_create",
                                return_value={"action": "unknown",
@@ -500,10 +498,25 @@ class SyncTest(Base):
         with self.candidates([]), \
              mock.patch.object(feishu_sync, "_create",
                                side_effect=AssertionError("上次 create 结果不明，0 候选不得重建")) as cr:
-            code, out = self.run_sync()
-        self.assertEqual(code, 1)
-        self.assertIn("FEISHU_SYNC_FAILED", out)
+            for _ in range(2):
+                code, out = self.run_sync()
+                self.assertEqual(code, 1)
+                self.assertIn("FEISHU_SYNC_FAILED", out)
+                self.assertEqual(feishu_sync._cached_result(WEEK, test=False)["action"], "unknown")
         cr.assert_not_called()
+
+    def test_create_unknown_survives_search_or_overwrite_failure(self):
+        self.write_cache(action="unknown", document_id=None, url=None)
+        candidates = [{"token": "doc7", "title": H1, "url": "u7"}]
+        for found, expected in ((None, "FEISHU_SYNC_FAILED"),
+                                (candidates + [{"token": "doc8", "title": H1}], "FEISHU_AMBIGUOUS_DOC"),
+                                (candidates, "FEISHU_SYNC_FAILED")):
+            with self.subTest(found=found), self.candidates(found), \
+                 mock.patch.object(feishu_sync, "_overwrite", return_value={"action": "failed"}):
+                code, out = self.run_sync()
+                self.assertEqual(code, 1)
+                self.assertIn(expected, out)
+                self.assertEqual(feishu_sync._cached_result(WEEK, test=False)["action"], "unknown")
 
     def test_create_unknown_then_backfill_finds_doc_overwrites(self):
         # 接上：第 2 次补交付搜索到已建文档（索引已收录）→ 正常 overwrite 收敛
@@ -514,6 +527,8 @@ class SyncTest(Base):
             code, out = self.run_sync()
         self.assertEqual(code, 0)
         self.assertIn("SYNC=updated", out)
+        result = feishu_sync._cached_result(WEEK, test=False)
+        self.assertEqual((result["action"], result["document_id"]), ("updated", "doc7"))
 
     def test_cached_result_ignores_mismatch(self):
         self.write_cache(week="2026-W44")
@@ -693,6 +708,15 @@ class SearchCandidatesTest(unittest.TestCase):
         with mock.patch.object(feishu_sync, "run_cli", side_effect=self.paged({None: p1, "t2": p2})):
             cands = feishu_sync.search_candidates("/bin/lark-cli", WEEK, test=False)
         self.assertEqual(len(cands), 2)
+
+    def test_incomplete_pagination_is_not_a_unique_result(self):
+        first_page = search_json([(f"AI 周报 · {WEEK}", "docA", "DOCX")])
+        first_page["data"]["has_more"] = True
+        for next_page in (None, "t2"):
+            with self.subTest(next_page=next_page), \
+                 mock.patch.object(feishu_sync, "run_cli", return_value=cli_ok(first_page)):
+                first_page["data"]["page_token"] = next_page
+                self.assertIsNone(feishu_sync.search_candidates("/bin/lark-cli", WEEK, test=False, max_pages=1))
 
 
 class NotifyTest(Base):

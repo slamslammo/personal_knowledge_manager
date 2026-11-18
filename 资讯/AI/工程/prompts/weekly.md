@@ -16,6 +16,8 @@
 
 运行模式由项目 `config/deployment.yaml` 维护，定时任务入口保持不变。`deployment.py plan` 输出本次模式，`deployment.py start` 据此调用协调脚本；不要跳过这个入口，也不要在运行中改配置。
 
+一次性演练显式指定 `TEST_RUN=1` 时，在本次执行环境导出它，并让恢复、计划、启动、同步、通知和验收等所有命令沿用。工具每次创建新 shell 时须逐次传入，不能只在 `plan` 或 `start` 单条命令前设置。未指定时不自行增加测试开关，以实际 `RUN_MODE` 分支；开关不写进固定任务提示词。
+
 | 项目模式或本次参数 | 行为 |
 | --- | --- |
 | `mode: acceptance`（项目配置） | 完整生成周报；协调提交和推送走本地沙箱；飞书文档带 `[测试]`；真实通知跳过；最后出具本次验收结果，不自动切正式 |
@@ -49,7 +51,9 @@ fi
 
 恢复只复用当前执行环境中实际存在、可核验的沙箱与产物；其他会话的沙箱链接不能证明本环境也有这些文件。`resume` 仅用于验收补交付，不推送生产 `main`、不发真实通知。GitHub 写入身份尚缺失时仍须报告生产发布待验，沙箱成功不能代替 GitHub 写入验收。
 
-**仅确定没有可恢复验收后**，才建立新运行：先观察上次保存的凭据，再做核心依赖检查。
+**仅确定没有可恢复验收后**，才准备新运行。清理前还须检查同一工作目录中的 `feishu.json`：有未决新建（`action=unknown`）时保留整个目录，先按部署指南处理，不能借新运行清空防重记录。明确开始另一周也须先保全原记录；该防重状态仅在对应工作目录生效，换目录或换实例不等于未创建。
+
+确认可清理后，先观察上次保存的凭据，再检查核心依赖。
 
 ```
 rm -rf /tmp/ai-weekly && mkdir -p /tmp/ai-weekly && S=资讯/AI/工程/scripts
@@ -61,7 +65,7 @@ python3 $S/deployment.py plan
 - `credential_probe.py --resume` 没有历史观察记录时只报 pending；有记录时先实际读取保存的测试文档，以观察自然到期后的首次 API 调用及刷新。它失败不得阻断 Git 周报，不回显凭据，也不能用本地标记证明跨任务状态可用。
 - `ensure` 只对 Python/PyYAML、git 核心生产依赖设门槛。非 `ENV=ok` 时按 `env-bootstrap.md` 补齐核心缺项后重跑；核心凭据或平台操作需用户完成时报告具体阻塞项。
 - 核心标记是 `core_ready`，不是“部署验收通过”。标记有效时仍检查本地核心依赖；Git 实际写权限由协调脚本的真实推送验证。`DELIVERY=unchecked/degraded`、`ACCEPTANCE=pending` 不阻断正式 Git 周报。
-- `RUN_MODE=acceptance` 时，先按 `env-bootstrap.md` 补齐部署与授权，并运行 `env_check.py check --require-delivery`。**严格机器检查成功后才开始新一轮完整生成**：核心 Git 写入初筛、Node/CLI、现有应用及 user/bot 服务端身份都需通过。需要人工配置或浏览器确认时先报告并停止，不先进行搜索、采集或写完整周报。C9 依赖多次真实运行，保持单独 pending，不是首次生成的前置条件；已有沙箱可按上面的恢复分支只补交付。
+- `RUN_MODE=acceptance` 时先按 bootstrap 补齐部署，`env_check.py check --require-delivery` 成功后才新生成；人工授权未完成就报告并停止。C9 单独 pending，不是首次生成前置项。
 - `RUN_MODE=production` 时，飞书依赖或授权失效只记录交付降级，不因这些缺项停止 Git 周报。环境要求升级也遵循这个边界。
 - `plan` 报模式配置错误时停止并报告，不能自行猜成正式模式或修改配置。
 
@@ -99,6 +103,8 @@ python3 $S/deployment.py start --platform <平台名>
 | `ACTION=blocked` | 首次验收的部署或授权未通过；停在环境部署，报告缺项或确认入口，不进入采集、搜索和写稿 |
 | `ACTION=error` | 记录错误码，按失败处理报告 |
 
+从程序输出中读取 `ACTION=` 行，不用退出码或最后一行猜动作；其后可能还有说明。没有该行或出现未知值时保留现场并报告，不假定已取得运行锁。
+
 ## 第 1 步：采集数据
 
 1. **采集**：`python3 $S/collect_all.py`。它会依次采集 Trendshift 周榜、HN、Hugging Face 和 HN 高分帖的原文，失败的数据源会自动重试、跳过并记录。
@@ -116,8 +122,8 @@ python3 $S/deployment.py start --platform <平台名>
      {"non_ai": ["owner/repo"], "exclude": {"owner/repo": "awesome 类合集"}, "hn_ai_repos": ["owner/repo"]}
      ```
    - 运行 `python3 $S/rank_github.py --week $WEEK`。排名、Top 5 和元数据 repos 以脚本结果为准，不要手工调整。
-3. **联网搜索**，每次运行 20 到 40 次（`config/runtime.yaml` 的 search）：
-   - **每搜索一次，就运行一次** `python3 $S/tracelog.py search "<用途>" "<查询词>"`。完整性检查按这个记录计数，少于 20 次不能提交。
+3. **联网搜索**，完整版按 `config/runtime.yaml` 的 search 下限与上限执行（当前 20 到 40 次）：
+   - **每搜索一次，就运行一次** `python3 $S/tracelog.py search "<用途>" "<查询词>"`。少于下限不能判为完整版通过；降级版免下限但仍检查上限，最终发布分支见第 5 步。达到上限不继续搜索。
    - 先用摘要里的线索：HN 高分帖的标题常常就是发布本身，标了"官方""一手"的链接可以直接作为原文，不需要再搜。搜索用具体的产品名、模型名或事件名。
    - 分配：发现本周发布 10 次（补充 HN 和 Hugging Face 没覆盖的）；② 核实 8 次；③ 传播分析，Top 5 每个项目 2 次（网页 1 次、YouTube 1 次），共 10 次；④ 核实文章内容和是否与 AI 相关 4 次；⑤ 和"洞察" 5 次；机动 3 次。
    - 优先使用 `config/sources.yaml` 里的来源；不使用中文媒体和 Newsletter。不要启动子任务做逐条核实。
@@ -218,10 +224,7 @@ python3 $S/check_run.py | tee /tmp/ai-weekly/checks.txt
 | `GATE_INCOMPLETE` | 回到 `check_run.py` 指出的步骤补做 |
 | 其他 `validate.py` 错误 | 按报错修改 |
 
-- 最多返工 3 轮（`config/runtime.yaml` 的 gates.max_rounds）。仍未通过时：
-  - 周报结构完整，只是门槛没过：照常提交，**第 5 步不加任何 quality 参数**——`coord.py` 按门槛结果自动标 `check_failed`；
-  - 周报残缺、或写作中断：运行 `python3 $S/draft.py --degraded --reason "<原因>"` 生成降级版，再运行 `finalize.py`，同样照常提交（元数据带 `quality: degraded`，脚本据此标 `degraded`）。
-- 警告不阻止提交，但要看一眼是否合理。
+最多返工 3 轮（`config/runtime.yaml` 的 gates.max_rounds），之后按下表发布或降级。警告不阻止发布，但应核对是否合理。
 
 ## 第 5 步：提交
 
@@ -229,16 +232,24 @@ python3 $S/check_run.py | tee /tmp/ai-weekly/checks.txt
 python3 $S/coord.py publish
 ```
 
-- **不要传 `--quality`**：产出质量由 `coord.py` 在推送前跑 `check_run.py`（含 `validate.py` 全部门槛）推导——门槛通过是 `full`，未通过是 `check_failed`，周报是降级版则是 `degraded`。传了期望值且与推导结果不一致会被拒绝（`GATE_MISMATCH`），这时按第 4 步返工，不要绕过。
-- `--allow-quality-override` 只在回溯（`week.json` 的 `mode=backfill`）时可用，正式运行加它会被拒绝（`GATE_OVERRIDE_DENIED`），不要试图绕过；而且它只豁免 `GATE_STALE`（材料早于本次运行），出现结构错误、缺材料、搜索次数不够时照样拒绝。声明值还要与周报元数据一致（降级版不能声明 `full`，否则 `GATE_OVERRIDE_CONFLICT`）。
-- 门槛没过**不会阻止推送**，只会让这次发布带 `check_failed` 标记（**git 提交说明**带「检查未通过」，通知首句同样标记；报告 H1 不变）。通知里要如实写这次没达标，不要写成「已完成、质量合格」。
-- 如果远端周报被人工改过，本次不会覆盖它，只提交数据和状态，`quality` 按 `check_failed` 记录（`gates.check_run=skipped`）——门槛检的是你这次写的候选，不是提交的那份，别把它说成「已通过」。
-- `coord.py` 只提交 `/tmp/ai-weekly/out/` 下白名单内的文件，连同状态文件放在同一个提交里，推送到 `main`。远端有新提交时它会自行重新读取、重试，不需要你处理。
-- 输出 `ACTION=published`：记下提交号，第 5.5 步要用。
-- 输出 `ACTION=lost`：运行锁已被其他运行接管（本次超时太久），产出没有推送。通知首句标"未提交"，正文说明锁被接管。
-- 输出 `ACTION=error`：按"失败处理"处理，通知里附上错误码（如 `PUSH_DENIED` 表示没有推送权限）。
+只提交 `/tmp/ai-weekly/out/` 的白名单产出与状态；远端有新提交由脚本重新读取并重试。**不要传 `--quality`**，实际质量由发布前的门槛检查推导；声明与结果不一致会拒绝发布。
+
+| 检查或发布结果 | 后续动作 |
+| --- | --- |
+| 完整版门槛通过 | 脚本记 `full`，不以人工声明代替 |
+| 完整版 3 轮仍未过、结构完整 | 允许发布 `check_failed`；提交说明和通知标“检查未通过”，报告 H1 不变，不声称质量合格 |
+| 周报残缺或写作中断 | `draft.py --degraded --reason "<原因>"` 生成降级稿，再运行 finalize 和 check_run 后发布；脚本记 `degraded` |
+| `ACTION=published` | 保存完整 SHA，进入第 5.5 步 |
+| `ACTION=lost` | 未发布，跳过第 5.5 步，进入第 6 步发“未提交”通知；不拿旧 SHA 或默认 main 同步 |
+| `ACTION=error`、输出缺失或未知 | 保留现场，按失败处理，不进入同步 |
+
+远端人工修改保护触发时只提交数据和状态，周报不覆盖，记 `check_failed/gates.check_run=skipped`；候选检查通过不代表被保留的远端稿通过。
+
+`--allow-quality-override` 只允许 `week.json.mode=backfill`，与 acceptance/production 部署模式无关；普通周运行使用会拒绝。它仅豁免 `GATE_STALE`，不能豁免搜索不足、缺材料或结构错误；覆盖值必须符合报告元数据。日常推荐链路不使用此参数。
 
 ## 第 5.5 步：飞书同步
+
+仅在 `ACTION=published` 后执行，使用输出的完整 SHA。
 
 ```
 python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交号>
@@ -261,6 +272,7 @@ python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交�
   python3 $S/feishu_sync.py verify --sha <同一提交号> --week "$WEEK"
   ```
 - 回溯运行同样执行本步。
+- `FEISHU_SYNC_UNKNOWN` 表示新建结果仍不明。保留原同步记录；搜索为空或失败都不能证明未创建。后续搜索唯一命中时由同步脚本复用该文档；不得删除记录后盲目再次新建。进一步人工恢复见部署指南。
 
 ## 第 6 步：通知
 
@@ -273,6 +285,8 @@ python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallba
 预检为 no_notify/off、notify 输出 `NOTIFY=skipped`，或平台没有 lark-cli 时，把通知内容作为本次运行的最后输出，由调度方转发。测试模式只写文件，并在最后原样输出，不发通知。
 
 `NOTIFY=sent` 表示飞书 API 已接受通知。`/tmp/ai-weekly/feishu-notify-receipt.json` 记录幂等键和 API 提供的消息 ID。需要验收实际到达时，另由接收人确认。
+
+网络结果不明时先核对接收情况。确需重试，保留原通知文件、原周记录和运行模式，使用上面的完整 `notify --file …` 命令；不改正文或切换精简版来换幂等键。原文件或上下文丢失时先报告，不重新生成一份当作同一次重试。
 
 通知全部用纯文本（不用表格和 Markdown 链接语法，URL 直接写完整）：
 - **首句**：格式固定为 `【AI周报 W{WNUM}】<本周最重要的一件事>。`，不超过 40 个汉字。
@@ -308,7 +322,7 @@ python3 $S/deployment.py finish
 python3 $S/verify.py --record
 ```
 
-按最后一行 `ACTION=` 处理：
+读取输出中的 `ACTION=` 行处理（不是最后一行，也不能仅凭进程退出码判断）：
 
 | 输出 | 做什么 |
 | --- | --- |
@@ -316,12 +330,15 @@ python3 $S/verify.py --record
 | `ACTION=run` | 校验不通过，锁已转为本次运行：从第 1 步开始完整重跑（第 0 步不用再做）。通知首句标"重跑"，正文写明 `verify.py` 输出的错误码和说明 |
 | `ACTION=exit` | 校验不通过，且本周的尝试次数已用完，已标为需人工：发一条提醒，首句为 `【AI周报 W{WNUM}｜需人工】<错误码>。` |
 | `ACTION=error` | 按"失败处理"处理 |
+| `ACTION=lost` | 校验锁已失去，保留现场并报告；不转入生成或飞书同步 |
+
+初始协调的 `ACTION=exit` 按第 0 步结束；本节的 `ACTION=exit` 则按上表发“需人工”提醒。无动作行或动作未知时报告阻塞，不继续生成。
 
 ## 失败处理
 
 任何一步出现无法恢复的错误（脚本反复报错、写作中断、环境故障）时：
-1. 已经有草稿和数据文件的：生成降级版并提交（见第 4 步最后），这样当周至少有一份数据准确的周报。
-2. 无法提交的：运行 `python3 $S/coord.py fail --code <错误码> --detail "<停在哪一步、原因>"`，释放锁，并把执行记录推送到状态文件。错误码见 `python3 $S/tracelog.py codes`。
+1. 本次已经取得运行锁、仍持锁且已有可核实的草稿和数据时，按第 4 步生成降级版并提交；部署未就绪、失锁或尚未取得运行资格时不进入此分支。
+2. 无法提交且本次确实持有锁时，运行 `python3 $S/coord.py fail --code <错误码> --detail "<停在哪一步、原因>"`，释放本次锁并尽力保存记录。尚未取得锁时只保留本地诊断并报告，不操作上一轮的锁。错误码见 `python3 $S/tracelog.py codes`。
 3. 按入口提示词发失败通知：写清停在哪一步、已经完成了什么、错误码。
 4. 测试模式同样执行，只是不发通知，把通知内容在最后原样输出。
 
