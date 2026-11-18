@@ -28,6 +28,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
+import paths
 import tracelog
 from common import OUT_DIR, WORK_DIR, fetch, load_config, read_json, write_json
 from weeks import BJT, Week, weekly_data_path
@@ -255,7 +256,7 @@ def main(argv=None) -> int:
     ap.add_argument("--trendshift", default=str(WORK_DIR / "trendshift.json"))
     ap.add_argument("--hn", default=str(WORK_DIR / "hn.json"))
     ap.add_argument("--judgments", default=str(WORK_DIR / "judgments.json"))
-    ap.add_argument("--out", help="默认写入本次运行的产出目录 /tmp/ai-weekly/out/AI资讯/数据/github-weekly/{WEEK}.json")
+    ap.add_argument("--out", help=f"默认写入本次运行的产出目录 /tmp/ai-weekly/out/{paths.data('{WEEK}')}")
     args = ap.parse_args(argv)
 
     week = Week.parse(args.week)

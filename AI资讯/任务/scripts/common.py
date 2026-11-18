@@ -16,9 +16,23 @@ import urllib.request
 from typing import Callable, NamedTuple
 
 SCRIPTS_DIR = pathlib.Path(__file__).resolve().parent
-TASK_DIR = SCRIPTS_DIR.parent  # AI资讯/任务
-BOARD_DIR = TASK_DIR.parent  # AI资讯
-REPO_DIR = BOARD_DIR.parent
+TASK_DIR = SCRIPTS_DIR.parent  # 工程目录（当前 AI资讯/任务）
+BOARD_DIR = TASK_DIR.parent  # 板块根目录（当前 AI资讯）
+
+
+def _repo_root(start: pathlib.Path) -> pathlib.Path:
+    """从脚本位置向上找含 .git 的目录，不依赖目录层级。
+
+    目录迁移后脚本多一层（资讯/AI/工程/scripts），原先 BOARD_DIR.parent
+    直接取仓库根的写法会指向 资讯/，所有 git 操作都会失效。
+    """
+    for parent in (start, *start.parents):
+        if (parent / ".git").exists():
+            return parent
+    return BOARD_DIR.parent  # 无 .git 的临时副本：退回旧算法
+
+
+REPO_DIR = _repo_root(SCRIPTS_DIR)
 WORK_DIR = pathlib.Path(os.environ.get("AI_WEEKLY_TMP", "/tmp/ai-weekly"))
 # 本次运行的产出（周报、数据文件等）按仓库内的相对路径放在 OUT_DIR 下，由 coord.py 提交；
 # 运行过程中不改动仓库的工作区。

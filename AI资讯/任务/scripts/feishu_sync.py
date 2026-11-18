@@ -48,8 +48,9 @@ import subprocess
 import sys
 import time
 
-from common import REPO_DIR, WORK_DIR, load_config, read_json, write_json
+import paths
 import tracelog
+from common import REPO_DIR, WORK_DIR, load_config, read_json, write_json
 
 MODE_FILE = "feishu-mode.json"
 RESULT_FILE = "feishu.json"
@@ -186,7 +187,7 @@ def week_from_weekjson() -> str | None:
 
 
 def report_path_for(week: str) -> str:
-    return f"AI资讯/周报/{week[:4]}/{week}.md"
+    return paths.report(week[:4], week)
 
 
 def git_show(ref: str, path: str) -> str | None:

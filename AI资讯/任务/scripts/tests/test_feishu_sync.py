@@ -20,6 +20,7 @@ SCRIPTS = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
 import feishu_sync  # noqa: E402
+import paths  # noqa: E402
 
 WEEK = "2026-W45"
 H1 = f"AI 周报 · {WEEK}（11/2–11/8）"
@@ -314,7 +315,7 @@ class SyncTest(Base):
              self.candidates([]), \
              mock.patch.object(feishu_sync, "_create", return_value={"action": "created", "document_id": "d"}):
             self.run_sync(week="2026-W40")
-        self.assertEqual(seen, {"ref": "main", "path": "AI资讯/周报/2026/2026-W40.md"})
+        self.assertEqual(seen, {"ref": "main", "path": paths.report(2026, "2026-W40")})
 
     def test_source_missing(self):
         with mock.patch.object(feishu_sync, "git_show", return_value=None):

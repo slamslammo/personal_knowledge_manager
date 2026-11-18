@@ -17,6 +17,7 @@ import pathlib
 import subprocess
 import sys
 
+import paths
 import tracelog
 from common import REPO_DIR, WORK_DIR
 
@@ -24,7 +25,7 @@ MARK = {"info": " ", "ok": "✓", "warn": "!", "error": "✗"}
 
 
 def load_remote(week: str, repo: pathlib.Path = REPO_DIR) -> dict | None:
-    path = f"AI资讯/数据/运行记录/{week}.json"
+    path = paths.state(week)
     subprocess.run(["git", "-C", str(repo), "fetch", "-q", "origin", "main"], capture_output=True)
     p = subprocess.run(["git", "-C", str(repo), "show", f"FETCH_HEAD:{path}"], capture_output=True)
     if p.returncode != 0:

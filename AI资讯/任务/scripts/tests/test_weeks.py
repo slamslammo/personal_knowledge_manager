@@ -6,6 +6,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
+import paths  # noqa: E402
 from weeks import (  # noqa: E402
     Week, monthly_status, quarterly_status, report_week, weekly_report_path, weeks_in_month,
 )
@@ -80,7 +81,7 @@ class PeriodStatusTest(unittest.TestCase):
         self.assertEqual(st["period"], "2026-10")
         self.touch_weeks("2026-W40", "2026-W41", "2026-W42", "2026-W43", "2026-W44")
         self.assertTrue(monthly_status(w45, self.repo)["generate"])
-        p = self.repo / "AI资讯/月报/2026/2026-10.md"
+        p = self.repo / paths.monthly(2026, 10)
         p.parent.mkdir(parents=True)
         p.write_text("x", encoding="utf-8")
         self.assertFalse(monthly_status(w45, self.repo)["generate"])

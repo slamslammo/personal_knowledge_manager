@@ -11,16 +11,17 @@ import pathlib
 import time
 
 import finalize
+import paths
 from test_validate import DATA, REPORT
 
 WEEK = "2026-W43"
-REPORT_REL = f"AI资讯/周报/2026/{WEEK}.md"
-DATA_REL = f"AI资讯/数据/github-weekly/{WEEK}.json"
+REPORT_REL = paths.report(2026, WEEK)
+DATA_REL = paths.data(WEEK)
 
 
 def week_info(mode="normal"):
     return {"week": WEEK, "mode": mode, "iso_year": 2026, "report_path": REPORT_REL,
-            "data_path": DATA_REL, "state_path": f"AI资讯/数据/运行记录/{WEEK}.json"}
+            "data_path": DATA_REL, "state_path": paths.state(WEEK)}
 
 
 def _write(path: pathlib.Path, obj, when: float) -> None:

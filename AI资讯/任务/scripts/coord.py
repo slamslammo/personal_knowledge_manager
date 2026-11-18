@@ -39,6 +39,7 @@ import subprocess
 import sys
 import time
 
+import paths
 import tracelog
 from common import OUT_DIR, REPO_DIR, WORK_DIR, load_config, read_json, write_json
 
@@ -606,7 +607,7 @@ def cmd_start(args) -> int:
     run_id = existing.get("run_id") if existing.get("week") == info["week"] else None
     ctx = Ctx(repo=repo, work=work, remote=remote, branch=cfg["branch"], week=info["week"], mode=info["mode"],
               report_path=info["report_path"], data_path=info["data_path"],
-              state_path=info.get("state_path") or f"AI资讯/数据/运行记录/{info['week']}.json",
+              state_path=info.get("state_path") or paths.state(info["week"]),
               run_id=run_id or new_run_id(args.platform, t), platform=args.platform, test=args.test, cfg=cfg)
     save_ctx(ctx, started_at=existing.get("started_at") or iso(t))
     tracelog.log("协调", "start", detail=f"{ctx.platform} {ctx.week} 远端 {ctx.remote}", work_dir=work,
@@ -697,8 +698,8 @@ def allowed_paths(ctx: Ctx) -> list[re.Pattern]:
     return [
         re.compile(re.escape(ctx.report_path) + r"$"),
         re.compile(re.escape(ctx.data_path) + r"$"),
-        re.compile(r"AI资讯/月报/\d{4}/\d{4}-\d{2}\.md$"),
-        re.compile(r"AI资讯/季报/\d{4}/\d{4}-Q[1-4]\.md$"),
+        re.compile(paths.MONTHLY_RE),
+        re.compile(paths.QUARTERLY_RE),
     ]
 
 
@@ -992,7 +993,7 @@ def cmd_status(args) -> int:
             return EXIT_ERROR
         ctx = Ctx(repo=pathlib.Path(os.environ.get("AI_WEEKLY_REPO", REPO_DIR)), work=work, remote="origin",
                   branch=cfg["branch"], week=week, mode="normal", report_path="", data_path="",
-                  state_path=f"AI资讯/数据/运行记录/{week}.json", run_id="", platform="", test=False, cfg=cfg)
+                  state_path=paths.state(week), run_id="", platform="", test=False, cfg=cfg)
     try:
         state = read_state(ctx, remote_tip(ctx))
     except CoordError as e:

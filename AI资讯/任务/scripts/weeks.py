@@ -23,10 +23,10 @@ import shlex
 import sys
 from dataclasses import dataclass
 
+import paths
+
 BJT = dt.timezone(dt.timedelta(hours=8), "Asia/Shanghai")
 TRENDSHIFT_DAILY_WINDOW_DAYS = 61  # Trendshift 仓库页内嵌的每日数据天数（含当天）
-
-BOARD = "AI资讯"
 
 
 @dataclass(frozen=True)
@@ -128,24 +128,24 @@ def prev_quarter(year: int, quarter: int) -> tuple[int, int]:
 
 
 def weekly_report_path(week: Week) -> str:
-    return f"{BOARD}/周报/{week.iso_year}/{week.label}.md"
+    return paths.report(week.iso_year, week.label)
 
 
 def weekly_data_path(week: Week) -> str:
-    return f"{BOARD}/数据/github-weekly/{week.label}.json"
+    return paths.data(week.label)
 
 
 def weekly_state_path(week: Week) -> str:
     """当周的状态文件：协调锁与执行记录（../方案.md 7.9、7.10 节）。"""
-    return f"{BOARD}/数据/运行记录/{week.label}.json"
+    return paths.state(week.label)
 
 
 def monthly_report_path(year: int, month: int) -> str:
-    return f"{BOARD}/月报/{year}/{year}-{month:02d}.md"
+    return paths.monthly(year, month)
 
 
 def quarterly_report_path(year: int, quarter: int) -> str:
-    return f"{BOARD}/季报/{year}/{year}-Q{quarter}.md"
+    return paths.quarterly(year, quarter)
 
 
 # ---------------------------------------------------------------- 月报、季报判定

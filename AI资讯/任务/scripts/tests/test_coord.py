@@ -14,6 +14,7 @@ SCRIPTS = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
 import coord  # noqa: E402
+import paths  # noqa: E402
 
 CFG = {"max_attempts": 3, "clock_skew_minutes": 5, "run_lease_minutes": 60, "verify_lease_minutes": 20,
        "renew_below_minutes": 30, "push_retries": 5, "branch": "main"}
@@ -142,9 +143,9 @@ class Lab:
         work = self.root / f"work-{name}-{week}"
         work.mkdir(exist_ok=True)
         info = {"week": week, "mode": "normal", "iso_year": 2026,
-                "report_path": f"AI资讯/周报/2026/{week}.md",
-                "data_path": f"AI资讯/数据/github-weekly/{week}.json",
-                "state_path": f"AI资讯/数据/运行记录/{week}.json"}
+                "report_path": paths.report(2026, week),
+                "data_path": paths.data(week),
+                "state_path": paths.state(week)}
         (work / "week.json").write_text(json.dumps(info, ensure_ascii=False))
         return Agent(self, name, repo, work, info)
 
@@ -153,7 +154,7 @@ class Lab:
         return p.stdout if p.returncode == 0 else None
 
     def state(self, week=None):
-        raw = self.show(f"AI资讯/数据/运行记录/{week or self.week}.json")
+        raw = self.show(paths.state(week or self.week))
         return json.loads(raw) if raw else None
 
     def log(self, fmt="%s"):

@@ -9,12 +9,13 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 import finalize  # noqa: E402
+import paths  # noqa: E402
 from check_run import check  # noqa: E402
 from test_validate import DATA, REPORT  # noqa: E402
 
 START = time.time() - 600  # 本次运行开始于 10 分钟前
-REPORT_REL = "AI资讯/周报/2026/2026-W43.md"
-DATA_REL = "AI资讯/数据/github-weekly/2026-W43.json"
+REPORT_REL = paths.report(2026, "2026-W43")
+DATA_REL = paths.data("2026-W43")
 
 
 def write(path, obj, mtime=None):
