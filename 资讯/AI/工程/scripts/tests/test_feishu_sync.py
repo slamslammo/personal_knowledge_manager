@@ -88,6 +88,55 @@ class Base(unittest.TestCase):
         return code, buf.getvalue()
 
 
+class ReadbackTest(Base):
+    SHA = "a" * 40
+
+    def verify(self, fetched, *, sha=SHA, doc=None):
+        args = types.SimpleNamespace(sha=sha, week=WEEK, doc=doc)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), \
+             mock.patch.object(feishu_sync, "git_show", return_value=REPORT) as source, \
+             mock.patch.object(feishu_sync, "cfg_load", return_value={}), \
+             mock.patch.object(feishu_sync, "find_cli", return_value="/bin/lark-cli"), \
+             mock.patch.object(feishu_sync, "run_cli", return_value=fetched) as cli:
+            rc = feishu_sync.cmd_verify(args)
+        return rc, buf.getvalue(), source, cli
+
+    def test_verified_content_uses_published_commit_and_only_reads_document(self):
+        (self.work / feishu_sync.RESULT_FILE).write_text(json.dumps({
+            "week": WEEK, "test": False, "action": "created", "document_id": "doc1"}))
+        response = {"ok": True, "data": {"document": {"content": REPORT, "document_id": "doc1"}}}
+        rc, out, source, cli = self.verify(response)
+        self.assertEqual(rc, 0, out)
+        source.assert_called_once_with(self.SHA, paths.report(2026, WEEK))
+        cli.assert_called_once_with("/bin/lark-cli", "docs", "+fetch", "--doc", "doc1", "--as", "user")
+        receipt = json.loads((self.work / feishu_sync.READBACK_FILE).read_text())
+        self.assertEqual((receipt["status"], receipt["source_sha"], receipt["document_id"]),
+                         ("passed", self.SHA, "doc1"))
+
+    def test_different_content_needs_review_and_preserves_delivery_id(self):
+        result = self.work / feishu_sync.RESULT_FILE
+        original = json.dumps({"week": WEEK, "test": False, "action": "created", "document_id": "doc1"})
+        result.write_text(original)
+        response = {"ok": True, "data": {"document": {"content": f"# {H1}\n正文缺失"}}}
+        rc, out, _, _ = self.verify(response)
+        self.assertEqual(rc, 1)
+        self.assertIn("READBACK=pending CODE=FEISHU_READBACK_MISMATCH", out)
+        self.assertEqual(result.read_text(), original)
+
+    def test_read_error_cannot_turn_into_success(self):
+        rc, out, _, _ = self.verify(cli_err(), doc="doc1")
+        self.assertEqual(rc, 1)
+        self.assertIn("FEISHU_READBACK_UNAVAILABLE", out)
+
+    def test_moving_branch_is_not_a_readback_source(self):
+        rc, out, source, cli = self.verify({}, sha="main", doc="doc1")
+        self.assertEqual(rc, 1)
+        self.assertIn("FEISHU_READBACK_SHA_REQUIRED", out)
+        source.assert_not_called()
+        cli.assert_not_called()
+
+
 class PreflightTest(Base):
     def preflight_with(self, cfg, cli="/bin/lark-cli", auth=None, auth_seq=None):
         with mock.patch.object(feishu_sync, "cfg_load", return_value=cfg), \
@@ -436,9 +485,7 @@ class SyncTest(Base):
         self.assertIn("FEISHU_SYNC_FAILED", out)
 
     def test_create_unknown_then_backfill_refuses_blind_recreate(self):
-        # 评审 P2-5 跨两次调用回归：
-        # 第 1 次 create 网络超时（结果不明）→ 记 action=unknown；
-        # 第 2 次补交付搜索仍 0 候选（索引未收录）→ 拒绝盲目重建
+        # 新建超时后，即使连续多次搜索都没有命中，也要一直保留 unknown。
         with self.candidates([]), \
              mock.patch.object(feishu_sync, "_create",
                                return_value={"action": "unknown",
@@ -451,10 +498,25 @@ class SyncTest(Base):
         with self.candidates([]), \
              mock.patch.object(feishu_sync, "_create",
                                side_effect=AssertionError("上次 create 结果不明，0 候选不得重建")) as cr:
-            code, out = self.run_sync()
-        self.assertEqual(code, 1)
-        self.assertIn("FEISHU_SYNC_FAILED", out)
+            for _ in range(2):
+                code, out = self.run_sync()
+                self.assertEqual(code, 1)
+                self.assertIn("FEISHU_SYNC_FAILED", out)
+                self.assertEqual(feishu_sync._cached_result(WEEK, test=False)["action"], "unknown")
         cr.assert_not_called()
+
+    def test_create_unknown_survives_search_or_overwrite_failure(self):
+        self.write_cache(action="unknown", document_id=None, url=None)
+        candidates = [{"token": "doc7", "title": H1, "url": "u7"}]
+        for found, expected in ((None, "FEISHU_SYNC_FAILED"),
+                                (candidates + [{"token": "doc8", "title": H1}], "FEISHU_AMBIGUOUS_DOC"),
+                                (candidates, "FEISHU_SYNC_FAILED")):
+            with self.subTest(found=found), self.candidates(found), \
+                 mock.patch.object(feishu_sync, "_overwrite", return_value={"action": "failed"}):
+                code, out = self.run_sync()
+                self.assertEqual(code, 1)
+                self.assertIn(expected, out)
+                self.assertEqual(feishu_sync._cached_result(WEEK, test=False)["action"], "unknown")
 
     def test_create_unknown_then_backfill_finds_doc_overwrites(self):
         # 接上：第 2 次补交付搜索到已建文档（索引已收录）→ 正常 overwrite 收敛
@@ -465,6 +527,8 @@ class SyncTest(Base):
             code, out = self.run_sync()
         self.assertEqual(code, 0)
         self.assertIn("SYNC=updated", out)
+        result = feishu_sync._cached_result(WEEK, test=False)
+        self.assertEqual((result["action"], result["document_id"]), ("updated", "doc7"))
 
     def test_cached_result_ignores_mismatch(self):
         self.write_cache(week="2026-W44")
@@ -645,6 +709,15 @@ class SearchCandidatesTest(unittest.TestCase):
             cands = feishu_sync.search_candidates("/bin/lark-cli", WEEK, test=False)
         self.assertEqual(len(cands), 2)
 
+    def test_incomplete_pagination_is_not_a_unique_result(self):
+        first_page = search_json([(f"AI 周报 · {WEEK}", "docA", "DOCX")])
+        first_page["data"]["has_more"] = True
+        for next_page in (None, "t2"):
+            with self.subTest(next_page=next_page), \
+                 mock.patch.object(feishu_sync, "run_cli", return_value=cli_ok(first_page)):
+                first_page["data"]["page_token"] = next_page
+                self.assertIsNone(feishu_sync.search_candidates("/bin/lark-cli", WEEK, test=False, max_pages=1))
+
 
 class NotifyTest(Base):
     def setUp(self):
@@ -675,7 +748,7 @@ class NotifyTest(Base):
         sent = []
         def fake_run(cli, *a, **k):
             sent.append(a)
-            return {"ok": True}
+            return {"ok": True, "data": {"message_id": "om_test", "body": {"content": "通知正文"}}}
         with mock.patch.object(feishu_sync, "run_cli", side_effect=fake_run):
             code, out = self.run_notify()
         self.assertEqual(code, 0)
@@ -686,6 +759,10 @@ class NotifyTest(Base):
         self.assertIn("ou_x", args)
         key = args[args.index("--idempotency-key") + 1]
         self.assertTrue(key.startswith(f"ai-weekly-{WEEK}-"))
+        receipt = json.loads((self.work / feishu_sync.NOTIFY_FILE).read_text())
+        self.assertEqual((receipt["status"], receipt["message_id"], receipt["idempotency_key"]),
+                         ("api_accepted", "om_test", key))
+        self.assertNotIn("通知正文", json.dumps(receipt, ensure_ascii=False))
 
     def test_fallback_on_business_failure(self):
         # 确定拒绝（业务/权限类）：首条未发出，可安全换键发精简版
@@ -700,6 +777,8 @@ class NotifyTest(Base):
         self.assertEqual(code, 0)
         self.assertEqual(len(calls), 2)
         self.assertTrue(any(f"@{fb}" == a for a in calls[1]))
+        receipt = json.loads((self.work / feishu_sync.NOTIFY_FILE).read_text())
+        self.assertTrue(receipt["idempotency_key"].endswith("-fb"))
 
     def test_network_unknown_retries_same_key(self):
         # 评审 P2-6：网络超时结果不明（首条可能已送达），必须用同一幂等键重试，

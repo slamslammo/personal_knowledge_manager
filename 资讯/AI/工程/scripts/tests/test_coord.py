@@ -16,6 +16,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import coord  # noqa: E402
 import paths  # noqa: E402
+import common  # noqa: E402
 
 CFG = {"max_attempts": 3, "clock_skew_minutes": 5, "run_lease_minutes": 60, "verify_lease_minutes": 20,
        "renew_below_minutes": 30, "push_retries": 5, "branch": "main"}
@@ -412,11 +413,12 @@ class MultiAgentTest(unittest.TestCase):
         a = lab.agent("a")
         a.start()
         a.write_outputs()
-        stray = a.work / "out" / "AI资讯" / "任务" / "方案.md"
+        stray_rel = "资讯/AI/文档/方案.md"
+        stray = a.work / "out" / stray_rel
         stray.parent.mkdir(parents=True)
         stray.write_text("不该提交\n", encoding="utf-8")
         self.assertEqual(a.coord("publish")[0], "published")
-        self.assertIsNone(lab.show("资讯/AI/文档/方案.md"))
+        self.assertIsNone(lab.show(stray_rel))
 
     def test_gate_failure_publishes_check_failed(self):
         # 搜索只做了 5 次：真实门槛判不通过，按 check_failed 发布并记下门槛码
@@ -799,6 +801,72 @@ class SetupSandboxTest(unittest.TestCase):
             self.assertEqual(coord.setup_sandbox(repo, work, "main"), remote)
             self.assertEqual(self._git_dir(remote, "rev-parse", "refs/heads/main"), published)
 
+    def test_empty_directory_is_initialized(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            repo, work = self._repo(root), root / "work"
+            (work / "sandbox.git").mkdir(parents=True)
+            remote = coord.setup_sandbox(repo, work, "main")
+            self.assertEqual(self._git_dir(remote, "rev-parse", "refs/heads/main"),
+                             self._git("rev-parse", "HEAD", cwd=repo))
+
+    def test_missing_metadata_does_not_reset_published_history(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            repo, work = self._repo(root), root / "work"
+            work.mkdir()
+            remote = coord.setup_sandbox(repo, work, "main")
+            tree = self._git("rev-parse", "HEAD^{tree}", cwd=repo)
+            head = self._git("rev-parse", "HEAD", cwd=repo)
+            published = subprocess.run(
+                ["git", "--git-dir", remote, "commit-tree", tree, "-p", head], input="published\n",
+                capture_output=True, text=True, check=True, env=self._ident()).stdout.strip()
+            self._git_dir(remote, "update-ref", "refs/heads/main", published)
+            (pathlib.Path(remote) / "HEAD").unlink()
+            self.assertEqual(coord.setup_sandbox(repo, work, "main"), remote)
+            self.assertEqual(self._git_dir(remote, "rev-parse", "refs/heads/main"), published)
+
+    def test_missing_published_object_is_not_silently_reset(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            repo, work = self._repo(root), root / "work"
+            work.mkdir()
+            remote = pathlib.Path(coord.setup_sandbox(repo, work, "main"))
+            ref = remote / "refs/heads/main"
+            missing = "a" * 40
+            ref.write_text(missing + "\n", encoding="utf-8")
+            with self.assertRaises(coord.CoordError):
+                coord.setup_sandbox(repo, work, "main")
+            self.assertEqual(ref.read_text().strip(), missing)
+
+    def test_existing_object_sources_are_preserved(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            repo, work = self._repo(root), root / "work"
+            work.mkdir()
+            remote = pathlib.Path(coord.setup_sandbox(repo, work, "main"))
+            old_objects = root / "other-objects"
+            old_objects.mkdir()
+            alternates = remote / "objects/info/alternates"
+            alternates.write_text(alternates.read_text() + str(old_objects) + "\n")
+            coord.setup_sandbox(repo, work, "main")
+            sources = alternates.read_text().splitlines()
+            self.assertIn(str(old_objects), sources)
+            self.assertEqual(len(sources), len(set(sources)))
+
+    def test_normal_checkout_is_not_reinitialized_as_sandbox(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            repo, work = self._repo(root), root / "work"
+            work.mkdir()
+            sandbox = work / "sandbox.git"
+            subprocess.run(["git", "clone", "-q", str(repo), str(sandbox)], check=True)
+            before = self._git("rev-parse", "HEAD", cwd=sandbox)
+            with self.assertRaises(coord.CoordError):
+                coord.setup_sandbox(repo, work, "main")
+            self.assertTrue((sandbox / ".git").is_dir())
+            self.assertEqual(self._git("rev-parse", "HEAD", cwd=sandbox), before)
+
 
 class LastSubjectRenameTest(unittest.TestCase):
     """目录迁移是 R100 纯重命名，不能触发「人工改稿」保护（2026-11-18 验收回归）。"""
@@ -857,3 +925,84 @@ class LastSubjectRenameTest(unittest.TestCase):
             ctx = ctx_for(repo=repo, report_path=self.NEW)
             self.assertIsNone(coord.last_subject(ctx, "HEAD", self.NEW))
             self.assertFalse(coord.report_is_manual(ctx, "HEAD"))
+
+    def test_pure_rename_ignores_other_matching_basenames(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            note = repo / "notes/2026-W45.md.review"
+            note.parent.mkdir()
+            note.write_text("before\n")
+            self._git(repo, "add", "-A")
+            self._git(repo, "commit", "-q", "-m", "Prepare migration notes")
+            target = repo / self.NEW
+            target.parent.mkdir(parents=True)
+            shutil.move(str(repo / self.OLD), str(target))
+            note.write_text("migration reviewed\n")
+            self._git(repo, "add", "-A")
+            self._git(repo, "commit", "-q", "-m", "Directory migration and notes")
+            ctx = ctx_for(repo=repo, report_path=self.NEW)
+            self.assertEqual(coord.last_subject(ctx, "HEAD", self.NEW), "AI 周报 2026-W45")
+            self.assertFalse(coord.report_is_manual(ctx, "HEAD"))
+
+    def test_filename_rename_chain_follows_old_paths(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            current = self.OLD
+            for target in ("reports/renamed-W45.md", "reports/final-W45.md"):
+                (repo / target).parent.mkdir(parents=True, exist_ok=True)
+                self._git(repo, "mv", current, target)
+                self._git(repo, "commit", "-q", "-m", "Pure filename rename")
+                current = target
+            ctx = ctx_for(repo=repo, report_path=current)
+            self.assertEqual(coord.last_subject(ctx, "HEAD", current), "AI 周报 2026-W45")
+            self.assertFalse(coord.report_is_manual(ctx, "HEAD"))
+
+    def test_rename_chain_keeps_prior_manual_edit_protected(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            (repo / self.OLD).write_text("# W45\n人工修订\n", encoding="utf-8")
+            self._git(repo, "add", "-A")
+            self._git(repo, "commit", "-q", "-m", "Manual report correction")
+            current = self.OLD
+            for target in ("reports/renamed-W45.md", "reports/final-W45.md"):
+                (repo / target).parent.mkdir(parents=True, exist_ok=True)
+                self._git(repo, "mv", current, target)
+                self._git(repo, "commit", "-q", "-m", "Pure filename rename")
+                current = target
+            ctx = ctx_for(repo=repo, report_path=current)
+            self.assertEqual(coord.last_subject(ctx, "HEAD", current), "Manual report correction")
+            self.assertTrue(coord.report_is_manual(ctx, "HEAD"))
+
+    def test_tabbed_rename_path_is_not_split(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = self._repo(pathlib.Path(d))
+            target = "reports/W45\tfinal.md"
+            (repo / target).parent.mkdir()
+            self._git(repo, "mv", self.OLD, target)
+            self._git(repo, "commit", "-q", "-m", "Pure rename with tab")
+            ctx = ctx_for(repo=repo, report_path=target)
+            self.assertEqual(coord.last_subject(ctx, "HEAD", target), "AI 周报 2026-W45")
+
+
+class RepositoryRootTest(unittest.TestCase):
+    def test_archive_without_git_uses_project_layout(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            scripts = root.joinpath(*pathlib.PurePosixPath(paths.BOARD_REL).parts, "工程", "scripts")
+            scripts.mkdir(parents=True)
+            self.assertEqual(common._repo_root(scripts), root)
+
+    def test_git_worktree_marker_does_not_depend_on_depth(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            (root / ".git").write_text("gitdir: /some/common/gitdir\n")
+            scripts = root / "arbitrary/deep/project/scripts"
+            scripts.mkdir(parents=True)
+            self.assertEqual(common._repo_root(scripts), root)
+
+    def test_unrecognized_archive_layout_reports_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            scripts = pathlib.Path(d) / "unknown/scripts"
+            scripts.mkdir(parents=True)
+            with self.assertRaises(RuntimeError):
+                common._repo_root(scripts)

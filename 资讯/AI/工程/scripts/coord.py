@@ -191,17 +191,34 @@ def last_subject(ctx: Ctx, sha: str, path: str) -> str | None:
     （2026-11-18 验收复现：迁移提交 6c8d55b 对 2026-W45.md 的状态是 R100，正文零变化）。
     人工编辑正文的提交状态是 M / A，仍会被识别，保护没有被削弱。
     """
-    log = out_text(git(ctx, "log", "--follow", "--format=%H%x09%s", sha, "--", path, check=False))
-    basename = path.rsplit("/", 1)[-1]
+    log = out_text(git(ctx, "log", "--follow", "--format=%H%x09%s", sha,
+                       "--", ":(literal)" + path))
+    tracked = path
     for line in log.splitlines():
         commit, _, subject = line.partition("\t")
         if not commit:
             continue
-        statuses = out_text(git(ctx, "diff-tree", "-r", "-M", "--no-commit-id", "--name-status",
-                               commit, check=False)).splitlines()
-        touched = [s for s in statuses if basename in s]
-        if touched and all(s.startswith("R100") for s in touched):
+        # NUL 分隔避免中文路径被 Git 引号转义，也不把同 basename 的其他文件算进来。
+        raw = git(ctx, "diff-tree", "--root", "-r", "-M", "--no-commit-id",
+                  "--name-status", "-z", commit).stdout
+        fields = raw.decode("utf-8", "surrogateescape").split("\0")
+        touched = []
+        index = 0
+        while index < len(fields) and fields[index]:
+            status = fields[index]
+            count = 2 if status.startswith(("R", "C")) else 1
+            if index + count >= len(fields):
+                # 非预期 diff 格式不能作为“没有正文改动”的证据。
+                return subject or None
+            names = fields[index + 1:index + count + 1]
+            if names[-1] == tracked:
+                touched.append((status, names))
+            index += count + 1
+        if len(touched) == 1 and touched[0][0] == "R100":
+            # --follow 后续提交里的路径可能已不同：跨文件名重命名时同步回溯旧路径。
+            tracked = touched[0][1][0]
             continue
+        # M/A/R<100、合并提交或无法确定目标的记录都保守保留，不跳过人工编辑。
         return subject or None
     return None
 
@@ -280,22 +297,41 @@ def setup_sandbox(repo: pathlib.Path, work: pathlib.Path, branch: str) -> str:
     这棵目录树，而不是远端上一次的提交。
     """
     path = work / "sandbox.git"
-    if not path.exists():
-        subprocess.run(["git", "init", "-q", "--bare", str(path)], check=True)
+    if path.is_symlink() or (path.exists() and not path.is_dir()) or (path / ".git").exists():
+        raise CoordError("INTERNAL", "沙箱路径不是独立裸仓库目录，保留现有文件并停止")
+    # init --bare 可重入，不会清空已有对象/ref；也能修复空目录或缺失 HEAD 的半初始化。
+    initialized = subprocess.run(["git", "init", "-q", "--bare", str(path)],
+                                 capture_output=True, text=True)
+    if initialized.returncode:
+        raise CoordError("INTERNAL", "沙箱元数据初始化失败，保留现有文件并停止")
     objects = subprocess.run(["git", "-C", str(repo), "rev-parse", "--git-path", "objects"],
                              capture_output=True, text=True, check=True).stdout.strip()
     objects = (repo / objects).resolve() if not os.path.isabs(objects) else pathlib.Path(objects)
     alternates = path / "objects" / "info" / "alternates"
     alternates.parent.mkdir(parents=True, exist_ok=True)
-    if not alternates.is_file() or alternates.read_text(encoding="utf-8").strip() != str(objects):
-        alternates.write_text(str(objects) + "\n", encoding="utf-8")
+    old_alternates = alternates.read_text(encoding="utf-8").splitlines() if alternates.is_file() else []
+    sources = list(dict.fromkeys([str(objects), *(line for line in old_alternates if line)]))
+    updated = "\n".join(sources) + "\n"
+    if not alternates.is_file() or alternates.read_text(encoding="utf-8") != updated:
+        # 保留旧对象源：已发布沙箱历史可能仍借用那些对象，不能因切换克隆而丢失。
+        alternates.write_text(updated, encoding="utf-8")
     ref = subprocess.run(["git", "--git-dir", str(path), "rev-parse", "--verify", "--quiet",
                           f"refs/heads/{branch}"], capture_output=True, text=True)
     tip = ref.stdout.strip()
     valid = (ref.returncode == 0 and re.fullmatch(r"[0-9a-f]{40}", tip)
              and subprocess.run(["git", "--git-dir", str(path), "cat-file", "-e", tip + "^{commit}"],
                                 capture_output=True).returncode == 0)
+    if tip and not valid:
+        raise CoordError("INTERNAL", "沙箱已发布分支无法读取；保留原 ref，不重置为本地 HEAD")
     if not valid:
+        # 不能把损坏的 ref 当成“尚未建立”而覆盖。
+        ref_name = f"refs/heads/{branch}"
+        loose = path / ref_name
+        packed = path / "packed-refs"
+        packed_exists = packed.is_file() and any(
+            line.endswith(" " + ref_name) for line in packed.read_text(encoding="utf-8").splitlines())
+        if loose.exists() or packed_exists:
+            raise CoordError("INTERNAL", "沙箱分支记录损坏；保留原 ref，需先恢复本地沙箱")
         head = subprocess.run(["git", "-C", str(repo), "rev-parse", "--verify", "HEAD"],
                               capture_output=True, text=True, check=True).stdout.strip()
         subprocess.run(["git", "--git-dir", str(path), "update-ref",
@@ -626,7 +662,11 @@ def cmd_start(args) -> int:
     repo = pathlib.Path(os.environ.get("AI_WEEKLY_REPO", REPO_DIR))
     remote = args.remote
     if not remote and args.test:
-        remote = setup_sandbox(repo, work, cfg["branch"])
+        try:
+            remote = setup_sandbox(repo, work, cfg["branch"])
+        except (CoordError, OSError, subprocess.CalledProcessError):
+            emit("error", "沙箱初始化或历史校验失败；保留现有沙箱，修复后重试")
+            return EXIT_ERROR
     remote = remote or "origin"
     existing = {}
     try:
@@ -1055,7 +1095,7 @@ def main(argv=None) -> int:
     p.add_argument("--quality", choices=["full", "degraded", "check_failed"], default=None,
                    help="期望的产出质量；实际值由 check_run.py 的门槛结果推导，不一致时拒绝发布")
     p.add_argument("--allow-quality-override", action="store_true",
-                   help="回溯或测试时按 --quality 直接发布，跳过与门槛结果的比对（记入 gates.override）")
+                   help="仅回溯可用：须指定与产物一致的 --quality，只可豁免 GATE_STALE（记入 gates.override）")
     p.add_argument("--codes", help="本次运行遇到的错误码，逗号分隔")
     v = sub.add_parser("verified")
     v.add_argument("--result", choices=["pass", "fail"], required=True)

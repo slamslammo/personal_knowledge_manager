@@ -127,6 +127,13 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.assertEqual(result["body_lines"].split("/")[0], "0")
         self.assertNotEqual(code, 0)
 
+    def test_unknown_readback_format_never_passes_acceptance(self):
+        result, code = self.finish(
+            "<title>[测试] AI 周报</title><script>unexpected</script>")
+        self.assertEqual(result["acceptance"], "pending")
+        self.assertEqual(result["comparison_error"], "unsupported_format")
+        self.assertNotEqual(code, 0)
+
     def test_unsynced_doc_and_failed_read_do_not_pass(self):
         result, code = self.finish(probe_code=1)
         self.assertEqual(result["acceptance"], "failed")
@@ -285,6 +292,75 @@ range: 2026-11-02/2026-11-08
         """发布稿里可能有 `URLError: <urlopen error …>`，不能当成标签剥掉。"""
         text = self.MARKDOWN.replace("联网搜索：22 次", "联网搜索：<urlopen error Tunnel failed> 22 次")
         self.assertIn("<urlopen error Tunnel failed>", "\n".join(d.document_parts(text)[1]))
+
+    def test_link_destination_is_not_formatted_as_markdown(self):
+        expected = "# T\n\n[源](https://example.com/a**b)"
+        correct = '<title>T</title><p><a href="https://example.com/a**b">源</a></p>'
+        changed = correct.replace("a**b", "ab")
+        self.assertEqual(d.compare_documents(expected, correct)["content_match"], "normalized_equal")
+        self.assertEqual(d.compare_documents(expected, changed)["content_match"], "manual_review")
+        # Literal backticks and nested parentheses in destinations survive too.
+        expected = "# T\n\n[源](https://example.com/a" + chr(96) + "(b))"
+        actual = '<title>T</title><p><a href="https://example.com/a' + chr(96) + '(b)">源</a></p>'
+        self.assertEqual(d.compare_documents(expected, actual)["content_match"], "normalized_equal")
+
+    def test_inline_code_operators_spaces_and_literal_markup_survive(self):
+        expected = "# T\n\n" + chr(96) + "2 ** 10 <x>  +  1" + chr(96)
+        actual = "<title>T</title><p><code>2 ** 10 &lt;x&gt;  +  1</code></p>"
+        self.assertEqual(d.compare_documents(expected, actual)["content_match"], "normalized_equal")
+        for broken in (actual.replace("**", ""), actual.replace("  +  ", " + "),
+                       actual.replace("&lt;x&gt;", "")):
+            with self.subTest(broken=broken):
+                self.assertEqual(d.compare_documents(expected, broken)["content_match"], "manual_review")
+
+    def test_numbered_heading_keeps_its_number(self):
+        expected = "# T\n\n### 1. 项目"
+        correct = "<title>T</title><h3>1. 项目</h3>"
+        self.assertEqual(d.compare_documents(expected, correct)["content_match"], "normalized_equal")
+        self.assertEqual(d.compare_documents(expected, correct.replace("1.", "99."))["content_match"],
+                         "manual_review")
+
+    def test_table_cell_boundaries_and_empty_cells_are_preserved(self):
+        expected = "# T\n\n| A | B |\n| --- | --- |\n| a\\|b | c |\n| | d |"
+        correct = ("<title>T</title><table><tr><th>A</th><th>B</th></tr>"
+                   "<tr><td>a|b</td><td>c</td></tr><tr><td></td><td>d</td></tr></table>")
+        self.assertEqual(d.compare_documents(expected, correct)["content_match"], "normalized_equal")
+        for broken in (correct.replace("<td>a|b</td><td>c</td>", "<td>a</td><td>b|c</td>"),
+                       correct.replace("<td></td>", "")):
+            with self.subTest(broken=broken):
+                self.assertEqual(d.compare_documents(expected, broken)["content_match"], "manual_review")
+
+    def test_html_table_entities_are_decoded_once(self):
+        expected = "# T\n\n| 错误 |\n| --- |\n| <urlopen error 502> &amp;lt; |"
+        actual = ("<title>T</title><table><tr><th>错误</th></tr>"
+                  "<tr><td><p>&lt;urlopen error 502&gt; &amp;lt;</p></td></tr></table>")
+        self.assertEqual(d.compare_documents(expected, actual)["content_match"], "normalized_equal")
+        self.assertEqual(d.compare_documents(expected, actual.replace("&amp;lt;", "&lt;"))["content_match"],
+                         "manual_review")
+
+    def test_supported_inline_formatting_does_not_hide_literal_symbols(self):
+        expected = "# T\n\n- **说明**：" + chr(96) + "**" + chr(96) + " [来源](https://example.com/?x=1&amp;y=2)"
+        actual = ('<title>T</title><ul><li><strong>说明</strong>：<code>**</code> '
+                  '<a href="https://example.com/?x=1&amp;y=2">来源</a></li></ul>')
+        self.assertEqual(d.compare_documents(expected, actual)["content_match"], "normalized_equal")
+        self.assertEqual(d.compare_documents(expected, actual.replace("<code>**</code>", ""))["content_match"],
+                         "manual_review")
+
+    def test_unsupported_or_malformed_conversion_requires_review(self):
+        for actual in ("<title>T</title><iframe>正文</iframe>",
+                       "<title>T</title><p>正文</div>",
+                       "<title>T</title><p>正文",
+                       "<title>T</title><table><tr><td colspan=\"2\">正文</td></tr></table>"):
+            with self.subTest(actual=actual):
+                result = d.compare_documents("# T\n\n正文", actual)
+                self.assertEqual(result["content_match"], "manual_review")
+                self.assertEqual(result["comparison_error"], "unsupported_format")
+        # The weekly format does not currently use these Markdown constructs.
+        for unsupported in ("![图](https://example.com/image.png)", chr(96) * 3 + "\n正文\n" + chr(96) * 3,
+                            "1. 正文"):
+            with self.subTest(unsupported=unsupported):
+                result = d.compare_documents("# T\n\n" + unsupported, "# T\n\n" + unsupported)
+                self.assertEqual(result["content_match"], "manual_review")
 
 
 if __name__ == "__main__":
