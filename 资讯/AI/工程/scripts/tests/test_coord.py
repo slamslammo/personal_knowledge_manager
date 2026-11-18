@@ -741,11 +741,20 @@ class SetupSandboxTest(unittest.TestCase):
         return subprocess.run(["git", "--git-dir", str(path), *args],
                               capture_output=True, text=True, check=True).stdout.strip()
 
+    @staticmethod
+    def _ident():
+        """CI 容器没有全局 git 身份，提交类命令必须显式带身份，否则退出 128。
+
+        2026-11-18：GitHub Actions 在 724dedd 上 `git commit-tree` 报
+        "unable to auto-detect email address"，本地因有全局配置而未暴露。
+        """
+        return dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                    GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+
     def _repo(self, root):
         repo = root / "repo"
         repo.mkdir()
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
-                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        env = self._ident()
         subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True, env=env)
         (repo / "a.txt").write_text("a", encoding="utf-8")
         subprocess.run(["git", "-C", str(repo), "add", "a.txt"], check=True, env=env)
@@ -782,7 +791,8 @@ class SetupSandboxTest(unittest.TestCase):
             tree = self._git("rev-parse", "HEAD^{tree}", cwd=repo)
             head = self._git("rev-parse", "HEAD", cwd=repo)
             p = subprocess.run(["git", "--git-dir", remote, "commit-tree", tree, "-p", head],
-                               input="published\n", capture_output=True, text=True, check=True)
+                               input="published\n", capture_output=True, text=True, check=True,
+                               env=self._ident())
             published = p.stdout.strip()
             self._git_dir(remote, "update-ref", "refs/heads/main", published)
             # 已发布的沙箱 tip 不能被下一次 setup 重置回本地 HEAD。
