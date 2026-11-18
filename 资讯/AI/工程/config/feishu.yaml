@@ -1,0 +1,14 @@
+# 飞书交付配置，feishu_sync.py 读取。设计依据见 ../../文档/提案/2026-11-14-飞书接入与定时任务收敛.md。
+
+enabled: true
+
+# 文档所在文件夹 token（可选）。为空时建在「我的空间」根目录。
+# 获取方式：在飞书里建好「AI 周报」文件夹，从文件夹 URL 复制 token 段。
+folder_token: ""
+
+notify:
+  as: bot                            # 通知以应用（bot）身份发送
+  user_open_id: "ou_4ae422ac0cc335fff6212d582972f769"   # 接收人（莫家文）
+
+# lark-cli 路径（可选）。为空时自动探测：PATH → WorkBuddy 连接器路径。
+cli_path: ""
