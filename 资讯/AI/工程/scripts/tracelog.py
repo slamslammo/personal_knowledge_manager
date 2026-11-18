@@ -62,6 +62,10 @@ ERROR_CODES = {
     "FEISHU_SOURCE_MISSING": "git 已发布内容读取失败（git show <ref>:<path>）",
     "FEISHU_AMBIGUOUS_DOC": "同周飞书文档多于一篇，拒绝覆盖，需人工定夺",
     "FEISHU_SYNC_FAILED": "飞书文档同步失败（重试后仍失败或 create 不可重试失败）",
+    "FEISHU_READBACK_SHA_REQUIRED": "正文核对需要已发布的完整提交号",
+    "FEISHU_READBACK_DOC_REQUIRED": "缺少本周正式同步的文档 ID，可显式指定",
+    "FEISHU_READBACK_UNAVAILABLE": "飞书正文读取暂不可用，保留文档并重试只读核对",
+    "FEISHU_READBACK_MISMATCH": "飞书正文与已发布稿未能判为一致，需要核对差异",
     "FEISHU_NOTIFY_FAILED": "飞书通知发送失败（含精简版重试）",
     # 协调与提交
     "LOCK_LOST": "锁已被其他运行接管，放弃推送",

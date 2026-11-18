@@ -1,4 +1,4 @@
-"""飞书交付：预检（preflight）、同步周报（sync）、发送通知（notify）。
+"""飞书交付：预检（preflight）、同步周报（sync）、读回核对（verify）、发送通知（notify）。
 
 设计依据 ../../文档/提案/2026-11-14-飞书接入与定时任务收敛.md（v4 终版）：
 
@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import hashlib
 import json
 import os
@@ -51,9 +52,12 @@ import time
 import paths
 import tracelog
 from common import REPO_DIR, WORK_DIR, load_config, read_json, write_json
+from weeks import Week
 
 MODE_FILE = "feishu-mode.json"
 RESULT_FILE = "feishu.json"
+READBACK_FILE = "feishu-delivery-check.json"
+NOTIFY_FILE = "feishu-notify-receipt.json"
 CONNECTOR_CLI = pathlib.Path.home() / ".workbuddy/binaries/node/cli-connector-packages/bin/lark-cli"
 PROXY_VARS = ("HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy")
 LOOPBACK = {"127.0.0.1", "localhost", "::1"}
@@ -554,12 +558,65 @@ def cmd_sync(args) -> int:
     return 1
 
 
+# ---------------------------------------------------------------- verify
+
+def cmd_verify(args) -> int:
+    """只读核对指定提交与实际文档，失败时保留 sync 的文档 ID 供补交付。"""
+    from document_compare import compare_documents
+
+    week = args.week or week_from_weekjson()
+    receipt = {"week": week, "source_sha": args.sha, "checked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+
+    def record(status: str, code: str | None = None) -> int:
+        receipt.update(status=status, code=code)
+        write_json(WORK_DIR / READBACK_FILE, receipt)
+        tracelog.log("飞书", "正文核对", "ok" if status == "passed" else "warn", code,
+                     source_sha=receipt["source_sha"], document_id=receipt.get("document_id"))
+        print(f"READBACK={status}" + (f" CODE={code}" if code else ""))
+        return 0 if status == "passed" else 1
+
+    if not re.fullmatch(r"[0-9a-f]{40}", args.sha):
+        return record("failed", "FEISHU_READBACK_SHA_REQUIRED")
+    try:
+        week = Week.parse(week or "").label
+    except ValueError:
+        return record("failed", "FEISHU_WEEK_UNKNOWN")
+    token = args.doc
+    if not token:
+        cached = _cached_result(week, test=False) or {}
+        if cached.get("action") in ("created", "updated"):
+            token = cached.get("document_id")
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", token):
+        return record("failed", "FEISHU_READBACK_DOC_REQUIRED")
+    receipt["document_id"] = token
+    expected = git_show(args.sha, report_path_for(week))
+    if not expected:
+        return record("failed", "FEISHU_SOURCE_MISSING")
+    cli = find_cli(cfg_load() or {})
+    if not cli:
+        return record("failed", "FEISHU_CLI_NOT_FOUND")
+    out = run_cli(cli, "docs", "+fetch", "--doc", token, "--as", "user")
+    data = out.get("data")
+    if out.get("error") or not isinstance(data, dict) or _business_failure(out):
+        return record("pending", "FEISHU_READBACK_UNAVAILABLE")
+    document = data.get("document")
+    actual = document.get("content") if isinstance(document, dict) else None
+    if not isinstance(actual, str) or not actual or document.get("document_id", token) != token:
+        return record("pending", "FEISHU_READBACK_UNAVAILABLE")
+    comparison = compare_documents(expected, actual)
+    receipt.update(comparison)
+    if comparison["content_match"] != "normalized_equal":
+        return record("pending", "FEISHU_READBACK_MISMATCH")
+    return record("passed")
+
+
 # ---------------------------------------------------------------- notify
 
 def cmd_notify(args) -> int:
     if is_test():
         print("NOTIFY=skipped test=1")
         return 0
+    (WORK_DIR / NOTIFY_FILE).unlink(missing_ok=True)
     mode = ensure_mode(refresh=True)
     if mode in ("off", "no_notify"):
         print(f"NOTIFY=skipped mode={mode}")
@@ -592,13 +649,21 @@ def cmd_notify(args) -> int:
             return 1
     elif err and args.fallback_file and pathlib.Path(args.fallback_file).exists():
         # 确定拒绝（业务/权限类）：首条未发出，可安全换键发精简版
-        out = send(args.fallback_file, key + "-fb")
+        key += "-fb"
+        out = send(args.fallback_file, key)
     if out.get("error"):
         err = out["error"]
         tracelog.log("飞书", "通知", "error", "FEISHU_NOTIFY_FAILED",
                      (err.get("detail") or err.get("subtype") or "")[:200])
         print("NOTIFY=failed CODE=FEISHU_NOTIFY_FAILED")
         return 1
+    data = out.get("data")
+    message_id = data.get("message_id") if isinstance(data, dict) else None
+    receipt = {"week": week, "status": "api_accepted", "idempotency_key": key,
+               "checked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+    if isinstance(message_id, str) and re.fullmatch(r"[A-Za-z0-9_-]+", message_id):
+        receipt["message_id"] = message_id
+    write_json(WORK_DIR / NOTIFY_FILE, receipt)
     tracelog.log("飞书", "通知", "ok", detail=f"idempotency={key}")
     print("NOTIFY=sent")
     return 0
@@ -607,7 +672,7 @@ def cmd_notify(args) -> int:
 # ---------------------------------------------------------------- main
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="飞书交付：preflight / sync / notify")
+    ap = argparse.ArgumentParser(description="飞书交付：preflight / sync / verify / notify")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("preflight", help="飞书环境预检（写 feishu-mode.json）")
     sp = sub.add_parser("sync", help="同步周报到飞书")
@@ -615,11 +680,15 @@ def main() -> int:
     sp.add_argument("--sha", help="已发布的提交号（缺省 main）")
     sp.add_argument("--week", help="ISO 周（缺省读 week.json）")
     sp.add_argument("--report", help="仓库内周报相对路径（缺省按周推导）")
+    sp = sub.add_parser("verify", help="只读核对正式飞书文档与指定已发布提交")
+    sp.add_argument("--sha", required=True, help="已发布的完整提交号")
+    sp.add_argument("--week", help="ISO 周（缺省读 week.json）")
+    sp.add_argument("--doc", help="文档 ID（缺省读本周正式同步结果）")
     sp = sub.add_parser("notify", help="以 bot 发送通知")
     sp.add_argument("--file", required=True, help="通知正文文件")
     sp.add_argument("--fallback-file", help="发送失败时的精简版文件")
     args = ap.parse_args()
-    return {"preflight": cmd_preflight, "sync": cmd_sync, "notify": cmd_notify}[args.cmd](args)
+    return {"preflight": cmd_preflight, "sync": cmd_sync, "verify": cmd_verify, "notify": cmd_notify}[args.cmd](args)
 
 
 if __name__ == "__main__":

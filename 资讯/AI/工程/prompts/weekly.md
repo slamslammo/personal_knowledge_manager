@@ -18,7 +18,7 @@
 
 | 项目模式或本次参数 | 行为 |
 | --- | --- |
-| `mode: acceptance`（项目配置，当前默认） | 完整生成周报；协调提交和推送走本地沙箱；飞书文档带 `[测试]`；真实通知跳过；最后出具本次验收结果，不自动切正式 |
+| `mode: acceptance`（项目配置） | 完整生成周报；协调提交和推送走本地沙箱；飞书文档带 `[测试]`；真实通知跳过；最后出具本次验收结果，不自动切正式 |
 | `mode: production`（项目配置） | 正式运行，报告周为上一周；提交推送到 `main`；按交付状态同步飞书并通知 |
 | `TARGET_START=YYYY-MM-DD`（周一）或 `TARGET_WEEK=YYYY-Www` | 指定回溯周，标题加“（回溯版）”，已有榜单数据可复用；验收/正式隔离仍由部署模式决定 |
 | 显式 `TEST_RUN=1` | 开发会话的测试覆盖，优先使用沙箱；定时任务首次验收不需要临时加这个参数 |
@@ -247,11 +247,18 @@ python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交�
 - 同步的是**已发布提交里的周报**（`git show`），不是 `/tmp` 下的候选稿——候选稿可能因远端人工修改保护而没有入库。
 - 同周文档只保留一篇：按「AI 周报 + 周编号」查重，命中唯一才覆盖（回溯版会覆盖普通版）；查到多篇时报 `FEISHU_AMBIGUOUS_DOC`，不盲目覆盖。
 - 读 `/tmp/ai-weekly/feishu.json` 得 `document_id` 与 `url`（第 6 步的飞书链接）。
-- 输出 `SYNC=created` 或 `SYNC=updated`：成功。
-- 输出 `SYNC=skipped`：预检已降级（no_doc/off），第 6 步通知用 GitHub 链接并注明。
-- 输出 `SYNC=error`：**不阻塞**，照常进入第 6 步，通知用 GitHub 链接并注明错误码。修复飞书环境后用下面的命令补交付，**不重跑整周**：
+- 输出 `SYNC=created` 或 `SYNC=updated`：飞书写接口成功。正式模式下，立即用第 5 步输出的完整 SHA 读回核对；验收模式由第 7 步核对测试文档正文。
+
+  ```bash
+  python3 $S/feishu_sync.py verify --sha <第 5 步输出的完整提交号> --week "$WEEK"
   ```
-  python3 $S/feishu_sync.py sync --from-published --week $WEEK
+
+  `READBACK=passed` 才报告正式飞书正文已核对。`READBACK=pending/failed` 表示交付待核，保留原文档和同步结果，通知用 GitHub 链接并注明核对错误码。临时读回失败先重试上述只读命令，无需重写文档。需要独立复核旧版时可加 `--doc <文档ID>`。脱敏核对结果在 `/tmp/ai-weekly/feishu-delivery-check.json`。
+- 输出 `SYNC=skipped`：预检已降级（no_doc/off），第 6 步通知用 GitHub 链接并注明。
+- 输出 `SYNC=error`：**不阻塞**，照常进入第 6 步，通知用 GitHub 链接并注明错误码。修复飞书环境后，指定应交付的已发布提交，补同步并读回，**不重跑整周**：
+  ```
+  python3 $S/feishu_sync.py sync --from-published --sha <已发布的完整提交号> --week "$WEEK"
+  python3 $S/feishu_sync.py verify --sha <同一提交号> --week "$WEEK"
   ```
 - 回溯运行同样执行本步。
 
@@ -265,6 +272,8 @@ python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallba
 
 预检为 no_notify/off、notify 输出 `NOTIFY=skipped`，或平台没有 lark-cli 时，把通知内容作为本次运行的最后输出，由调度方转发。测试模式只写文件，并在最后原样输出，不发通知。
 
+`NOTIFY=sent` 表示飞书 API 已接受通知。`/tmp/ai-weekly/feishu-notify-receipt.json` 记录幂等键和 API 提供的消息 ID。需要验收实际到达时，另由接收人确认。
+
 通知全部用纯文本（不用表格和 Markdown 链接语法，URL 直接写完整）：
 - **首句**：格式固定为 `【AI周报 W{WNUM}】<本周最重要的一件事>。`，不超过 40 个汉字。
   - 按情况在 `W{WNUM}` 后加标记，多个时依次写：`｜重跑`（校验不通过后重跑，或重跑已有的周）、`｜接管`（前一个运行超时后接管）、`｜回溯`、`｜降级`、`｜检查未通过`、`｜未提交`。
@@ -277,7 +286,7 @@ python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallba
   - `校验：通过（N 个警告）` 或列出未通过的错误码；
   - `完整性：全部完成，联网搜索 N 次` 或列出未完成的步骤；
   - 正式模式写 `提交：已推送到 main（提交号前 7 位）`，或写明未提交原因；验收模式写 `提交：已推送到本地沙箱（提交号前 7 位），未写入 GitHub`，不能声称推送 main。
-- **结尾**：周报全文链接。第 5.5 步成功时用 `feishu.json` 里的飞书文档链接；同步失败或跳过时用 GitHub 链接并注明「飞书同步失败：<错误码>」或「飞书未同步：<预检模式>」，GitHub 链接路径中的中文要做百分号编码（`python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"`，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面）。验收模式飞书未同步时，不生成指向生产 main 的本轮假链接，改给出本地沙箱提交号与临时产出路径，并在最后输出正文。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败按同步脚本实际错误类型与幂等策略处理，不盲目换键重发。
+- **结尾**：周报全文链接。正式模式读回通过后用 `feishu.json` 里的飞书文档链接；同步失败、跳过或读回待核时用 GitHub 链接并注明原因。GitHub 链接路径中的中文要做百分号编码（`python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"`，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面）。验收模式可列出 `[测试]` 文档链接供核对，飞书未同步时给出本地沙箱提交号与临时产出路径，并在最后输出正文。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败按同步脚本实际错误类型与幂等策略处理，不盲目换键重发。
 
 ## 第 7 步：验收结果（仅验收模式）
 
@@ -316,7 +325,7 @@ python3 $S/verify.py --record
 3. 按入口提示词发失败通知：写清停在哪一步、已经完成了什么、错误码。
 4. 测试模式同样执行，只是不发通知，把通知内容在最后原样输出。
 
-飞书同步或飞书通知失败**不算**无法恢复的错误：周报已照常发布。修复飞书环境后补交付（`python3 $S/feishu_sync.py sync --from-published --week $WEEK`），必要时补发通知，不需要重跑整周。
+飞书同步、读回核对或通知失败时，Git 周报已照常发布。按第 5.5 步对指定提交补交付，必要时补发通知，不需要重跑整周。
 
 ## 执行记录
 

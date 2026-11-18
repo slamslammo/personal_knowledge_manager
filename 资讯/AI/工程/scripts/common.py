@@ -29,7 +29,15 @@ def _repo_root(start: pathlib.Path) -> pathlib.Path:
     for parent in (start, *start.parents):
         if (parent / ".git").exists():
             return parent
-    return BOARD_DIR.parent  # 无 .git 的临时副本：退回旧算法
+    # GitHub 归档/离线副本没有 .git。按项目路径常量匹配工程目录，避免迁移后
+    # 把 <仓库>/资讯 误当根目录，导致 report_exists 等只读判定全部偏移一层。
+    import paths
+
+    for parent in (start, *start.parents):
+        expected = parent.joinpath(*pathlib.PurePosixPath(paths.BOARD_REL).parts, "工程", "scripts")
+        if expected.resolve() == start.resolve():
+            return parent
+    raise RuntimeError("无法定位仓库根目录：需要 Git 检出或保留项目目录结构的归档")
 
 
 REPO_DIR = _repo_root(SCRIPTS_DIR)
