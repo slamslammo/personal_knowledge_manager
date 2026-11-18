@@ -53,23 +53,87 @@ def start(platform: str) -> int:
     return subprocess.run(argv).returncode
 
 
-def normalized_markdown(text: str) -> str:
-    """仅折叠常见 Markdown 排版差异，保留文字、数字和链接。
+_TAG = re.compile(r"(?is)<[^>]+>")
+# 只认块级标签，避免把正文里的 `<urlopen error …>` 这类文本误判成 HTML。
+_HTML_HINT = re.compile(r"(?is)<(?:title|h[1-6]|p|br|table|ul|ol|li|div|blockquote|hr|tr|td|th)\b")
+_SEPARATOR = re.compile(r"\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*")
+_COMMENT = re.compile(r"(?s)<!--.*?-->")
 
-    飞书转换超出此范围时按待核对处理，不用宽松关键词匹配宣称正文一致。
+
+def _inline_text(fragment: str) -> str:
+    """行内标签还原成纯文本：链接还原成 `文本 地址`，与 Markdown 侧折叠规则对齐。"""
+    def link(match: re.Match) -> str:
+        text = _inline_text(match.group(2))
+        href = html.unescape(match.group(1))
+        return f"{text} {href}" if text else href
+
+    fragment = re.sub(r'(?is)<a\s[^>]*href="([^"]*)"[^>]*>(.*?)</a>', link, fragment)
+    fragment = re.sub(r"(?is)</p>\s*<p[^>]*>", " ", fragment)
+    return html.unescape(_TAG.sub("", fragment))
+
+
+def _table_rows(block: str) -> str:
+    rows = []
+    for row in re.findall(r"(?is)<tr[^>]*>(.*?)</tr>", block):
+        cells = re.findall(r"(?is)<t[hd][^>]*>(.*?)</t[hd]>", row)
+        values = [re.sub(r"\s+", " ", _inline_text(cell)).strip() for cell in cells]
+        if values:
+            rows.append("| " + " | ".join(values) + " |")
+    return "\n".join(rows)
+
+
+def _quote_block(inner: str) -> str:
+    lines = [line.strip() for line in html_to_markdown(inner).splitlines() if line.strip()]
+    return "\n" + "\n".join("> " + line for line in lines) + "\n"
+
+
+def html_to_markdown(text: str) -> str:
+    """把飞书读回的 HTML 化正文还原成块结构；输入已是 Markdown 时原样返回。
+
+    `docs +fetch` 返回的正文是单行 HTML 表示：文档标题变 `<title>`（飞书把它放在
+    全文最前，而发布稿里 H1 在 YAML 头之后）、段落变 `<p>`、换行变 `<br/>`、列表变
+    `<li>`、表格变 `<table>`。不先还原块结构，任何跨行比对都必然不等。
     """
-    text = html.unescape(text).replace("\r\n", "\n")
-    lines = []
-    for line in text.splitlines():
-        if re.fullmatch(r"\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*", line):
+    if not _HTML_HINT.search(text):
+        return text
+    text = re.sub(r"(?is)<table[^>]*>.*?</table>", lambda m: "\n" + _table_rows(m.group(0)) + "\n", text)
+    text = re.sub(r"(?is)<title[^>]*>(.*?)</title>", lambda m: "\n# " + _inline_text(m.group(1)) + "\n", text)
+    text = re.sub(r"(?is)<blockquote[^>]*>(.*?)</blockquote>", lambda m: _quote_block(m.group(1)), text)
+    text = re.sub(r"(?i)<h([1-6])[^>]*>", lambda m: "\n" + "#" * int(m.group(1)) + " ", text)
+    text = re.sub(r"(?i)</h[1-6]>|<br\s*/?>", "\n", text)
+    text = re.sub(r"(?i)<li[^>]*>", "\n- ", text)
+    text = re.sub(r"(?i)</?(?:p|div|ul|ol|li|tr|table|hr)[^>]*>", "\n", text)
+    return _inline_text(text)
+
+
+def _fold_line(line: str) -> str:
+    """折叠单行的排版差异，文字、数字与链接地址都保留。"""
+    line = re.sub(r"^\s*#{1,6}\s+", "", line)
+    line = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 \2", line)
+    line = line.replace("**", "").replace("`", "")
+    line = re.sub(r"\s*\|\s*", "|", line).strip().strip("|")
+    line = re.sub(r"^(?:[-*+]\s+|\d+[.)]\s+|>\s?)", "", line)
+    return re.sub(r"\s+", " ", line).strip()
+
+
+def document_parts(text: str) -> tuple[str, list[str]]:
+    """拆成（文档标题，正文行）。标题单独核对、正文按原顺序比对。
+
+    飞书把 H1 提到文档标题位、把 YAML 头转成正文首块，标题与正文的相对位置和发布稿
+    不同；顺序差异只允许发生在标题这一处，正文顺序仍严格比对。
+    HTML 注释（如 `<!-- auto:data-notes -->`）不进入渲染结果，两侧都剔除。
+    """
+    title, body = "", []
+    for line in _COMMENT.sub("", html_to_markdown(text)).replace("\r\n", "\n").splitlines():
+        if _SEPARATOR.fullmatch(line):
             continue
-        line = re.sub(r"^\s*#{1,6}\s+", "", line)
-        line = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 \2", line)
-        line = line.replace("**", "").replace("`", "")
-        line = re.sub(r"\s*\|\s*", "|", line).strip().strip("|")
-        if line:
-            lines.append(re.sub(r"\s+", " ", line))
-    return "\n".join(lines)
+        if not title and re.match(r"^\s*#\s+\S", line):
+            title = _fold_line(line)
+            continue
+        folded = _fold_line(line)
+        if folded:
+            body.append(folded)
+    return title, body
 
 
 def _git(repo: pathlib.Path, *args: str) -> str:
@@ -142,9 +206,16 @@ def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
         expected = re.sub(r"(?m)^# ", "# [测试] ", evidence["content"], count=1)
         result.update(document_id=synced["document_id"], url=synced.get("url"),
                       notification="skipped", api_read="ok", document_delivery="read_back")
-        if normalized_markdown(actual) != normalized_markdown(expected):
+        exp_title, exp_body = document_parts(expected)
+        act_title, act_body = document_parts(actual)
+        if (exp_title, exp_body) != (act_title, act_body):
+            first = next((i for i in range(max(len(exp_body), len(act_body)))
+                          if i >= len(exp_body) or i >= len(act_body) or exp_body[i] != act_body[i]), None)
             result.update(acceptance="pending", content_match="manual_review",
-                          reason="读回正文与发布稿存在转换差异，请对照 feishu-content.md 与 feishu-readback.md")
+                          title_match=exp_title == act_title,
+                          body_lines=f"{len(act_body)}/{len(exp_body)}",
+                          first_diff_line=first + 1 if first is not None else 0,
+                          reason="读回正文与发布稿存在内容差异，请对照 feishu-content.md 与 feishu-readback.md")
         else:
             result.update(acceptance="passed", content_match="normalized_equal", document_delivery="passed")
         if not (work / "notification.txt").is_file():

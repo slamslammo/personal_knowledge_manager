@@ -119,6 +119,9 @@ class SandboxAcceptanceTest(unittest.TestCase):
         result, code = self.finish("# [测试] 内容被改过")
         self.assertEqual(result["acceptance"], "pending")
         self.assertEqual(result["content_match"], "manual_review")
+        self.assertFalse(result["title_match"])
+        self.assertEqual(result["first_diff_line"], 1)
+        self.assertEqual(result["body_lines"].split("/")[0], "0")
         self.assertNotEqual(code, 0)
 
     def test_unsynced_doc_and_failed_read_do_not_pass(self):
@@ -168,6 +171,8 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.assertEqual((self.work / "feishu.json").read_bytes(), saved)
         self.assertTrue((self.work / "out" / fixture.REPORT_REL).is_file())
 
+
+
     def test_wrong_app_from_scan_cannot_write_documents(self):
         with mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
                 mock.patch.object(env_check, "check_binding", return_value=("NEEDS_HUMAN", "应用绑定", "")), \
@@ -188,3 +193,95 @@ class SandboxAcceptanceTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReadbackMatchTest(unittest.TestCase):
+    """飞书读回是 HTML 化单行表示，必须还原块结构后比对，但不能因此放过内容丢失。
+
+    2026-11-18 验收：读回 12,201 字符 0 换行（`<title>`、`<h2>`、`<br/>`、`<table>`），
+    发布稿 8,497 字符 144 行 Markdown，旧的逐行折叠必然不等，导致每次运行都以
+    `ACCEPTANCE=pending` 收尾。此处的样本保留真实结构：标题被提到文档首位、YAML 头
+    变成正文首块、列表与表格走 HTML 标签。
+    """
+
+    MARKDOWN = """---
+week: 2026-W45
+range: 2026-11-02/2026-11-08
+---
+# [测试] AI 周报 · 2026-W45
+
+## ① 本周概览
+
+- **开放权重**：Kimi K3.1 Pro 放出完整权重。
+- 争议见 [问题报告](https://example.com/report)。
+
+## ② 传播文章 Top 5
+
+| # | 文章 | 分数 |
+| --- | --- | --- |
+| 1 | [模型权重编程实验](https://example.com/astra) | 2971 |
+
+## 数据说明
+
+<!-- auto:data-notes -->
+- 联网搜索：22 次（下限 20，上限 40）。
+<!-- /auto -->
+
+> 口径：每日数据按 UTC 日期累计。
+"""
+
+    READBACK = (
+        "<title>[测试] AI 周报 · 2026-W45</title><hr/>"
+        "<h2>week: 2026-W45<br/>range: 2026-11-02/2026-11-08</h2>"
+        "<h2>① 本周概览</h2><ul>"
+        "<li><b>开放权重</b>：Kimi K3.1 Pro 放出完整权重。</li>"
+        '<li>争议见 <a href="https://example.com/report">问题报告</a>。</li></ul>'
+        "<h2>② 传播文章 Top 5</h2><table><colgroup><col/><col/><col/></colgroup>"
+        '<thead><tr><th><p>#</p></th><th><p>文章</p></th><th><p>分数</p></th></tr></thead>'
+        '<tbody><tr><td><p>1</p></td><td><p><a href="https://example.com/astra">模型权重编程实验</a></p></td>'
+        "<td><p>2971</p></td></tr></tbody></table>"
+        "<h2>数据说明</h2><ul><li>联网搜索：22 次（下限 20，上限 40）。</li></ul>"
+        "<blockquote><p>口径：每日数据按 UTC 日期累计。</p></blockquote>"
+    )
+
+    def test_html_readback_equals_markdown_source(self):
+        self.assertEqual(d.document_parts(self.READBACK), d.document_parts(self.MARKDOWN))
+
+    def test_title_is_compared_separately(self):
+        broken = self.READBACK.replace("<title>[测试] AI 周报", "<title>AI 周报")
+        self.assertNotEqual(d.document_parts(broken)[0], d.document_parts(self.MARKDOWN)[0])
+
+    def test_missing_line_is_detected(self):
+        broken = self.READBACK.replace("<li>联网搜索：22 次（下限 20，上限 40）。</li>", "")
+        self.assertNotEqual(d.document_parts(broken), d.document_parts(self.MARKDOWN))
+
+    def test_changed_number_is_detected(self):
+        broken = self.READBACK.replace("<p>2971</p>", "<p>2900</p>")
+        self.assertNotEqual(d.document_parts(broken), d.document_parts(self.MARKDOWN))
+
+    def test_changed_link_target_is_detected(self):
+        broken = self.READBACK.replace("https://example.com/astra", "https://example.com/other")
+        self.assertNotEqual(d.document_parts(broken), d.document_parts(self.MARKDOWN))
+
+    def test_dropped_table_column_is_detected(self):
+        broken = self.READBACK.replace("<td><p>2971</p></td>", "")
+        self.assertNotEqual(d.document_parts(broken), d.document_parts(self.MARKDOWN))
+
+    def test_swapped_order_is_detected(self):
+        first = "<li><b>开放权重</b>：Kimi K3.1 Pro 放出完整权重。</li>"
+        second = '<li>争议见 <a href="https://example.com/report">问题报告</a>。</li>'
+        broken = self.READBACK.replace(first + second, second + first)
+        self.assertNotEqual(d.document_parts(broken), d.document_parts(self.MARKDOWN))
+
+    def test_extra_section_is_detected(self):
+        broken = self.READBACK + "<h2>补一段</h2>"
+        self.assertNotEqual(d.document_parts(broken), d.document_parts(self.MARKDOWN))
+
+    def test_html_comment_does_not_count(self):
+        without_comment = self.MARKDOWN.replace("<!-- auto:data-notes -->\n", "")
+        self.assertEqual(d.document_parts(without_comment), d.document_parts(self.MARKDOWN))
+
+    def test_markdown_with_angle_bracket_text_is_not_treated_as_html(self):
+        """发布稿里可能有 `URLError: <urlopen error …>`，不能当成标签剥掉。"""
+        text = self.MARKDOWN.replace("联网搜索：22 次", "联网搜索：<urlopen error Tunnel failed> 22 次")
+        self.assertIn("<urlopen error Tunnel failed>", "\n".join(d.document_parts(text)[1]))
