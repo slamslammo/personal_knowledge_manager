@@ -1,12 +1,15 @@
-"""板块产出路径：相对仓库根目录的单一真相源。
+"""路径与命名的单一真相源：仓库内产出 + 运行时目录 + 固定文件名。
 
-脚本与测试不要各自拼路径字符串，一律从本模块取。
-2026-11-18 目录迁移已完成：AI资讯/ → 资讯/AI/，四类产出统一收进 数据/。
-以后再调整板块位置，只改 BOARD_REL 一行即可；
-weeks.py / coord.py / feishu_sync.py / trace_view.py / 测试均无需改动。
+脚本、手册、文档与测试一律从本模块取路径，不各自拼字符串，也不由智能体
+临时决定数据落在哪里。开发约束见 ../../文档/开发原则.md。
+
+2026-11-18 目录迁移：AI资讯/ → 资讯/AI/，四类产出统一收进 数据/。
+2026-11-19 运行时路径收编：工作目录由仓库检出位置推导，跨环境规则唯一。
 """
 from __future__ import annotations
 
+import os
+import pathlib
 import re
 
 # 板块根目录（相对仓库根）：资讯/{板块名}
@@ -42,3 +45,144 @@ def quarterly(year: int, quarter: int) -> str:
 # coord.py 的写入白名单正则；迁移时随 OUTPUT_REL 自动更新。
 MONTHLY_RE = re.escape(OUTPUT_REL) + r"/月报/\d{4}/\d{4}-\d{2}\.md$"
 QUARTERLY_RE = re.escape(OUTPUT_REL) + r"/季报/\d{4}/\d{4}-Q[1-4]\.md$"
+
+
+# ---------------------------------------------------------------------------
+# 运行时目录：由仓库检出位置推导，不依赖 OS 临时目录，也不由智能体命名。
+# ---------------------------------------------------------------------------
+
+RUNTIME_DIR_NAME = ".ai-weekly"      # 落在仓库检出目录的父级（仓库外）
+WORK_DIR_NAME = "work"               # 单次运行的 scratch
+ARCHIVE_DIR_NAME = "archive"         # 按周归档，一周一份，只读证据
+STATE_DIR_NAME = "state"             # 跨运行状态，clean 不清
+LOGS_DIR_NAME = "logs"               # 运行日志
+
+WEEK_PATTERN = re.compile(r"^\d{4}-W\d{2}$")
+
+# 固定文件名。脚本读写中间数据一律从这里取，不追加周后缀、不按次数编号。
+FILES = {
+    "week": "week.json",
+    "coord": "coord.json",
+    "deployment": "deployment.json",
+    "materials": "materials.json",
+    "digest": "digest.md",
+    "collect_report": "collect_report.json",
+    "articles": "articles.json",
+    "hn": "hn.json",
+    "hf": "hf.json",
+    "draft": "draft.json",
+    "judgments": "judgments.json",
+    "checks": "checks.txt",
+    "trace": "trace.jsonl",
+    "searches": "searches.txt",
+    "notification": "notification.txt",
+    "notification_short": "notification-short.txt",
+    "feishu_content": "feishu-content.md",
+    "feishu": "feishu.json",
+    "feishu_mode": "feishu-mode.json",
+    "feishu_delivery_check": "feishu-delivery-check.json",
+    "feishu_notify_receipt": "feishu-notify-receipt.json",
+    "manifest": "MANIFEST.json",
+}
+
+# clean 必须保留的跨运行状态：飞书防重与交付凭据。
+# 手册原先的 rm -rf 会把它们一起抹掉，与防重要求冲突（开发原则 2.4）。
+CLEAN_PRESERVE = frozenset({
+    FILES["feishu"],
+    FILES["feishu_delivery_check"],
+    FILES["feishu_notify_receipt"],
+    FILES["deployment"],
+})
+
+# 归档只留不可再生的关键证据；采集原文、素材、摘要等可再生数据不归档。
+ARCHIVE_EVIDENCE = (
+    FILES["checks"],
+    FILES["trace"],
+    FILES["searches"],
+    FILES["notification"],
+    FILES["notification_short"],
+    FILES["feishu_content"],
+    FILES["feishu"],
+    FILES["feishu_delivery_check"],
+    FILES["feishu_notify_receipt"],
+)
+
+
+def repo_root(start: pathlib.Path) -> pathlib.Path:
+    """从脚本位置向上找含 .git 的目录；归档副本无 .git 时按板块结构匹配。"""
+    for parent in (start, *start.parents):
+        if (parent / ".git").exists():
+            return parent
+    for parent in (start, *start.parents):
+        expected = parent.joinpath(*pathlib.PurePosixPath(BOARD_REL).parts, "工程", "scripts")
+        if expected.resolve() == start.resolve():
+            return parent
+    raise RuntimeError("无法定位仓库根目录：需要 Git 检出或保留项目目录结构的归档")
+
+
+def runtime_root(repo: pathlib.Path | None = None,
+                 env: dict | None = None) -> pathlib.Path:
+    """运行时根。
+
+    优先级：AI_WEEKLY_HOME（部署级显式覆盖）> 由 REPO_DIR 推导的默认根。
+    默认落在仓库检出目录的父级，因此不在仓库内、不入库、工作空间可见。
+    """
+    env = os.environ if env is None else env
+    override = env.get("AI_WEEKLY_HOME")
+    if override:
+        return pathlib.Path(override).expanduser().resolve()
+    if repo is None:
+        repo = repo_root(pathlib.Path(__file__).resolve().parent)
+    return (pathlib.Path(repo).resolve().parent / RUNTIME_DIR_NAME).resolve()
+
+
+def work_dir(repo: pathlib.Path | None = None,
+             env: dict | None = None) -> pathlib.Path:
+    """本次运行的工作目录。
+
+    AI_WEEKLY_TMP 是过渡期兼容入口（旧任务与测试仍在使用），优先级最高；
+    PR 合并、旧任务停用后随测试一并删除。正常路径恒为 runtime_root()/work。
+    """
+    env = os.environ if env is None else env
+    legacy = env.get("AI_WEEKLY_TMP")
+    if legacy:
+        return pathlib.Path(legacy).expanduser().resolve()
+    return runtime_root(repo, env) / WORK_DIR_NAME
+
+
+def archive_dir(week: str, repo: pathlib.Path | None = None,
+                env: dict | None = None) -> pathlib.Path:
+    """按周归档目录，一周一份；周编号格式不合法时显式失败。"""
+    if not WEEK_PATTERN.fullmatch(week or ""):
+        raise ValueError(f"非法周编号：{week!r}，应为 YYYY-Www")
+    return runtime_root(repo, env) / ARCHIVE_DIR_NAME / week
+
+
+def state_dir(repo: pathlib.Path | None = None,
+              env: dict | None = None) -> pathlib.Path:
+    return runtime_root(repo, env) / STATE_DIR_NAME
+
+
+def logs_dir(repo: pathlib.Path | None = None,
+             env: dict | None = None) -> pathlib.Path:
+    return runtime_root(repo, env) / LOGS_DIR_NAME
+
+
+def validate_work_dir(work: pathlib.Path, repo: pathlib.Path) -> None:
+    """校验工作目录，非法即报错停止，不静默回退 /tmp（开发原则 2.2）。"""
+    work = pathlib.Path(work).resolve()
+    repo = pathlib.Path(repo).resolve()
+    if str(work) in ("", "/", "."):
+        raise ValueError(f"工作目录非法：{work}")
+    if work == repo or repo in work.parents:
+        raise ValueError(f"工作目录不得落在仓库内：{work}（仓库 {repo}）")
+    for parent in (work, *work.parents):
+        if parent.exists() and parent.is_symlink() and repo in parent.resolve().parents:
+            raise ValueError(f"工作目录不得通过符号链接指向仓库内：{work}")
+
+
+def archive_report_path(week: str, iso_year: int | str) -> str:
+    """归档目录内的周报副本相对路径，文件名与仓库内完全一致。"""
+    if not WEEK_PATTERN.fullmatch(week or ""):
+        raise ValueError(f"非法周编号：{week!r}")
+    return f"{week}.md"

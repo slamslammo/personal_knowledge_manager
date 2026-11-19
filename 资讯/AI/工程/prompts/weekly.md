@@ -8,7 +8,7 @@
 **五条原则**：
 1. **先协调**：第 0 步由 `coord.py` 决定本次做什么。结果是"退出"就立即结束，不再往下读。
 2. **数据交给脚本**：采集、链接、数字、排名由脚本给出。不要自己拼链接、手抄数字，也不要拿网站首页去找文章。
-3. **提交只经 `coord.py`**：周报和数据写在 `/tmp/ai-weekly/out/` 下，由 `coord.py publish` 提交推送。不要直接用 git 提交、推送、变基或切换分支，也不要改动仓库工作区里的文件。
+3. **提交只经 `coord.py`**：周报和数据写在 `$W/out/` 下，由 `coord.py publish` 提交推送。不要直接用 git 提交、推送、变基或切换分支，也不要改动仓库工作区里的文件。
 4. **重试有上限**：各上限在 `config/runtime.yaml`。用完就按降级处理，不无限重试。
 5. **出错先记录**：无法恢复时，先按"失败处理"写记录、释放锁，再通知。
 
@@ -31,13 +31,20 @@
 
 本次明确指定了与旧产物不同的目标周时，不自动恢复旧周；先保全旧产物，再按本次目标生成。无新目标周或目标一致时适用下面的恢复分支。
 
-在仓库根目录执行，后文 `$S` 指脚本目录。**先保留并检查上一轮产物，不要起手清空临时目录。** 如果本人刚完成飞书浏览器确认，先按 `env-bootstrap.md` 在原执行环境完成保存的设备码轮询及凭据落盘，再处理下面的恢复分支；不能先清理保存设备码的目录。
+在仓库根目录执行。后文 `$S` 指脚本目录，`$W` 是本次工作目录，**由脚本给出，不手写路径**：
+
+```
+S=资讯/AI/工程/scripts
+W="$(python3 $S/workdir.py print)"
+python3 $S/workdir.py check
+```
+
+每次新建 shell 都要重新取一次 `W`（工具每次创建的是新 shell）。路径、中间文件名、归档命名一律由 `scripts/paths.py` 决定；不要自己拼路径、加周后缀或给目录起名。**先保留并检查上一轮产物，不要起手清空工作目录。** 如果本人刚完成飞书浏览器确认，先按 `env-bootstrap.md` 在原执行环境完成保存的设备码轮询及凭据落盘，再处理下面的恢复分支；不能先清理保存设备码的目录。
 
 已有本地协调记录时，先检查能否恢复验收交付：
 
 ```
-S=资讯/AI/工程/scripts
-if test -f /tmp/ai-weekly/coord.json; then
+if test -f "$W/coord.json"; then
   python3 $S/deployment.py resume
 fi
 ```
@@ -45,7 +52,7 @@ fi
 | 恢复结果 | 后续动作 |
 | --- | --- |
 | `RESUME=completed` | 已用保存的沙箱提交补交付并核对结果；报告本次结果后结束，不重新采集、搜索或写稿 |
-| `RESUME=pending` | 保留整个 `/tmp/ai-weekly/`。按 `env-bootstrap.md` 补齐确实缺失的应用配置或本人授权，再执行 `deployment.py resume`；需要人工时报告并结束，不重新生成周报 |
+| `RESUME=pending` | 保留整个 `$W/`。按 `env-bootstrap.md` 补齐确实缺失的应用配置或本人授权，再执行 `deployment.py resume`；需要人工时报告并结束，不重新生成周报 |
 | `RESUME=not_available`，或没有本地协调记录 | 没有可恢复的沙箱提交，继续下面的新运行准备 |
 | 错误或未知结果 | 保留现有文件并报告阻塞项，不通过清空目录掩盖恢复失败 |
 
@@ -53,10 +60,10 @@ fi
 
 **仅确定没有可恢复验收后**，才准备新运行。清理前还须检查同一工作目录中的 `feishu.json`：有未决新建（`action=unknown`）时保留整个目录，先按部署指南处理，不能借新运行清空防重记录。明确开始另一周也须先保全原记录；该防重状态仅在对应工作目录生效，换目录或换实例不等于未创建。
 
-确认可清理后，先观察上次保存的凭据，再检查核心依赖。
+确认可清理后，先观察上次保存的凭据，再检查核心依赖。**清理只能走脚本的保留清单式 `clean`，禁止 `rm -rf` 整目录删除**：`feishu.json`、交付收据与部署状态属于跨运行状态，必须留下；脚本会先把**上一轮**不可再生的证据按周归档到 `archive/{WEEK}/`，再清除可再生的 scratch。
 
 ```
-rm -rf /tmp/ai-weekly && mkdir -p /tmp/ai-weekly && S=资讯/AI/工程/scripts
+python3 $S/workdir.py clean
 python3 $S/credential_probe.py --resume
 python3 $S/env_check.py ensure
 python3 $S/deployment.py plan
@@ -72,7 +79,7 @@ python3 $S/deployment.py plan
 核心就绪、模式确定后继续：
 
 ```
-python3 $S/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > /tmp/ai-weekly/week.json
+python3 $S/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > "$W/week.json"
 eval "$(python3 $S/weeks.py [同上参数] --format env)"
 python3 $S/feishu_sync.py preflight
 python3 $S/deployment.py start --platform <平台名>
@@ -108,7 +115,7 @@ python3 $S/deployment.py start --platform <平台名>
 ## 第 1 步：采集数据
 
 1. **采集**：`python3 $S/collect_all.py`。它会依次采集 Trendshift 周榜、HN、Hugging Face 和 HN 高分帖的原文，失败的数据源会自动重试、跳过并记录。
-   - 只读 `/tmp/ai-weekly/digest.md`（不超过 150 行，链接都是完整链接，官方或一手来源已标注）。不要用 head 之类截断脚本输出。需要更多帖子时用 `python3 $S/collect_all.py show hn --offset 60`，看单篇原文信息用 `python3 $S/collect_all.py show article <HN id>`。
+   - 只读 `$W/digest.md`（不超过 150 行，链接都是完整链接，官方或一手来源已标注）。不要用 head 之类截断脚本输出。需要更多帖子时用 `python3 $S/collect_all.py show hn --offset 60`，看单篇原文信息用 `python3 $S/collect_all.py show article <HN id>`。
    - 输出 `COLLECT=trendshift_not_ready`：周榜未就绪。不要空等，先做下面的第 3 项和第 2 步的 ②；写完 ② 后运行 `python3 $S/collect_all.py --only trendshift`，就绪了就补做第 2 项；仍未就绪，写完 ④⑤ 后再试最后一次；还是不行，③ 由草稿写明"周榜未就绪"，其余照常，并在通知里说明。
    - 输出 `COLLECT=degraded`：有数据源跳过了，照常继续，数据说明会自动写明。
    - 回溯且摘要显示"复用已存档的榜单数据"：跳过第 2 项。
@@ -117,7 +124,7 @@ python3 $S/deployment.py start --platform <平台名>
    - 摘要会标出往期数据文件里的判定（如"往期：非 AI（2026-W42）"）。没有新信息时沿用往期判定，保证前后各周一致；改判时在数据说明里写一句原因。脚本按当周数据做的排除（归档、fork、疑似刷星、仓库不存在）每周重新计算，摘要里标为"脚本曾自动排除"，不要把它们写进判定文件的 `exclude`。
    - 按名称和描述就能判断的排除项：awesome 类或纯链接合集、越狱提示词合集。
    - 从摘要的 HN 部分找出与 AI 相关的 GitHub 仓库（数据文件里的"HN 热议项目"）。
-   - 把判断写进 `/tmp/ai-weekly/judgments.json`：
+   - 把判断写进 `$W/judgments.json`：
      ```json
      {"non_ai": ["owner/repo"], "exclude": {"owner/repo": "awesome 类合集"}, "hn_ai_repos": ["owner/repo"]}
      ```
@@ -200,15 +207,15 @@ python3 $S/deployment.py start --platform <平台名>
 
 ## 第 3 步：月报与季报
 
-读 `/tmp/ai-weekly/week.json` 的 `monthly` 和 `quarterly`：
-- `generate` 为 true 时，如果 `资讯/AI/工程/prompts/monthly.md`（季报为 `quarterly.md`）存在且第一行是对应的任务标记，就按它生成，写到 `/tmp/ai-weekly/out/` 下与仓库相同的相对路径。手册还不存在就跳过，在数据说明里写"{期间} 月报到期，月报手册尚未就绪"。
+读 `$W/week.json` 的 `monthly` 和 `quarterly`：
+- `generate` 为 true 时，如果 `资讯/AI/工程/prompts/monthly.md`（季报为 `quarterly.md`）存在且第一行是对应的任务标记，就按它生成，写到 `$W/out/` 下与仓库相同的相对路径。手册还不存在就跳过，在数据说明里写"{期间} 月报到期，月报手册尚未就绪"。
 - `due` 为 true 但 `missing_weeks` 不为空时，不生成，在数据说明里写"{期间} 月报到期，缺少周报 {missing_weeks}，暂不生成"。
 
 ## 第 4 步：检查与返工
 
 ```
 python3 $S/finalize.py
-python3 $S/check_run.py | tee /tmp/ai-weekly/checks.txt
+python3 $S/check_run.py | tee "$W/checks.txt"
 ```
 
 - `finalize.py` 刷新数据说明的事实部分，删掉草稿提示。每次改完周报、每次补做搜索之后，都要重新运行它。
@@ -232,7 +239,7 @@ python3 $S/check_run.py | tee /tmp/ai-weekly/checks.txt
 python3 $S/coord.py publish
 ```
 
-只提交 `/tmp/ai-weekly/out/` 的白名单产出与状态；远端有新提交由脚本重新读取并重试。**不要传 `--quality`**，实际质量由发布前的门槛检查推导；声明与结果不一致会拒绝发布。
+只提交 `$W/out/` 的白名单产出与状态；远端有新提交由脚本重新读取并重试。**不要传 `--quality`**，实际质量由发布前的门槛检查推导；声明与结果不一致会拒绝发布。
 
 | 检查或发布结果 | 后续动作 |
 | --- | --- |
@@ -257,14 +264,14 @@ python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交�
 
 - 同步的是**已发布提交里的周报**（`git show`），不是 `/tmp` 下的候选稿——候选稿可能因远端人工修改保护而没有入库。
 - 同周文档只保留一篇：按「AI 周报 + 周编号」查重，命中唯一才覆盖（回溯版会覆盖普通版）；查到多篇时报 `FEISHU_AMBIGUOUS_DOC`，不盲目覆盖。
-- 读 `/tmp/ai-weekly/feishu.json` 得 `document_id` 与 `url`（第 6 步的飞书链接）。
+- 读 `$W/feishu.json` 得 `document_id` 与 `url`（第 6 步的飞书链接）。
 - 输出 `SYNC=created` 或 `SYNC=updated`：飞书写接口成功。正式模式下，立即用第 5 步输出的完整 SHA 读回核对；验收模式由第 7 步核对测试文档正文。
 
   ```bash
   python3 $S/feishu_sync.py verify --sha <第 5 步输出的完整提交号> --week "$WEEK"
   ```
 
-  `READBACK=passed` 才报告正式飞书正文已核对。`READBACK=pending/failed` 表示交付待核，保留原文档和同步结果，通知用 GitHub 链接并注明核对错误码。临时读回失败先重试上述只读命令，无需重写文档。需要独立复核旧版时可加 `--doc <文档ID>`。脱敏核对结果在 `/tmp/ai-weekly/feishu-delivery-check.json`。
+  `READBACK=passed` 才报告正式飞书正文已核对。`READBACK=pending/failed` 表示交付待核，保留原文档和同步结果，通知用 GitHub 链接并注明核对错误码。临时读回失败先重试上述只读命令，无需重写文档。需要独立复核旧版时可加 `--doc <文档ID>`。脱敏核对结果在 `$W/feishu-delivery-check.json`。
 - 输出 `SYNC=skipped`：预检已降级（no_doc/off），第 6 步通知用 GitHub 链接并注明。
 - 输出 `SYNC=error`：**不阻塞**，照常进入第 6 步，通知用 GitHub 链接并注明错误码。修复飞书环境后，指定应交付的已发布提交，补同步并读回，**不重跑整周**：
   ```
@@ -276,17 +283,25 @@ python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交�
 
 ## 第 6 步：通知
 
-先把通知内容写入 `/tmp/ai-weekly/notification.txt`，另写一份去掉全文和表格的精简版 `/tmp/ai-weekly/notification-short.txt`（发送失败时兜底）。然后运行：
+先把通知内容写入 `$W/notification.txt`，另写一份去掉全文和表格的精简版 `$W/notification-short.txt`（发送失败时兜底）。然后运行：
 
 ```
-python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallback-file /tmp/ai-weekly/notification-short.txt
+python3 $S/feishu_sync.py notify --file "$W/notification.txt" --fallback-file "$W/notification-short.txt"
 ```
 
 预检为 no_notify/off、notify 输出 `NOTIFY=skipped`，或平台没有 lark-cli 时，把通知内容作为本次运行的最后输出，由调度方转发。测试模式只写文件，并在最后原样输出，不发通知。
 
-`NOTIFY=sent` 表示飞书 API 已接受通知。`/tmp/ai-weekly/feishu-notify-receipt.json` 记录幂等键和 API 提供的消息 ID。需要验收实际到达时，另由接收人确认。
+`NOTIFY=sent` 表示飞书 API 已接受通知。`$W/feishu-notify-receipt.json` 记录幂等键和 API 提供的消息 ID。需要验收实际到达时，另由接收人确认。
 
 网络结果不明时先核对接收情况。确需重试，保留原通知文件、原周记录和运行模式，使用上面的完整 `notify --file …` 命令；不改正文或切换精简版来换幂等键。原文件或上下文丢失时先报告，不重新生成一份当作同一次重试。
+
+**交付完成后归档本次证据**（一周一份，`MANIFEST.json` 的 `runs[]` 按 `run_id` 幂等合并；只归档不可再生的关键证据，不复制采集素材）：
+
+```
+python3 $S/workdir.py archive --week "$WEEK"
+```
+
+归档目录与文件名由 `paths.py` 固定，不要手工 copy 文件或另起目录名。`MANIFEST.json` 里的 `session_id`、`model` 留空供后续消耗对比时补，脚本不杜撰。
 
 通知全部用纯文本（不用表格和 Markdown 链接语法，URL 直接写完整）：
 - **首句**：格式固定为 `【AI周报 W{WNUM}】<本周最重要的一件事>。`，不超过 40 个汉字。
@@ -296,7 +311,7 @@ python3 $S/feishu_sync.py notify --file /tmp/ai-weekly/notification.txt --fallba
   - ①–⑤ 和洞察的精简版，每个板块 2 到 3 行；GitHub Top 5 列出项目名和本周新增 star。
   - 周榜未就绪、月报到期未生成等情况各用一行说明。
   - 重跑时加一行重跑原因（校验输出的错误码和说明）。
-- **运行结果**：固定三行，取自 `/tmp/ai-weekly/checks.txt` 和第 5 步的输出：
+- **运行结果**：固定三行，取自 `$W/checks.txt` 和第 5 步的输出：
   - `校验：通过（N 个警告）` 或列出未通过的错误码；
   - `完整性：全部完成，联网搜索 N 次` 或列出未完成的步骤；
   - 正式模式写 `提交：已推送到 main（提交号前 7 位）`，或写明未提交原因；验收模式写 `提交：已推送到本地沙箱（提交号前 7 位），未写入 GitHub`，不能声称推送 main。

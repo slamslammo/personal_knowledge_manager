@@ -24,7 +24,7 @@
 
 降级版（元数据 quality: degraded）只检查结构、元数据、③ 与数据文件的一致性，不检查各板块条目数。
 
-默认校验本次运行的产出（/tmp/ai-weekly/out 下）；没有时校验仓库中的文件。
+默认校验本次运行的产出（工作目录 out/ 下）；没有时校验仓库中的文件。
 
 退出码：0 通过（可能有警告）；1 有错误。
 
@@ -526,7 +526,7 @@ def main(argv=None) -> int:
     ap.add_argument("--data", help="默认为本次运行的产出，没有时为仓库中的数据文件")
     ap.add_argument("--data-only", action="store_true", help="只校验数据文件")
     g = ap.add_mutually_exclusive_group()
-    g.add_argument("--materials", help="采集素材，默认 /tmp/ai-weekly/materials.json（存在时）")
+    g.add_argument("--materials", help="采集素材，默认工作目录的 materials.json（存在时）")
     g.add_argument("--no-materials", action="store_true", help="不做对照素材的门槛检查")
     ap.add_argument("--tolerance", type=float, default=0.0, help="HN 数字允许的变化比例（校验时用）")
     args = ap.parse_args(argv)

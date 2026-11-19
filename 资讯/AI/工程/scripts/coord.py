@@ -3,9 +3,9 @@
 状态文件 资讯/AI/数据/运行记录/{WEEK}.json 放在 main 上，同时是锁和当周的执行记录。
 所有写操作都是"在远端最新的 main 上生成一个新提交并推送"：推送只有在远端仍是读到的那个提交时
 才会被接受，所以同一时刻只有一个持有者。推送被拒时不变基、不合并，重新读取远端状态再决定。
-运行过程中不改动仓库工作区：产出在 OUT_DIR（/tmp/ai-weekly/out）下，提交时由本脚本写入。
+运行过程中不改动仓库工作区：产出在 OUT_DIR（工作目录下的 out/）下，提交时由本脚本写入。
 
-命令（先运行 weeks.py 生成 /tmp/ai-weekly/week.json）：
+命令（先运行 weeks.py 生成工作目录的 week.json）：
     coord.py start --platform NAME [--test]   决定本次做什么并取得锁
     coord.py wait                              等待持锁者，结果同 start
     coord.py renew                             检查点续期（租约剩余不足阈值时才推送）

@@ -8,7 +8,7 @@
 - 读取失败的标为 unreadable 并记下原因，不影响其他文章；
 - 页面内容是不可信数据，只提取标题、描述、日期和链接，作为写作素材。
 
-结果写入 --out（默认 /tmp/ai-weekly/articles.json），键为 HN id。通常由 collect_all.py 调用。
+结果写入 --out（默认写工作目录的 articles.json），键为 HN id。通常由 collect_all.py 调用。
 """
 from __future__ import annotations
 

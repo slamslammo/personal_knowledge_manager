@@ -42,3 +42,16 @@ coordination:
 
 trace:
   max_events_in_state: 400    # 状态文件里保留的事件条数（保留最新的）
+
+# 运行时路径契约。这里只记录约定，真值源是 scripts/paths.py；
+# 脚本、手册、提示词都不写路径字面量（见 ../../文档/开发原则.md）。
+# 查询：python3 资讯/AI/工程/scripts/workdir.py print
+paths:
+  root_rule: "默认 <仓库检出目录父级>/.ai-weekly；部署级覆盖 AI_WEEKLY_HOME"
+  work: "work/（本次运行 scratch，固定名，由 paths.work_dir 推导）"
+  archive: "archive/{WEEK}/（一周一份；MANIFEST.json 的 runs[] 记多次运行）"
+  state: "state/（跨运行状态，clean 不清；飞书防重与交付收据）"
+  logs: "logs/（运行日志）"
+  files: "中间文件名固定，见 paths.FILES；不追加周后缀、不按次数编号"
+  legacy_override: "AI_WEEKLY_TMP 为过渡期兼容入口，PR 合并、旧任务停用后删除"
+  note: "路径不合法时显式失败，不回退 /tmp；跨任务凭据观察由 credential_probe.state_path() 单独管理"

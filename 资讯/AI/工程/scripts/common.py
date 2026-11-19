@@ -20,28 +20,19 @@ TASK_DIR = SCRIPTS_DIR.parent  # 工程目录：资讯/AI/工程
 BOARD_DIR = TASK_DIR.parent  # 板块根目录：资讯/AI
 
 
+import paths  # 路径单一真相源（见 ../../文档/开发原则.md）
+
+
 def _repo_root(start: pathlib.Path) -> pathlib.Path:
-    """从脚本位置向上找含 .git 的目录，不依赖目录层级。
-
-    目录迁移后脚本多一层（资讯/AI/工程/scripts），原先 BOARD_DIR.parent
-    直接取仓库根的写法会指向 资讯/，所有 git 操作都会失效。
-    """
-    for parent in (start, *start.parents):
-        if (parent / ".git").exists():
-            return parent
-    # GitHub 归档/离线副本没有 .git。按项目路径常量匹配工程目录，避免迁移后
-    # 把 <仓库>/资讯 误当根目录，导致 report_exists 等只读判定全部偏移一层。
-    import paths
-
-    for parent in (start, *start.parents):
-        expected = parent.joinpath(*pathlib.PurePosixPath(paths.BOARD_REL).parts, "工程", "scripts")
-        if expected.resolve() == start.resolve():
-            return parent
-    raise RuntimeError("无法定位仓库根目录：需要 Git 检出或保留项目目录结构的归档")
+    """兼容入口：实际逻辑在 paths.repo_root，测试与旧调用方仍可用本名字。"""
+    return paths.repo_root(start)
 
 
 REPO_DIR = _repo_root(SCRIPTS_DIR)
-WORK_DIR = pathlib.Path(os.environ.get("AI_WEEKLY_TMP", "/tmp/ai-weekly"))
+# 工作目录由 paths.py 推导：运行时根 /work；AI_WEEKLY_TMP 为过渡期兼容入口。
+# 不在本模块、手册或提示词里写路径字面量。
+WORK_DIR = paths.work_dir(REPO_DIR)
+# 合法性校验只由 workdir.py check/clean 显式执行，不在 import 时拦截测试与只读脚本。
 # 本次运行的产出（周报、数据文件等）按仓库内的相对路径放在 OUT_DIR 下，由 coord.py 提交；
 # 运行过程中不改动仓库的工作区。
 OUT_DIR = WORK_DIR / "out"
