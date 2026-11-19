@@ -1,7 +1,7 @@
 """采集总调度：一条命令完成全部数据采集，统一重试、跳过与记录。规则见 ../../文档/方案.md 7.1、7.7 节。
 
 依次运行 Trendshift 周榜、HN、Hugging Face 和原文读取（fetch_articles.py）。每个请求在 common.fetch
-里重试 3 次；某个数据源仍失败就跳过并记录错误码，继续采集其他数据源。产出（都在 /tmp/ai-weekly/）：
+里重试 3 次；某个数据源仍失败就跳过并记录错误码，继续采集其他数据源。产出（都在本次工作目录下）：
 
 - materials.json       全量素材：周榜（含往期判定）、HN 全部 story（含原文读取结果）、论文
 - digest.md            精简摘要，不超过 digest.max_lines 行，链接都是完整链接；智能体只读这一份
@@ -175,7 +175,7 @@ def build_digest(m: dict, info: dict, max_lines: int) -> str:
     ranking = load_config("ranking")
     article_min = ranking["articles"]["min_points"]
     head = [f"# 素材摘要 {m['week']}（{info.get('range_label', m['range'])}）",
-            "> 完整数据在 /tmp/ai-weekly/materials.json。摘要之外的帖子：python3 collect_all.py show hn --offset N；"
+            "> 完整数据在工作目录的 materials.json。摘要之外的帖子：python3 collect_all.py show hn --offset N；"
             "单篇原文信息：python3 collect_all.py show article <HN id>。", "", "## 采集状态"]
     names = {"trendshift": "Trendshift 周榜", "hn": "HN", "hf": "Hugging Face", "articles": "原文读取"}
     for key, label in names.items():

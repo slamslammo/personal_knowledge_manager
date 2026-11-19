@@ -19,7 +19,7 @@
 ## 运行环境
 
 - Python ≥ 3.10 + PyYAML。平台专属的解释器、身份和网络配置见 [部署指南](../文档/部署指南.md#47-workbuddy-本机主运行者)。
-- 在**仓库根目录**运行，只依赖 Python 标准库和 PyYAML。中间文件默认写到 `/tmp/ai-weekly/`（可用 `AI_WEEKLY_TMP` 修改）。
+- 在**仓库根目录**运行，只依赖 Python 标准库和 PyYAML。中间文件写到由 `scripts/paths.py` 约定的工作目录（默认 `<仓库检出目录父级>/.ai-weekly/work`，部署级覆盖 `AI_WEEKLY_HOME`）；查询用 `python3 资讯/AI/工程/scripts/workdir.py print`。
 - 本地、CI 与部署环境使用同一份依赖清单：`python3 -m pip install -r 资讯/AI/工程/requirements.txt`。
 
 ## 唯一推荐运行链路
@@ -30,7 +30,7 @@
 
 `deployment.py plan` 只报告实际计划，不能替代启动；一次性测试覆盖及跨进程传递按执行手册处理，不改保存入口。
 
-产出写在 `/tmp/ai-weekly/out/` 下与仓库相同的相对路径处，由 `coord.py` 统一提交；运行会话只读工程文件。
+产出写在 `workdir.py print` 给出的工作目录 `out/` 下与仓库相同的相对路径处，由 `coord.py` 统一提交；运行会话只读工程文件。
 
 开发验证只运行测试与可移植性检查，不触发周报：
 
