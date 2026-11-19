@@ -770,13 +770,15 @@ class NotifyTest(Base):
         fb.write_text("精简版", encoding="utf-8")
         calls = []
         def fake_run(cli, *a, **k):
-            calls.append(a)
+            calls.append((a, k))
             return cli_err("permission", "forbidden") if len(calls) == 1 else {"ok": True}
         with mock.patch.object(feishu_sync, "run_cli", side_effect=fake_run):
             code, out = self.run_notify(fallback=str(fb))
         self.assertEqual(code, 0)
         self.assertEqual(len(calls), 2)
-        self.assertTrue(any(f"@{fb}" == a for a in calls[1]))
+        # 正文改走 stdin：CLI 的 @file 不接受仓库父级下的运行时目录（PR #13 回归修复）
+        self.assertTrue(any(a == "-" for a in calls[1][0]))
+        self.assertEqual(str(calls[1][1].get("stdin_path")), str(fb))
         receipt = json.loads((self.work / feishu_sync.NOTIFY_FILE).read_text())
         self.assertTrue(receipt["idempotency_key"].endswith("-fb"))
 
