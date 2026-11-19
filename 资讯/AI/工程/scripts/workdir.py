@@ -1,6 +1,6 @@
 """运行时目录的唯一入口：查询、校验、清理、归档。
 
-智能体只调用本脚本，不自行拼接路径、不发明文件名（见 ../../文档/开发原则.md）。
+运行会话通过本脚本查询、清理与归档工作目录。
 
 用法：
   python3 workdir.py print                 # 输出本次工作目录（供手册的 $W）
@@ -63,7 +63,7 @@ def cmd_clean(args) -> int:
     """保留清单式清理：先归档本次证据，再删除可再生的 scratch。
 
     与旧的 rm -rf 不同，CLEAN_PRESERVE 中的跨运行状态必须留下，
-    否则飞书防重与交付收据会被抹掉（开发原则 2.4）。
+    否则飞书防重状态与交付收据会丢失。
     """
     paths.validate_work_dir(WORK_DIR, REPO_DIR)
     WORK_DIR.mkdir(parents=True, exist_ok=True)

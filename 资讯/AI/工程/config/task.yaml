@@ -1,5 +1,5 @@
 # AI 资讯任务的能力、网络与路径清单。实际平台安排见部署指南，运行模式见 deployment.yaml。
-# 本文件与执行手册只写平台无关的要求；各平台的对应做法见 ../../文档/部署指南.md 第 4 节。
+# 本文件与执行手册只写平台无关的要求；各平台的对应做法见 ../../文档/部署指南.md。
 
 task: ai-weekly
 version: v0.8
@@ -17,7 +17,7 @@ agent:
     - shell                     # 运行 bash 命令
     - python3                   # 带 PyYAML
     - network                   # 脚本访问 network.allow 中的站点，git 推送
-    - git_push                  # 推送本仓库的 main：协调锁依赖它（../../文档/方案.md 7.9 节），推送不了就无法运行
+    - git_push                  # 推送本仓库的 main：协调锁依赖它（见 ../scripts/coord.py），推送不了就无法运行
     - web_search                # 联网搜索
   optional_capabilities:                           # 没有时有降级办法
     - notify                    # 没有时把通知作为运行的最后输出，由调度方转发

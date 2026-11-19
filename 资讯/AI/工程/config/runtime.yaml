@@ -1,4 +1,4 @@
-# 运行时的重试、上限与协调参数，规则说明见 ../../文档/方案.md 7.7、7.9、7.10 节。
+# 运行时的重试、上限与协调参数，运行流程见 ../prompts/weekly.md。
 # coord.py、collect_all.py、fetch_articles.py、check_run.py、trace.py 读取本文件。
 
 network:
@@ -44,7 +44,7 @@ trace:
   max_events_in_state: 400    # 状态文件里保留的事件条数（保留最新的）
 
 # 运行时路径契约。这里只记录约定，真值源是 scripts/paths.py；
-# 脚本、手册、提示词都不写路径字面量（见 ../../文档/开发原则.md）。
+# 脚本、手册、提示词都不写路径字面量（见 ../scripts/paths.py）。
 # 查询：python3 资讯/AI/工程/scripts/workdir.py print
 paths:
   root_rule: "默认 <仓库检出目录父级>/.ai-weekly；部署级覆盖 AI_WEEKLY_HOME"
