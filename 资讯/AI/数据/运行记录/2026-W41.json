@@ -2,16 +2,24 @@
   "schema": 1,
   "task": "ai-weekly",
   "week": "2026-W41",
-  "phase": "running",
-  "lock": {
-    "purpose": "run",
+  "phase": "produced",
+  "lock": null,
+  "attempts": 1,
+  "produced": {
     "run_id": "workbuddy-20261119-151726-8cbq",
     "platform": "workbuddy",
-    "acquired_at": "2026-11-19T15:17:26+08:00",
-    "lease_until": "2026-11-19T16:17:26+08:00"
+    "at": "2026-11-19T15:25:29+08:00",
+    "quality": "full",
+    "mode": "backfill",
+    "files": [
+      "资讯/AI/数据/github-weekly/2026-W41.json",
+      "资讯/AI/数据/周报/2026/2026-W41.md"
+    ],
+    "gates": {
+      "check_run": "pass",
+      "codes": []
+    }
   },
-  "attempts": 1,
-  "produced": null,
   "verified": null,
   "runs": [
     {
@@ -21,7 +29,22 @@
       "action": "run",
       "mode": "backfill",
       "reason": "本周还没有运行",
-      "outcome": "running"
+      "outcome": "produced:full",
+      "ended_at": "2026-11-19T15:25:29+08:00",
+      "codes": [],
+      "summary": {
+        "events": 36,
+        "by_status": {
+          "info": 21,
+          "ok": 7,
+          "warn": 8,
+          "error": 0
+        },
+        "codes": {
+          "ARTICLE_UNREADABLE": 7
+        },
+        "searches": 20
+      }
     }
   ],
   "events": [
@@ -44,6 +67,413 @@
         "run_id": "workbuddy-20261119-151726-8cbq",
         "test": false
       }
+    },
+    {
+      "ts": "2026-11-19T15:17:30+08:00",
+      "seq": 3,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "协调",
+      "event": "取得运行锁",
+      "status": "ok",
+      "detail": "本周还没有运行",
+      "data": {
+        "mode": "backfill",
+        "commit": "acc61f84a702ae9a6798c5b4ff667d64bbff6462"
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:44+08:00",
+      "seq": 4,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "Trendshift",
+      "status": "ok",
+      "detail": "回溯：复用已存档的榜单数据文件"
+    },
+    {
+      "ts": "2026-11-19T15:17:45+08:00",
+      "seq": 5,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "HN",
+      "status": "ok",
+      "detail": "426 条（不低于 100 分的 280 条）",
+      "data": {
+        "seconds": 1.2
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:45+08:00",
+      "seq": 6,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "Hugging Face",
+      "status": "ok",
+      "detail": "10 篇",
+      "data": {
+        "seconds": 0.8
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 7,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://mistral.ai/news/mistral-large-4/\\：HTTP 404",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 8,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://openai.com/index/sharing-ai-progress-in-mathematics/：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 9,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://apnews.com/article/h1b-visa-program-vance-microsoft-e7b3a407f822702b269ee277d21343ea：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 10,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://openai.com/index/gpt-6-for-everyone/：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 11,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://gizmodo.com/youtuber-says-cops-paid-him-a-visit-after-he-built-flock-style-camera-to-track-cops-2000824306：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 12,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://radar.cloudflare.com/bots/as13238?dateRange=7d：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 13,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://www.reuters.com/world/us-imposes-sanctions-international-criminal-court-hours-after-former-judge-wins-2026-10-09/：HTTP 401",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:17:57+08:00",
+      "seq": 14,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "detail": "33/40 篇成功，官方来源 5 篇，不可读 7 篇",
+      "data": {
+        "seconds": 11.5
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:04+08:00",
+      "seq": 15,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "发现：Mistral Large 4 Le Chonk release",
+      "data": {
+        "n": 1
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:04+08:00",
+      "seq": 16,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "发现：Anthropic Claude Haiku 5.5 fastest small model announcement",
+      "data": {
+        "n": 2
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:04+08:00",
+      "seq": 17,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "发现：OpenAI GPT-6 Intelligent UI for everyone",
+      "data": {
+        "n": 3
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:04+08:00",
+      "seq": 18,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "发现：Reflection AI Beam 501B open weight model",
+      "data": {
+        "n": 4
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:04+08:00",
+      "seq": 19,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "发现：DeepSeek 4.1 Flash release 2026",
+      "data": {
+        "n": 5
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:18+08:00",
+      "seq": 20,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：morluto rea reverse engineer anything github coding agent",
+      "data": {
+        "n": 6
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:18+08:00",
+      "seq": 21,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：storytold artcraft github AI",
+      "data": {
+        "n": 7
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:18+08:00",
+      "seq": 22,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：openai/math github Lean formalization results withdrawn",
+      "data": {
+        "n": 8
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:18+08:00",
+      "seq": 23,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：Niko1221 Strata github project",
+      "data": {
+        "n": 9
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:18+08:00",
+      "seq": 24,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：mattpocock skills github agent skills",
+      "data": {
+        "n": 10
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:36+08:00",
+      "seq": 25,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：REA reverse engineer anything YouTube coding agent demo review",
+      "data": {
+        "n": 11
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:36+08:00",
+      "seq": 26,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：ArtCraft storytold 13 apps Claude written YouTube review",
+      "data": {
+        "n": 12
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:36+08:00",
+      "seq": 27,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：mattpocock skills YouTube agent skills review",
+      "data": {
+        "n": 13
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:36+08:00",
+      "seq": 28,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播：Mistral Large 4 Le Chonk YouTube benchmark review",
+      "data": {
+        "n": 14
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:36+08:00",
+      "seq": 29,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "⑤ 洞察：OpenAI math 722 manuscripts mathematicians reaction Lean verification debate",
+      "data": {
+        "n": 15
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:59+08:00",
+      "seq": 30,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Typesafe AI raises 870M 7.5B valuation Jev",
+      "data": {
+        "n": 16
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:59+08:00",
+      "seq": 31,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Google EmbeddingGemma 2 lightweight multimodal embedding model",
+      "data": {
+        "n": 17
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:59+08:00",
+      "seq": 32,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Cloudflare acquires Deno celld workerd October 2026",
+      "data": {
+        "n": 18
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:59+08:00",
+      "seq": 33,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "⑤ 洞察：Terence Tao Math 2.0 value mathematical progress AI proofs",
+      "data": {
+        "n": 19
+      }
+    },
+    {
+      "ts": "2026-11-19T15:20:59+08:00",
+      "seq": 34,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "④ 核实：OpenAI fires three safety researchers mishandling research information",
+      "data": {
+        "n": 20
+      }
+    },
+    {
+      "ts": "2026-11-19T15:21:15+08:00",
+      "seq": 35,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "写作",
+      "event": "草稿",
+      "status": "ok",
+      "detail": "/tmp/ai-weekly-w41/out/资讯/AI/数据/周报/2026/2026-W41.md"
+    },
+    {
+      "ts": "2026-11-19T15:24:59+08:00",
+      "seq": 36,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "写作",
+      "event": "finalize",
+      "status": "ok",
+      "detail": "数据说明已刷新，联网搜索 20 次"
     }
   ]
 }
