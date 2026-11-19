@@ -20,7 +20,7 @@ TASK_DIR = SCRIPTS_DIR.parent  # 工程目录：资讯/AI/工程
 BOARD_DIR = TASK_DIR.parent  # 板块根目录：资讯/AI
 
 
-import paths  # 路径单一真相源（见 ../../文档/开发原则.md）
+import paths  # 路径单一真相源
 
 
 def _repo_root(start: pathlib.Path) -> pathlib.Path:

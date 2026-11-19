@@ -1,7 +1,6 @@
 """读取 HN 高分帖链接的原文：标题、摘要、发布时间、规范链接，并判断是否官方或一手来源。
 
-让 ② 的官方原文和 ④ 的文章链接来自采集数据，而不是模型临场去网站首页找（W44 的教训，见
-../../文档/版本规划.md 2026-11-02）。规则见 ../../文档/方案.md 7.1、7.5、7.7 节：
+为 ② 和 ④ 提供具体原文链接。读取限制见 ../config/runtime.yaml，安全规则见 ../prompts/routine-prompt.md。
 
 - 对象：hn.json 中分数不低于 articles.min_points、带外链的 story，按分数取前 articles.max_articles 篇；
 - 只发 GET；最多跟随 max_redirects 次跳转；单页最多读 max_bytes；不执行网页脚本；

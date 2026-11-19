@@ -136,7 +136,7 @@ def weekly_data_path(week: Week) -> str:
 
 
 def weekly_state_path(week: Week) -> str:
-    """当周的状态文件：协调锁与执行记录（../../文档/方案.md 7.9、7.10 节）。"""
+    """当周的状态文件：协调锁与执行记录，由 coord.py 管理。"""
     return paths.state(week.label)
 
 

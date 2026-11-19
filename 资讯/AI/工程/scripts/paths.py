@@ -1,10 +1,6 @@
-"""路径与命名的单一真相源：仓库内产出 + 运行时目录 + 固定文件名。
+"""仓库产出、运行时目录和共享文件名。
 
-脚本、手册、文档与测试一律从本模块取路径，不各自拼字符串，也不由智能体
-临时决定数据落在哪里。开发约束见 ../../文档/开发原则.md。
-
-2026-11-18 目录迁移：AI资讯/ → 资讯/AI/，四类产出统一收进 数据/。
-2026-11-19 运行时路径收编：工作目录由仓库检出位置推导，跨环境规则唯一。
+运行时目录通常由仓库检出位置推导。可用 workdir.py print 查看生效路径。
 """
 from __future__ import annotations
 
@@ -85,8 +81,7 @@ FILES = {
     "manifest": "MANIFEST.json",
 }
 
-# clean 必须保留的跨运行状态：飞书防重与交付凭据。
-# 手册原先的 rm -rf 会把它们一起抹掉，与防重要求冲突（开发原则 2.4）。
+# workdir.py 清理时保留这些文件，避免丢失防重状态或交付收据。
 CLEAN_PRESERVE = frozenset({
     FILES["feishu"],
     FILES["feishu_delivery_check"],
@@ -169,7 +164,7 @@ def logs_dir(repo: pathlib.Path | None = None,
 
 
 def validate_work_dir(work: pathlib.Path, repo: pathlib.Path) -> None:
-    """校验工作目录，非法即报错停止，不静默回退 /tmp（开发原则 2.2）。"""
+    """校验工作目录，非法即报错停止，不静默回退 /tmp。"""
     work = pathlib.Path(work).resolve()
     repo = pathlib.Path(repo).resolve()
     if str(work) in ("", "/", "."):

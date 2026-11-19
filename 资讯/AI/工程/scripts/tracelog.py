@@ -1,6 +1,6 @@
 """执行记录：把每一步的事件追加到工作目录的 trace.jsonl，事后可以还原整次运行。
 
-规则见 ../../文档/方案.md 7.10 节。脚本通过 log() 自动记录；智能体用命令行记录关键动作：
+事件配置见 ../config/runtime.yaml。脚本通过 log() 自动记录；智能体用命令行记录关键动作：
 
     python3 tracelog.py search "② 核实" "Gemini 4 Carbon announcement"   # 记一次联网搜索
     python3 tracelog.py log --step 写作 --event 返工 --status warn --code GATE_LINK_HOMEPAGE --detail "..."
