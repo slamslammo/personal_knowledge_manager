@@ -129,16 +129,27 @@ def _parse_envelope(text: str) -> dict | None:
     return out if isinstance(out, dict) else None
 
 
-def run_cli(cli: str, *args: str, timeout: int = 60) -> dict:
+def run_cli(cli: str, *args: str, timeout: int = 60, stdin_text: str | None = None,
+            stdin_path: str | os.PathLike | None = None) -> dict:
     """执行 lark-cli 并解析 JSON 信封；网络层异常包装为 type=network 的统一结构。
 
     官方 CLI 的失败信封可能写在 stderr（评审 P2-4）：stdout 解析不到时必须再试
     stderr，否则 network/timeout 会被错标成 cli/bad_output，重试分支失效、
     权限 code/hint 丢失。
+
+    stdin_text 用于把正文直接送入 CLI（对应 --content - / --markdown -）。
+    CLI 的 @file 只接受 cwd、/tmp、~/files 三个根；运行时工作目录由 paths.py
+    推导到仓库父级，不在白名单内，故正文必须走 stdin，不能落临时文件。
+
+    传 stdin_path 时由本函数读文件，调用方只需把参数换成 "-" 并给出路径，
+    便于测试在不落盘的情况下模拟。
     """
+    if stdin_text is None and stdin_path is not None:
+        stdin_text = pathlib.Path(stdin_path).read_text(encoding="utf-8")
     env, removed = adapt_proxy_env()
     try:
-        p = subprocess.run([cli, *args], capture_output=True, text=True, env=env, timeout=timeout)
+        p = subprocess.run([cli, *args], input=stdin_text, capture_output=True,
+                           text=True, env=env, timeout=timeout)
     except subprocess.TimeoutExpired:
         return {"ok": False, "error": {"type": "network", "subtype": "timeout", "detail": f"{timeout}s 超时",
                                        "_removed_proxies": removed}}
@@ -380,7 +391,8 @@ def _business_failure(out: dict) -> str | None:
 def _overwrite(cli: str, token: str, content_file: pathlib.Path) -> dict:
     """覆盖已有文档。幂等：网络失败与写入不完整（partial_success/failed）都可重试。"""
     out = run_cli(cli, "docs", "+update", "--doc", token, "--command", "overwrite",
-                  "--doc-format", "markdown", "--content", f"@{content_file}", "--as", "user")
+                  "--doc-format", "markdown", "--content", "-", "--as", "user",
+                  stdin_path=content_file)
     if out.get("error"):
         return {"action": "retry" if (out["error"].get("type") == "network") else "failed", "error": out["error"]}
     why = _business_failure(out)
@@ -396,11 +408,11 @@ def _create(cli: str, title: str, content_file: pathlib.Path, folder: str) -> di
     网络类失败返回 action=unknown（结果不明），写入 feishu.json 供下次补交付收敛，
     不能像普通失败一样丢弃（评审 P2-5）。
     """
-    argv = ["docs", "+create", "--doc-format", "markdown", "--content", f"@{content_file}",
+    argv = ["docs", "+create", "--doc-format", "markdown", "--content", "-",
             "--title", title, "--as", "user"]
     if folder:
         argv += ["--parent-token", folder]
-    out = run_cli(cli, *argv)
+    out = run_cli(cli, *argv, stdin_path=content_file)
     if out.get("error"):
         err = out["error"]
         return {"action": "unknown" if err.get("type") == "network" else "failed", "error": err}
@@ -637,8 +649,10 @@ def cmd_notify(args) -> int:
     key = f"ai-weekly-{week}-{hashlib.md5(text.encode('utf-8')).hexdigest()[:8]}"
 
     def send(file: str, k: str) -> dict:
+        # 正文走 stdin：CLI 的 @file 白名单不含仓库父级下的运行时工作目录。
         return run_cli(cli, "im", "+messages-send", "--as", "bot", "--user-id", uid,
-                       "--markdown", f"@{file}", "--idempotency-key", k)
+                       "--markdown", "-", "--idempotency-key", k,
+                       stdin_path=file)
 
     out = send(args.file, key)
     err = out.get("error")
