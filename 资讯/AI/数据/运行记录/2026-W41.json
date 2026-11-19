@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "task": "ai-weekly",
+  "week": "2026-W41",
+  "phase": "running",
+  "lock": {
+    "purpose": "run",
+    "run_id": "workbuddy-20261119-151726-8cbq",
+    "platform": "workbuddy",
+    "acquired_at": "2026-11-19T15:17:26+08:00",
+    "lease_until": "2026-11-19T16:17:26+08:00"
+  },
+  "attempts": 1,
+  "produced": null,
+  "verified": null,
+  "runs": [
+    {
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "platform": "workbuddy",
+      "started_at": "2026-11-19T15:17:26+08:00",
+      "action": "run",
+      "mode": "backfill",
+      "reason": "本周还没有运行",
+      "outcome": "running"
+    }
+  ],
+  "events": [
+    {
+      "ts": "2026-11-19T15:17:22+08:00",
+      "seq": 1,
+      "step": "飞书",
+      "event": "预检",
+      "status": "ok"
+    },
+    {
+      "ts": "2026-11-19T15:17:26+08:00",
+      "seq": 2,
+      "run_id": "workbuddy-20261119-151726-8cbq",
+      "step": "协调",
+      "event": "start",
+      "status": "info",
+      "detail": "workbuddy 2026-W41 远端 origin",
+      "data": {
+        "run_id": "workbuddy-20261119-151726-8cbq",
+        "test": false
+      }
+    }
+  ]
+}
