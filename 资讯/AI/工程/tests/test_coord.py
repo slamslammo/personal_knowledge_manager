@@ -16,7 +16,8 @@ for _d in ("core", "weekly"):
     if str(SCRIPTS / _d) not in sys.path:
         sys.path.insert(0, str(SCRIPTS / _d))
 
-import coord  # noqa: E402
+import coord
+import quality as gate_quality  # noqa: E402
 import paths  # noqa: E402
 import common  # noqa: E402
 
@@ -631,45 +632,45 @@ class PublishGateTest(unittest.TestCase):
     """发布前的质量推导：quality 由门槛结果决定，不再由智能体声明（提案 2.1、2.2）。"""
 
     def test_derive_matrix(self):
-        self.assertEqual(coord.derive_quality(True, False, None), ("full", None))
-        self.assertEqual(coord.derive_quality(False, False, None), ("check_failed", None))
-        self.assertEqual(coord.derive_quality(True, True, None), ("degraded", None))
-        self.assertEqual(coord.derive_quality(False, True, None), ("degraded", None))
+        self.assertEqual(gate_quality.derive_quality(True, False, None), ("full", None))
+        self.assertEqual(gate_quality.derive_quality(False, False, None), ("check_failed", None))
+        self.assertEqual(gate_quality.derive_quality(True, True, None), ("degraded", None))
+        self.assertEqual(gate_quality.derive_quality(False, True, None), ("degraded", None))
 
     def test_requested_mismatch_is_rejected(self):
-        self.assertEqual(coord.derive_quality(False, False, "full"), ("check_failed", "GATE_MISMATCH"))
-        self.assertEqual(coord.derive_quality(True, True, "check_failed"), ("degraded", "GATE_MISMATCH"))
+        self.assertEqual(gate_quality.derive_quality(False, False, "full"), ("check_failed", "GATE_MISMATCH"))
+        self.assertEqual(gate_quality.derive_quality(True, True, "check_failed"), ("degraded", "GATE_MISMATCH"))
 
     def test_requested_matches(self):
-        self.assertEqual(coord.derive_quality(False, False, "check_failed"), ("check_failed", None))
-        self.assertEqual(coord.derive_quality(True, False, "full"), ("full", None))
+        self.assertEqual(gate_quality.derive_quality(False, False, "check_failed"), ("check_failed", None))
+        self.assertEqual(gate_quality.derive_quality(True, False, "full"), ("full", None))
 
     def test_report_is_degraded(self):
         with tempfile.TemporaryDirectory() as d:
             p = pathlib.Path(d) / "r.md"
             p.write_text("---\nweek: 2026-W45\nquality: degraded\n---\n\n# t\n", encoding="utf-8")
-            self.assertTrue(coord.report_is_degraded(p))
+            self.assertTrue(gate_quality.report_is_degraded(p))
             # 与 validate.py 同一套 YAML 解析：带引号、行尾带注释都算降级版
             p.write_text('---\nweek: 2026-W45\nquality: "degraded"\n---\n\n# t\n', encoding="utf-8")
-            self.assertTrue(coord.report_is_degraded(p))
+            self.assertTrue(gate_quality.report_is_degraded(p))
             p.write_text("---\nweek: 2026-W45\nquality: degraded  # 写作中断\n---\n\n# t\n", encoding="utf-8")
-            self.assertTrue(coord.report_is_degraded(p))
+            self.assertTrue(gate_quality.report_is_degraded(p))
             p.write_text("---\nweek: 2026-W45\n---\n\n# t\n", encoding="utf-8")
-            self.assertFalse(coord.report_is_degraded(p))
+            self.assertFalse(gate_quality.report_is_degraded(p))
             p.write_text("---\nweek: 2026-W45\nquality: full\n---\n\n# t\n", encoding="utf-8")
-            self.assertFalse(coord.report_is_degraded(p))
+            self.assertFalse(gate_quality.report_is_degraded(p))
             p.write_text("没有元数据\n", encoding="utf-8")
-            self.assertFalse(coord.report_is_degraded(p))
-            self.assertFalse(coord.report_is_degraded(pathlib.Path(d) / "missing.md"))
+            self.assertFalse(gate_quality.report_is_degraded(p))
+            self.assertFalse(gate_quality.report_is_degraded(pathlib.Path(d) / "missing.md"))
 
     def test_gate_unverified_is_idempotent_and_does_not_touch_shared_gates(self):
         gates = {"check_run": "pass", "codes": []}
         out = coord.apply_publish(coord.empty_state("2026-W45"), ctx_for(), T0, "full", [], [], None, gates)
-        coord.mark_gate_unverified(out)
+        gate_quality.mark_gate_unverified(out)
         self.assertEqual(gates, {"check_run": "pass", "codes": []})  # 调用方手里的 gates 不被改写
         self.assertEqual((out["produced"]["quality"], out["produced"]["gates"]["check_run"]),
                          ("check_failed", "skipped"))
-        coord.mark_gate_unverified(out)  # 重试时再调一次，结果不变
+        gate_quality.mark_gate_unverified(out)  # 重试时再调一次，结果不变
         self.assertEqual(out["produced"]["gates"]["codes"], ["GATE_UNVERIFIED"])
 
     def test_gate_unverified_when_runner_fails(self):
@@ -681,7 +682,7 @@ class PublishGateTest(unittest.TestCase):
 
         coord.subprocess.run = boom
         try:
-            ok, codes = coord.publish_gate(ctx)
+            ok, codes = gate_quality.publish_gate(ctx)
         finally:
             coord.subprocess.run = orig
         self.assertFalse(ok)
@@ -694,17 +695,17 @@ class PublishGateTest(unittest.TestCase):
         coord.subprocess.run = lambda *a, **kw: coord.subprocess.CompletedProcess(
             a, 1, stdout="Traceback (most recent call last): ...\n", stderr="")
         try:
-            ok, codes = coord.publish_gate(ctx)
+            ok, codes = gate_quality.publish_gate(ctx)
         finally:
             coord.subprocess.run = orig
         self.assertEqual((ok, codes), (False, ["GATE_UNVERIFIED"]))
 
     def test_override_allowed_scope(self):
         # 只认回溯运行：--test 允许指定任意远端（含 origin / 生产 URL），按名字排除挡不住
-        self.assertTrue(coord.override_allowed(ctx_for(test=False, mode="backfill")))
-        self.assertFalse(coord.override_allowed(ctx_for(test=False, mode="normal")))
-        self.assertFalse(coord.override_allowed(ctx_for(test=True, mode="normal", remote="/tmp/sandbox.git")))
-        self.assertFalse(coord.override_allowed(ctx_for(test=True, mode="normal", remote="origin")))
+        self.assertTrue(gate_quality.override_allowed(ctx_for(test=False, mode="backfill")))
+        self.assertFalse(gate_quality.override_allowed(ctx_for(test=False, mode="normal")))
+        self.assertFalse(gate_quality.override_allowed(ctx_for(test=True, mode="normal", remote="/tmp/sandbox.git")))
+        self.assertFalse(gate_quality.override_allowed(ctx_for(test=True, mode="normal", remote="origin")))
 
     def test_apply_publish_records_gates(self):
         state = coord.empty_state("2026-W45")
