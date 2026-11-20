@@ -46,8 +46,11 @@ def cli_ok(payload):
     return {"ok": True, **payload}
 
 
-def cli_err(type_="network", subtype="timeout"):
-    return {"ok": False, "error": {"type": type_, "subtype": subtype, "detail": "mock"}}
+def cli_err(type_="network", subtype="timeout", code=None):
+    e = {"type": type_, "subtype": subtype, "detail": "mock"}
+    if code is not None:
+        e["code"] = code
+    return {"ok": False, "error": e}
 
 
 class Base(unittest.TestCase):
@@ -537,6 +540,86 @@ class SyncTest(Base):
         self.assertIsNone(feishu_sync._cached_result(WEEK, test=False))
         self.assertIsNone(feishu_sync._cached_result("2026-W44", test=False))
 
+    # ---- P0：补交付不得丢失已知文档 ID，结果不明时不得新建 ----
+
+    NOT_FOUND = {"ok": False, "error": {"type": "business", "code": 404,
+                                        "detail": "doc not_found"}}
+
+    def p0_fetch(self, error):
+        """让真实 _doc_state 走 run_cli：fetch 返回指定错误，其余命令给空成功。"""
+        def fake_run_cli(cli, *a, **kw):
+            if a[:2] == ("docs", "+fetch"):
+                return error
+            return {"ok": True, "data": {}}
+        return mock.patch.object(feishu_sync, "run_cli", side_effect=fake_run_cli)
+
+    def test_fetch_timeout_preserves_known_document_id(self):
+        # 路径①：读回超时是「结果不明」，失败也要把已知 ID 留在 feishu.json
+        self.write_cache()
+        with self.p0_fetch(cli_err("network", "timeout")), \
+             self.candidates([]), \
+             mock.patch.object(feishu_sync, "_create",
+                               side_effect=AssertionError("读回超时不应新建")) as cr:
+            code, out = self.run_sync()
+        self.assertEqual(code, 1)
+        self.assertIn("FEISHU_SYNC_FAILED", out)
+        result = json.loads((self.work / feishu_sync.RESULT_FILE).read_text(encoding="utf-8"))
+        self.assertEqual(result.get("document_id"), "doc1")
+        self.assertEqual(result.get("url"), "https://x/docx/doc1")
+        cr.assert_not_called()
+
+    def test_known_id_survives_repeated_fetch_failures(self):
+        # 接上：连续多次补交付都读回超时，已知 ID 一直保留，绝不退回搜索 0 候选 create
+        self.write_cache()
+        with self.p0_fetch(cli_err("network", "timeout")), \
+             self.candidates([]), \
+             mock.patch.object(feishu_sync, "_create",
+                               side_effect=AssertionError("ID 未确认不存在前不得新建")) as cr:
+            for _ in range(3):
+                code, _ = self.run_sync()
+                self.assertEqual(code, 1)
+                self.assertEqual(feishu_sync._cached_result(WEEK, test=False)["document_id"], "doc1")
+        cr.assert_not_called()
+
+    def test_permission_fetch_error_never_creates_and_preserves_id(self):
+        # 路径②：权限不足不能证明文档不存在，不得落搜索 0 候选 create
+        self.write_cache()
+        with self.p0_fetch(cli_err("permission", "forbidden", code=99991672)), \
+             self.candidates([]), \
+             mock.patch.object(feishu_sync, "_create",
+                               side_effect=AssertionError("权限不足不应新建")) as cr:
+            code, out = self.run_sync()
+        self.assertEqual(code, 1)
+        result = json.loads((self.work / feishu_sync.RESULT_FILE).read_text(encoding="utf-8"))
+        self.assertEqual(result.get("document_id"), "doc1")
+        cr.assert_not_called()
+
+    def test_confirmed_missing_allows_create_after_search(self):
+        # 正常路径仍可用：确认原文档不存在 + 搜索查重 0 候选 → 允许新建，新 ID 覆盖旧 ID
+        self.write_cache()
+        with self.p0_fetch(self.NOT_FOUND), \
+             self.candidates([]), \
+             mock.patch.object(feishu_sync, "_create",
+                               return_value={"action": "created", "document_id": "doc2", "url": "u2"}) as cr:
+            code, out = self.run_sync()
+        self.assertEqual(code, 0, out)
+        self.assertIn("SYNC=created", out)
+        cr.assert_called_once()
+        result = json.loads((self.work / feishu_sync.RESULT_FILE).read_text(encoding="utf-8"))
+        self.assertEqual(result.get("document_id"), "doc2")
+
+    def test_search_failure_does_not_create_and_preserves_id(self):
+        # 查重未完成（search 返回 None）时不得新建，已知 ID 也不能丢
+        self.write_cache()
+        with self.p0_fetch(self.NOT_FOUND), \
+             self.candidates(None), \
+             mock.patch.object(feishu_sync, "_create",
+                               side_effect=AssertionError("查重失败不应新建")) as cr:
+            code, out = self.run_sync()
+        self.assertEqual(code, 1)
+        self.assertEqual(feishu_sync._cached_result(WEEK, test=False)["document_id"], "doc1")
+        cr.assert_not_called()
+
 
 class IsTestTest(Base):
     def test_env_var(self):
@@ -624,6 +707,30 @@ class RunCliEnvelopeTest(Base):
         self.assertNotIn("error", out)
         self.assertTrue(out["ok"])
         self.assertEqual(out["data"], {"x": 1})
+
+
+class DocStateTest(unittest.TestCase):
+    """P0：_doc_state 只有明确「文档不存在」才判 missing，其余错误一律 unknown。"""
+
+    def state(self, out):
+        with mock.patch.object(feishu_sync, "run_cli", return_value=out):
+            return feishu_sync._doc_state("/bin/lark-cli", "doc1")
+
+    def test_success_is_exists(self):
+        self.assertEqual(self.state(cli_ok({"data": {"document": {"document_id": "doc1"}}})), "exists")
+
+    def test_network_timeout_is_unknown(self):
+        self.assertEqual(self.state(cli_err("network", "timeout")), "unknown")
+
+    def test_permission_denied_is_unknown_not_missing(self):
+        self.assertEqual(self.state(cli_err("permission", "forbidden", code=99991672)), "unknown")
+
+    def test_bad_output_is_unknown(self):
+        self.assertEqual(self.state({"ok": False, "error": {"type": "cli", "subtype": "bad_output"}}), "unknown")
+
+    def test_explicit_not_found_is_missing(self):
+        self.assertEqual(self.state({"ok": False, "error": {"type": "business", "code": 404,
+                                                            "detail": "doc not_found"}}), "missing")
 
 
 class BusinessResultTest(Base):
