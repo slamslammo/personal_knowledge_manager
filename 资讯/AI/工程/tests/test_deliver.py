@@ -92,6 +92,17 @@ class DeliverTest(unittest.TestCase):
         self.assertTrue(notice.exists())
         self.assertIn("｜失败】", notice.read_text(encoding="utf-8"))
 
+    def test_test_mode_verify_passes_doc(self):
+        self.responses = self.ok_chain()
+        self.responses["feishu_sync.py"] = [
+            done(f"SYNC=created\nDOCUMENT_ID={SHA[:12]}\n"), done("READBACK=passed\n"), done("NOTIFY=skipped\n")]
+        rc, out = self.run_deliver("--test")
+        self.assertEqual(rc, 0, out)
+        verify = [a for s, a in self.calls if s == "feishu_sync.py" and "verify" in a]
+        self.assertEqual(len(verify), 1)
+        self.assertIn("--doc", verify[0])
+        self.assertIn(SHA[:12], verify[0])
+
     def test_sync_error_does_not_block_delivery(self):
         self.responses = self.ok_chain()
         self.responses["feishu_sync.py"] = [done("SYNC=error\n"), done("NOTIFY=sent\n")]

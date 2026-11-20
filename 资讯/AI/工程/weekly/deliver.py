@@ -127,7 +127,15 @@ def main() -> int:
         if st not in ("created", "updated"):
             warnings.append(f"SYNC={st or 'unknown'}；通知链接应以 GitHub 为准")
         else:
-            run("feishu_sync.py", "verify", "--sha", sha, "--week", args.week)
+            verify_args = ["verify", "--sha", sha, "--week", args.week]
+            if args.test:
+                # 测试模式的 feishu.json 是 test=true，cmd_verify 的 token 回退只认
+                # test=false 记录；不带 --doc 会写出误导性的 FEISHU_READBACK_DOC_REQUIRED。
+                # 验收的真正读回由 deployment.py finish 独立完成，这里补 doc 只为不留废料收据。
+                doc = value(sync.stdout, "DOCUMENT_ID")
+                if doc:
+                    verify_args += ["--doc", doc]
+            run("feishu_sync.py", *verify_args)
     except (OSError, subprocess.TimeoutExpired) as e:
         warnings.append(f"飞书交付异常 {str(e)[:80]}")
 
