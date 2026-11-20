@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -r "资讯/AI/工程/requirements.txt"
-      - run: python -m unittest discover -s "资讯/AI/工程/scripts/tests" -t "资讯/AI/工程/scripts/tests"
+      - run: python -m unittest discover -s "资讯/AI/工程/tests" -t "资讯/AI/工程/tests"
         env:
           GIT_CONFIG_GLOBAL: /dev/null
           GIT_CONFIG_NOSYSTEM: "1"
