@@ -40,6 +40,7 @@ import sys
 import time
 
 import paths
+import quality as gate_quality
 import tracelog
 from common import OUT_DIR, REPO_DIR, WORK_DIR, load_config, read_json, write_json
 
@@ -786,97 +787,6 @@ def collect_outputs(ctx: Ctx) -> tuple[dict[str, bytes], list[str]]:
     return files, rejected
 
 
-GATE_TIMEOUT_SECONDS = 120
-
-
-def report_is_degraded(path: pathlib.Path) -> bool:
-    """周报元数据里的 quality 是否为 degraded（降级版）。
-
-    与 validate.py 用同一套解析（split_front_matter + yaml.safe_load），不能各用各的：
-    `quality: "degraded"` 或行尾带注释的写法，validate 认、正则不认，就会出现
-    「按降级版的宽松规则校验通过，却被标成 full 发布」。
-    """
-    import validate  # 延迟导入：coord 只在发布时读周报元数据
-
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError:
-        return False
-    fm_text, _ = validate.split_front_matter(text)
-    if fm_text is None:
-        return False
-    try:
-        import yaml
-
-        fm = yaml.safe_load(fm_text) or {}
-    except Exception:  # noqa: BLE001 元数据坏掉时按非降级处理，交给 validate 报结构错误
-        return False
-    return isinstance(fm, dict) and fm.get("quality") == "degraded"
-
-
-GATE_SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "weekly" / "check_run.py"  # 固定，不提供替换入口
-
-
-def publish_gate(ctx: Ctx) -> tuple[bool, list[str]]:
-    """发布前跑 check_run.py（内含 validate.py 的全部校验与质量门槛），返回 (是否通过, 错误码)。
-
-    门槛结果由脚本给出，不由智能体声明；崩溃、超时或输出里没有 CODES= 时，说明本轮**没拿到**
-    门槛结果，一律记 GATE_UNVERIFIED（让运维去查脚本或环境），而不是 GATE_INCOMPLETE
-    （那个码的语义是「步骤没做」，会把人引向返工流程）。
-    """
-    timeout = int((ctx.cfg.get("publish") or {}).get("gate_timeout_seconds", GATE_TIMEOUT_SECONDS))
-    try:
-        p = subprocess.run([sys.executable, str(GATE_SCRIPT), "--work-dir", str(ctx.work)],
-                           capture_output=True, text=True, timeout=timeout)
-    except (subprocess.TimeoutExpired, OSError):
-        return False, ["GATE_UNVERIFIED"]
-    codes = []
-    for line in (p.stdout or "").splitlines():
-        if line.startswith("CODES="):
-            codes = [c for c in line[len("CODES="):].split(",") if c]
-    if p.returncode != 0 and not codes:
-        return False, ["GATE_UNVERIFIED"]
-    return p.returncode == 0, codes
-
-
-def derive_quality(gates_ok: bool, degraded: bool, requested: str | None) -> tuple[str, str | None]:
-    """quality 由门槛结果推导；requested 只作期望值，不一致时返回 GATE_MISMATCH。"""
-    derived = "degraded" if degraded else ("full" if gates_ok else "check_failed")
-    if requested and requested != derived:
-        return derived, "GATE_MISMATCH"
-    return derived, None
-
-
-def override_allowed(ctx: Ctx) -> bool:
-    """能不能用 --allow-quality-override 覆盖门槛结果。
-
-    只认回溯运行（week.json 的 mode=backfill）。不看 `--test` 标志：`--test` 允许显式指定
-    任意远端（`--remote origin`、生产 URL 都可以），那种运行等于在生产上跑，按名字排除 origin
-    挡不住，所以干脆不给测试运行这个权限——要覆盖就把 mode 设成 backfill，那是唯一真实场景。
-    """
-    return ctx.mode == "backfill"
-
-
-# --allow-quality-override 能豁免的失败码，只有「产物早于本次运行」这一类。
-# 回溯是补历史周报，复用当周存档材料属正常，材料旧可以用人工确认代替重跑；
-# 但「没有产物」「搜索次数不够」「结构不合格」说的是产出内容本身，与时间无关，
-# 一并豁免就会让结构错误、缺材料的周报带上 full（2026-11-12 评审复现：
-# quality=full、gate=fail、codes=[GATE_INCOMPLETE, GATE_SEARCH_MIN, GATE_STRUCTURE]）。
-OVERRIDABLE_CODES = frozenset({"GATE_STALE"})
-
-
-def mark_gate_unverified(state: dict) -> None:
-    """把本次产出的门槛记录降为「未验证」：检的不是最终提交的那份周报时用（周报被人工改过）。"""
-    prod = state.setdefault("produced", {})
-    gates = prod.setdefault("gates", {})
-    gates["check_run"] = "skipped"
-    codes = list(gates.get("codes") or [])
-    if "GATE_UNVERIFIED" not in codes:
-        codes.append("GATE_UNVERIFIED")
-    gates["codes"] = codes
-    prod["quality"] = "check_failed"
-
-
 def report_is_manual(ctx: Ctx, tip: str) -> bool:
     """远端最新的周报提交不是本脚本写的（人工改过），本次发布不会覆盖它。"""
     subject = last_subject(ctx, tip, ctx.report_path)
@@ -898,7 +808,7 @@ def cmd_publish(args) -> int:
         if not args.quality:
             emit("error", "--allow-quality-override 要同时给 --quality，说明按哪个质量发布")
             return EXIT_ERROR
-        if not override_allowed(ctx):
+        if not gate_quality.override_allowed(ctx):
             tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_DENIED",
                          f"mode={ctx.mode} test={ctx.test} remote={ctx.remote} 时不能用 --allow-quality-override",
                          work_dir=ctx.work)
@@ -912,11 +822,11 @@ def cmd_publish(args) -> int:
         tracelog.log("提交", "周报被人工修改", "warn", "MANUAL_EDIT",
                      "不覆盖远端周报，门槛结果不适用于本次提交内容，按未验证处理", work_dir=ctx.work)
     else:
-        gates_ok, gate_codes = publish_gate(ctx)
+        gates_ok, gate_codes = gate_quality.publish_gate(ctx)
         gate_status = "pass" if gates_ok else "fail"
     gates = {"check_run": gate_status, "codes": gate_codes}
     # 人工改过周报时提交的不是本次候选，按未验证处理；质量也不看候选的元数据（那份不提交）
-    degraded = False if manual else report_is_degraded(ctx.out / ctx.report_path)
+    degraded = False if manual else gate_quality.report_is_degraded(ctx.out / ctx.report_path)
     if args.allow_quality_override:
         if manual:
             emit("error", "GATE_OVERRIDE_CONFLICT：周报被人工改过，本次提交的不是你的候选，不能声明产出质量")
@@ -931,7 +841,7 @@ def cmd_publish(args) -> int:
             return EXIT_ERROR
         quality, mismatch = args.quality, None
         # 覆盖只能豁免「材料是旧的」；其余失败说明产出本身不合格，不能借覆盖变成 full
-        blocked = [c for c in gate_codes if c not in OVERRIDABLE_CODES]
+        blocked = [c for c in gate_codes if c not in gate_quality.OVERRIDABLE_CODES]
         if blocked:
             tracelog.log("提交", "拒绝覆盖", "error", "GATE_OVERRIDE_DENIED",
                          f"失败码不在可豁免范围：{','.join(blocked)}", work_dir=ctx.work)
@@ -942,7 +852,7 @@ def cmd_publish(args) -> int:
         if gate_codes:
             gates["waived"] = sorted(set(gate_codes))
     else:
-        quality, mismatch = derive_quality(gates_ok, degraded, args.quality)
+        quality, mismatch = gate_quality.derive_quality(gates_ok, degraded, args.quality)
     if mismatch:
         tracelog.log("提交", "拒绝发布", "error", "GATE_MISMATCH",
                      f"门槛结果是 {quality}，与 --quality {args.quality} 不一致", work_dir=ctx.work)
@@ -972,7 +882,7 @@ def cmd_publish(args) -> int:
             out.pop(ctx.report_path)  # 周报被手工改过：不覆盖
             dropped.append(ctx.report_path)
             # 每次尝试都要降级：推送被拒后重试时，build 会按原来的 quality 重新生成状态
-            mark_gate_unverified(state)
+            gate_quality.mark_gate_unverified(state)
         return out
 
     def build(state, tip):

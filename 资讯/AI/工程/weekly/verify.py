@@ -27,6 +27,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import collect_hn
 import coord
+import quality as gate_quality
 import tracelog
 from common import fetch, load_config, write_json
 from finalize import AUTO_BEGIN
@@ -55,7 +56,7 @@ def override_conflict(produced: dict, report_file) -> bool:
 
     publish 侧已经拒绝这种组合，这里防的是旧状态文件与手工写入。
     """
-    return produced.get("quality") == "full" and coord.report_is_degraded(report_file)
+    return produced.get("quality") == "full" and gate_quality.report_is_degraded(report_file)
 
 
 def verify(ctx: coord.Ctx, tolerance: float) -> tuple[bool, list[str], list[str]]:
