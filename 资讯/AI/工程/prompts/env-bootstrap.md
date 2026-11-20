@@ -20,7 +20,7 @@
 在仓库根目录执行：
 
 ```
-python3 资讯/AI/工程/scripts/env_check.py check
+python3 资讯/AI/工程/core/env_check.py check
 ```
 
 输出分开解释：
@@ -55,9 +55,9 @@ Git 写入身份优先复用平台已有授权；缺失时由用户在平台秘�
    - 将确认 URL 和有效期作为当前回复的可见内容发给本人。需要二维码时，使用 `lark-cli auth qrcode "<本次确认URL>" --output "$W/feishu-auth.png"（`W` 由 `workdir.py print` 取得）`，并通过平台图片/文件输出能力展示生成文件；不能只打印云端路径。平台无法展示图片时直接给可点击 URL，不承诺弹出本机浏览器或系统授权窗。
    - 设备码仅保存到当前任务允许的临时目录，文件权限 600；不回显设备码，不写入 Git 或部署报告。本人在有效期内确认后，先在**同一执行环境**运行 `lark-cli auth login --device-code <本次设备码>`，完成换取并保存凭据，再实际读取验证；不要先重新启动会清空临时目录的整套周报流程。
    - 不把本人点击链接当作已完成 CLI 登录；还必须完成设备码轮询及凭据落盘。若任务已结束、设备码过期，或下一次任务无法恢复原环境及临时状态，则重新生成授权入口，并明确报告跨任务状态问题，不能声称已免扫码。已有有效 user 身份直接复用，不重复要求授权。
-3. 运行 `python3 资讯/AI/工程/scripts/env_check.py check --require-delivery`，确认核心 Git 写入初筛、工具、绑定及 user/bot 服务端鉴权通过。首次验收的新生成必须在它成功后开始；失败停在部署并报告缺项，不进入采集和写稿。正式运行的 Git 周报仍按飞书降级规则执行；C9 观察不由此命令宣称通过。
+3. 运行 `python3 资讯/AI/工程/core/env_check.py check --require-delivery`，确认核心 Git 写入初筛、工具、绑定及 user/bot 服务端鉴权通过。首次验收的新生成必须在它成功后开始；失败停在部署并报告缺项，不进入采集和写稿。正式运行的 Git 周报仍按飞书降级规则执行；C9 观察不由此命令宣称通过。
 4. 文档始终显式使用 **user**：由本次沙箱周报同步创建/更新 `[测试]` 文档，再实际读回核对标题和正文。保留测试文档。bot 仅负责通知；此前 bot 建文档的 99991672 是旧权限观察，**不是必须持续失败的验收条件**，不再为验证失败而创建 bot 文档。
-5. 执行 `python3 资讯/AI/工程/scripts/credential_probe.py --doc <测试文档ID>`（本次同步成功后可省略 `--doc` 从结果文件读取）。它执行真实 user 文档读取，记录必要的过期时间和实例观察，不输出正文或凭据。重复本地 `auth status` 不能证明自动续期。
+5. 执行 `python3 资讯/AI/工程/core/credential_probe.py --doc <测试文档ID>`（本次同步成功后可省略 `--doc` 从结果文件读取）。它执行真实 user 文档读取，记录必要的过期时间和实例观察，不输出正文或凭据。重复本地 `auth status` 不能证明自动续期。
 
 扫码选已有应用的核对依据：飞书[官方安装使用指南](https://www.feishu.cn/content/article/7623291503305083853)明确说明配置时可选择已有应用；固定版本 [`init.go`](https://github.com/larksuite/cli/blob/v1.0.100/cmd/config/init.go)、[`init_interactive.go`](https://github.com/larksuite/cli/blob/v1.0.100/cmd/config/init_interactive.go)展示一键配置与返回凭据保存流程；[`app_registration.go`](https://github.com/larksuite/cli/blob/v1.0.100/internal/auth/app_registration.go)的 begin 请求与确认 URL 没有“仅新建”参数。应用扫码配置与后续 `auth login` 的用户文档授权分开核验，已有有效 user 身份时不重复要求授权。
 

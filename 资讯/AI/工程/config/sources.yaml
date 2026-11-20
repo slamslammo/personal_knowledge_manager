@@ -1,4 +1,4 @@
-# AI 资讯任务的信息源。执行手册让智能体在运行时读取本文件；data_endpoints 由 scripts/ 下的采集脚本使用。
+# AI 资讯任务的信息源。执行手册让智能体在运行时读取本文件；data_endpoints 由 weekly/ 下的采集脚本使用。
 
 official:                     # 官方一手来源，发布类资讯必须以此为原文
   - openai.com

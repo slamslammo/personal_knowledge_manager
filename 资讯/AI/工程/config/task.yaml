@@ -10,14 +10,14 @@ schedule:                    # 未来启用调度时的参考，不会创建或�
   report_period: 上一周（周一 00:00 至周日 24:00，北京时间）
 
 agent:
-  prompt: 资讯/AI/工程/prompts/routine-prompt.md   # 入口提示词，贴进定时任务
+  prompt: 资讯/AI/工程/prompts/routine-weekly.md   # 入口提示词，贴进定时任务
   manual: 资讯/AI/工程/prompts/weekly.md           # 执行手册，运行时从仓库读取
   model_tier: 高档通用模型，最高思考强度             # 不写具体型号，在平台设置中选择
   capabilities:                                    # 平台必须提供的能力
     - shell                     # 运行 bash 命令
     - python3                   # 带 PyYAML
     - network                   # 脚本访问 network.allow 中的站点，git 推送
-    - git_push                  # 推送本仓库的 main：协调锁依赖它（见 ../scripts/coord.py），推送不了就无法运行
+    - git_push                  # 推送本仓库的 main：协调锁依赖它（见 ../core/coord.py），推送不了就无法运行
     - web_search                # 联网搜索
   optional_capabilities:                           # 没有时有降级办法
     - notify                    # 没有时把通知作为运行的最后输出，由调度方转发
@@ -40,7 +40,7 @@ repository:
 
 runtime:
   requires: [git, python3, PyYAML]
-  tests: python3 -m unittest discover -s 资讯/AI/工程/scripts/tests -t 资讯/AI/工程/scripts/tests
+  tests: python3 -m unittest discover -s 资讯/AI/工程/tests -t 资讯/AI/工程/tests
 
 network:
   allow:

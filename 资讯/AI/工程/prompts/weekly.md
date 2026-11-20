@@ -1,7 +1,7 @@
 <!-- task: ai-weekly -->
 # AI 周报执行手册
 
-本手册由入口提示词 `prompts/routine-prompt.md` 调用。入口提示词里的安全规则、写入白名单和"无法生成周报时也要发通知"始终有效，优先于本手册。规则依据见 `../../文档/方案.md`，参数见 `../config/`。
+本手册由入口提示词 `prompts/routine-weekly.md` 调用。入口提示词里的安全规则、写入白名单和"无法生成周报时也要发通知"始终有效，优先于本手册。规则依据见 `../../文档/方案.md`，参数见 `../config/`。
 
 本手册只写与平台无关的步骤，任何能运行 shell、git、python3 并能联网搜索的智能体都应能照做。定时和通知在不同平台上的对应做法，见 [部署指南](../../文档/部署指南.md)。
 
@@ -34,18 +34,18 @@
 在仓库根目录执行。后文 `$S` 指脚本目录，`$W` 是本次工作目录，**由脚本给出，不手写路径**：
 
 ```
-S=资讯/AI/工程/scripts
-W="$(python3 $S/workdir.py print)"
-python3 $S/workdir.py check
+S=资讯/AI/工程
+W="$(python3 $S/core/workdir.py print)"
+python3 $S/core/workdir.py check
 ```
 
-每次新建 shell 都要重新取一次 `W`（工具每次创建的是新 shell）。路径、中间文件名、归档命名一律由 `scripts/paths.py` 决定；不要自己拼路径、加周后缀或给目录起名。**先保留并检查上一轮产物，不要起手清空工作目录。** 如果本人刚完成飞书浏览器确认，先按 `env-bootstrap.md` 在原执行环境完成保存的设备码轮询及凭据落盘，再处理下面的恢复分支；不能先清理保存设备码的目录。
+每次新建 shell 都要重新取一次 `W`（工具每次创建的是新 shell）。路径、中间文件名、归档命名一律由 `core/paths.py` 决定；不要自己拼路径、加周后缀或给目录起名。**先保留并检查上一轮产物，不要起手清空工作目录。** 如果本人刚完成飞书浏览器确认，先按 `env-bootstrap.md` 在原执行环境完成保存的设备码轮询及凭据落盘，再处理下面的恢复分支；不能先清理保存设备码的目录。
 
 已有本地协调记录时，先检查能否恢复验收交付：
 
 ```
 if test -f "$W/coord.json"; then
-  python3 $S/deployment.py resume
+  python3 $S/weekly/deployment.py resume
 fi
 ```
 
@@ -63,10 +63,10 @@ fi
 确认可清理后，先观察上次保存的凭据，再检查核心依赖。**清理只能走脚本的保留清单式 `clean`，禁止 `rm -rf` 整目录删除**：`feishu.json`、交付收据与部署状态属于跨运行状态，必须留下；脚本会先把**上一轮**不可再生的证据按周归档到 `archive/{WEEK}/`，再清除可再生的 scratch。
 
 ```
-python3 $S/workdir.py clean
-python3 $S/credential_probe.py --resume
-python3 $S/env_check.py ensure
-python3 $S/deployment.py plan
+python3 $S/core/workdir.py clean
+python3 $S/core/credential_probe.py --resume
+python3 $S/core/env_check.py ensure
+python3 $S/weekly/deployment.py plan
 ```
 
 - `credential_probe.py --resume` 没有历史观察记录时只报 pending；有记录时先实际读取保存的测试文档，以观察自然到期后的首次 API 调用及刷新。它失败不得阻断 Git 周报，不回显凭据，也不能用本地标记证明跨任务状态可用。
@@ -79,10 +79,10 @@ python3 $S/deployment.py plan
 核心就绪、模式确定后继续：
 
 ```
-python3 $S/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > "$W/week.json"
-eval "$(python3 $S/weeks.py [同上参数] --format env)"
-python3 $S/feishu_sync.py preflight
-python3 $S/deployment.py start --platform <平台名>
+python3 $S/core/weeks.py [--target-start YYYY-MM-DD | --week YYYY-Www] > "$W/week.json"
+eval "$(python3 $S/core/weeks.py [同上参数] --format env)"
+python3 $S/core/feishu_sync.py preflight
+python3 $S/weekly/deployment.py start --platform <平台名>
 ```
 
 - `preflight` 的普通授权状态只决定交付降级，不能替代服务端鉴权或文档实际读写验收；部署联网检查另用 `auth status --verify` 和真实文档读取。
@@ -105,7 +105,7 @@ python3 $S/deployment.py start --platform <平台名>
 | --- | --- |
 | `ACTION=run` | 本次持有运行锁，执行后续生成、发布与交付 |
 | `ACTION=verify` | 转到末尾“校验流程” |
-| `ACTION=wait` | 运行 `python3 $S/coord.py wait` 等待，直到不再是 wait，再按新输出处理 |
+| `ACTION=wait` | 运行 `python3 $S/core/coord.py wait` 等待，直到不再是 wait，再按新输出处理 |
 | `ACTION=exit` | 本周已完成、其他运行在校验或需人工；结束，不发通知 |
 | `ACTION=blocked` | 首次验收的部署或授权未通过；停在环境部署，报告缺项或确认入口，不进入采集、搜索和写稿 |
 | `ACTION=error` | 记录错误码，按失败处理报告 |
@@ -114,9 +114,9 @@ python3 $S/deployment.py start --platform <平台名>
 
 ## 第 1 步：采集数据
 
-1. **采集**：`python3 $S/collect_all.py`。它会依次采集 Trendshift 周榜、HN、Hugging Face 和 HN 高分帖的原文，失败的数据源会自动重试、跳过并记录。
-   - 只读 `$W/digest.md`（不超过 150 行，链接都是完整链接，官方或一手来源已标注）。不要用 head 之类截断脚本输出。需要更多帖子时用 `python3 $S/collect_all.py show hn --offset 60`，看单篇原文信息用 `python3 $S/collect_all.py show article <HN id>`。
-   - 输出 `COLLECT=trendshift_not_ready`：周榜未就绪。不要空等，先做下面的第 3 项和第 2 步的 ②；写完 ② 后运行 `python3 $S/collect_all.py --only trendshift`，就绪了就补做第 2 项；仍未就绪，写完 ④⑤ 后再试最后一次；还是不行，③ 由草稿写明"周榜未就绪"，其余照常，并在通知里说明。
+1. **采集**：`python3 $S/weekly/collect_all.py`。它会依次采集 Trendshift 周榜、HN、Hugging Face 和 HN 高分帖的原文，失败的数据源会自动重试、跳过并记录。
+   - 只读 `$W/digest.md`（不超过 150 行，链接都是完整链接，官方或一手来源已标注）。不要用 head 之类截断脚本输出。需要更多帖子时用 `python3 $S/weekly/collect_all.py show hn --offset 60`，看单篇原文信息用 `python3 $S/weekly/collect_all.py show article <HN id>`。
+   - 输出 `COLLECT=trendshift_not_ready`：周榜未就绪。不要空等，先做下面的第 3 项和第 2 步的 ②；写完 ② 后运行 `python3 $S/weekly/collect_all.py --only trendshift`，就绪了就补做第 2 项；仍未就绪，写完 ④⑤ 后再试最后一次；还是不行，③ 由草稿写明"周榜未就绪"，其余照常，并在通知里说明。
    - 输出 `COLLECT=degraded`：有数据源跳过了，照常继续，数据说明会自动写明。
    - 回溯且摘要显示"复用已存档的榜单数据"：跳过第 2 项。
 2. **AI 判定与 GitHub 排名**：
@@ -128,21 +128,21 @@ python3 $S/deployment.py start --platform <平台名>
      ```json
      {"non_ai": ["owner/repo"], "exclude": {"owner/repo": "awesome 类合集"}, "hn_ai_repos": ["owner/repo"]}
      ```
-   - 运行 `python3 $S/rank_github.py --week $WEEK`。排名、Top 5 和元数据 repos 以脚本结果为准，不要手工调整。
+   - 运行 `python3 $S/weekly/rank_github.py --week $WEEK`。排名、Top 5 和元数据 repos 以脚本结果为准，不要手工调整。
 3. **联网搜索**，完整版按 `config/runtime.yaml` 的 search 下限与上限执行（当前 20 到 40 次）：
-   - **每搜索一次，就运行一次** `python3 $S/tracelog.py search "<用途>" "<查询词>"`。少于下限不能判为完整版通过；降级版免下限但仍检查上限，最终发布分支见第 5 步。达到上限不继续搜索。
+   - **每搜索一次，就运行一次** `python3 $S/core/tracelog.py search "<用途>" "<查询词>"`。少于下限不能判为完整版通过；降级版免下限但仍检查上限，最终发布分支见第 5 步。达到上限不继续搜索。
    - 先用摘要里的线索：HN 高分帖的标题常常就是发布本身，标了"官方""一手"的链接可以直接作为原文，不需要再搜。搜索用具体的产品名、模型名或事件名。
    - 分配：发现本周发布 10 次（补充 HN 和 Hugging Face 没覆盖的）；② 核实 8 次；③ 传播分析，Top 5 每个项目 2 次（网页 1 次、YouTube 1 次），共 10 次；④ 核实文章内容和是否与 AI 相关 4 次；⑤ 和"洞察" 5 次；机动 3 次。
    - 优先使用 `config/sources.yaml` 里的来源；不使用中文媒体和 Newsletter。不要启动子任务做逐条核实。
-4. 运行 `python3 $S/coord.py renew`（租约快到期时续期，没到期时什么也不做）。
+4. 运行 `python3 $S/core/coord.py renew`（租约快到期时续期，没到期时什么也不做）。
 
 ## 第 2 步：写周报
 
-1. 运行 `python3 $S/draft.py`，生成草稿 `$OUT_REPORT`。在这个文件上写，不要写到仓库的 `$REPORT_PATH`。
+1. 运行 `python3 $S/weekly/draft.py`，生成草稿 `$OUT_REPORT`。在这个文件上写，不要写到仓库的 `$REPORT_PATH`。
    - 草稿已经填好：元数据的 week、range、repos，标题，③ 的名次、链接、总 star 和本周增量，④ 的候选行（原文链接、分数、评论数、HN 讨论链接），数据说明的事实部分。这些不要改。
    - 你要填写所有 `{{...}}` 占位符，按 `<!-- 草稿：... -->` 提示操作。提示会在第 4 步被自动删除。
 2. 正文顺序是 ① 本周概览、洞察、②–⑤、数据说明。写作顺序不同：先写 ②–⑤，再写洞察，最后写 ①。
-3. 写完运行 `python3 $S/coord.py renew`。
+3. 写完运行 `python3 $S/core/coord.py renew`。
 
 **板块归属优先级：② > ③ > ④ > ⑤。**
 - 同一件事只在优先级最高的板块详细写。
@@ -214,13 +214,13 @@ python3 $S/deployment.py start --platform <平台名>
 ## 第 4 步：检查与返工
 
 ```
-python3 $S/finalize.py
-python3 $S/check_run.py | tee "$W/checks.txt"
+python3 $S/weekly/finalize.py
+python3 $S/weekly/check_run.py | tee "$W/checks.txt"
 ```
 
 - `finalize.py` 刷新数据说明的事实部分，删掉草稿提示。每次改完周报、每次补做搜索之后，都要重新运行它。
 - `check_run.py` 逐项检查各步是否在本次运行中做过，并运行 `validate.py` 的全部校验和质量门槛。没通过时最后一行是 `CODES=...`。
-- 没通过就按错误码返工，只重做没通过的部分。返工完重新运行上面两条命令。每轮先记一行：`python3 $S/tracelog.py log --step 返工 --event "第 N 轮" --status warn --code <错误码> --detail "<改了什么>"`。
+- 没通过就按错误码返工，只重做没通过的部分。返工完重新运行上面两条命令。每轮先记一行：`python3 $S/core/tracelog.py log --step 返工 --event "第 N 轮" --status warn --code <错误码> --detail "<改了什么>"`。
 
 | 错误码 | 返工 |
 | --- | --- |
@@ -236,7 +236,7 @@ python3 $S/check_run.py | tee "$W/checks.txt"
 ## 第 5 步：提交
 
 ```
-python3 $S/coord.py publish
+python3 $S/core/coord.py publish
 ```
 
 只提交 `$W/out/` 的白名单产出与状态；远端有新提交由脚本重新读取并重试。**不要传 `--quality`**，实际质量由发布前的门槛检查推导；声明与结果不一致会拒绝发布。
@@ -259,7 +259,7 @@ python3 $S/coord.py publish
 仅在 `ACTION=published` 后执行，使用输出的完整 SHA。
 
 ```
-python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交号>
+python3 $S/core/feishu_sync.py sync --from-published --sha <第 5 步输出的提交号>
 ```
 
 - 同步的是**已发布提交里的周报**（`git show`），不是 `/tmp` 下的候选稿——候选稿可能因远端人工修改保护而没有入库。
@@ -268,15 +268,15 @@ python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交�
 - 输出 `SYNC=created` 或 `SYNC=updated`：飞书写接口成功。正式模式下，立即用第 5 步输出的完整 SHA 读回核对；验收模式由第 7 步核对测试文档正文。
 
   ```bash
-  python3 $S/feishu_sync.py verify --sha <第 5 步输出的完整提交号> --week "$WEEK"
+  python3 $S/core/feishu_sync.py verify --sha <第 5 步输出的完整提交号> --week "$WEEK"
   ```
 
   `READBACK=passed` 才报告正式飞书正文已核对。`READBACK=pending/failed` 表示交付待核，保留原文档和同步结果，通知用 GitHub 链接并注明核对错误码。临时读回失败先重试上述只读命令，无需重写文档。需要独立复核旧版时可加 `--doc <文档ID>`。脱敏核对结果在 `$W/feishu-delivery-check.json`。
 - 输出 `SYNC=skipped`：预检已降级（no_doc/off），第 6 步通知用 GitHub 链接并注明。
 - 输出 `SYNC=error`：**不阻塞**，照常进入第 6 步，通知用 GitHub 链接并注明错误码。修复飞书环境后，指定应交付的已发布提交，补同步并读回，**不重跑整周**：
   ```
-  python3 $S/feishu_sync.py sync --from-published --sha <已发布的完整提交号> --week "$WEEK"
-  python3 $S/feishu_sync.py verify --sha <同一提交号> --week "$WEEK"
+  python3 $S/core/feishu_sync.py sync --from-published --sha <已发布的完整提交号> --week "$WEEK"
+  python3 $S/core/feishu_sync.py verify --sha <同一提交号> --week "$WEEK"
   ```
 - 回溯运行同样执行本步。
 - `FEISHU_SYNC_UNKNOWN` 表示新建结果仍不明。保留原同步记录；搜索为空或失败都不能证明未创建。后续搜索唯一命中时由同步脚本复用该文档；不得删除记录后盲目再次新建。进一步人工恢复见部署指南。
@@ -286,7 +286,7 @@ python3 $S/feishu_sync.py sync --from-published --sha <第 5 步输出的提交�
 先把通知内容写入 `$W/notification.txt`，另写一份去掉全文和表格的精简版 `$W/notification-short.txt`（发送失败时兜底）。然后运行：
 
 ```
-python3 $S/feishu_sync.py notify --file "$W/notification.txt" --fallback-file "$W/notification-short.txt"
+python3 $S/core/feishu_sync.py notify --file "$W/notification.txt" --fallback-file "$W/notification-short.txt"
 ```
 
 预检为 no_notify/off、notify 输出 `NOTIFY=skipped`，或平台没有 lark-cli 时，把通知内容作为本次运行的最后输出，由调度方转发。测试模式只写文件，并在最后原样输出，不发通知。
@@ -298,7 +298,7 @@ python3 $S/feishu_sync.py notify --file "$W/notification.txt" --fallback-file "$
 **交付完成后归档本次证据**（一周一份，`MANIFEST.json` 的 `runs[]` 按 `run_id` 幂等合并；只归档不可再生的关键证据，不复制采集素材）：
 
 ```
-python3 $S/workdir.py archive --week "$WEEK"
+python3 $S/core/workdir.py archive --week "$WEEK"
 ```
 
 归档目录与文件名由 `paths.py` 固定，不要手工 copy 文件或另起目录名。`MANIFEST.json` 里的 `session_id`、`model` 留空供后续消耗对比时补，脚本不杜撰。
@@ -322,7 +322,7 @@ python3 $S/workdir.py archive --week "$WEEK"
 通知文件已生成且测试通知已跳过后运行：
 
 ```
-python3 $S/deployment.py finish
+python3 $S/weekly/deployment.py finish
 ```
 
 该命令核对本次真实检查、沙箱发布、测试文档及实际 user 读取结果。`ACCEPTANCE=passed/pending/failed` 只描述本次沙箱验收，不等于完整上线批准；完整性失败、飞书未交付或读回差异不得写成通过。保留输出中的报告位置、沙箱提交号、测试文档链接，便于用户核对正文。
@@ -334,7 +334,7 @@ python3 $S/deployment.py finish
 本周已有另一次运行的产出，本次只做独立校验，由脚本判断：
 
 ```
-python3 $S/verify.py --record
+python3 $S/weekly/verify.py --record
 ```
 
 读取输出中的 `ACTION=` 行处理（不是最后一行，也不能仅凭进程退出码判断）：
@@ -353,7 +353,7 @@ python3 $S/verify.py --record
 
 任何一步出现无法恢复的错误（脚本反复报错、写作中断、环境故障）时：
 1. 本次已经取得运行锁、仍持锁且已有可核实的草稿和数据时，按第 4 步生成降级版并提交；部署未就绪、失锁或尚未取得运行资格时不进入此分支。
-2. 无法提交且本次确实持有锁时，运行 `python3 $S/coord.py fail --code <错误码> --detail "<停在哪一步、原因>"`，释放本次锁并尽力保存记录。尚未取得锁时只保留本地诊断并报告，不操作上一轮的锁。错误码见 `python3 $S/tracelog.py codes`。
+2. 无法提交且本次确实持有锁时，运行 `python3 $S/core/coord.py fail --code <错误码> --detail "<停在哪一步、原因>"`，释放本次锁并尽力保存记录。尚未取得锁时只保留本地诊断并报告，不操作上一轮的锁。错误码见 `python3 $S/core/tracelog.py codes`。
 3. 按入口提示词发失败通知：写清停在哪一步、已经完成了什么、错误码。
 4. 测试模式同样执行，只是不发通知，把通知内容在最后原样输出。
 
@@ -362,5 +362,5 @@ python3 $S/verify.py --record
 ## 执行记录
 
 - 脚本会自动记录执行事件；你只需记录每次搜索（`tracelog.py search`）和每轮返工（`tracelog.py log`）。
-- 查看本次运行的记录：`python3 $S/trace_view.py --local --errors`。
-- 事后还原整周的过程：`python3 $S/trace_view.py --week $WEEK`（读取 `main` 上的状态文件）。
+- 查看本次运行的记录：`python3 $S/core/trace_view.py --local --errors`。
+- 事后还原整周的过程：`python3 $S/core/trace_view.py --week $WEEK`（读取 `main` 上的状态文件）。

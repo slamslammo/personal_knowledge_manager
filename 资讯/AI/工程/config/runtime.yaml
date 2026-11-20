@@ -43,9 +43,9 @@ coordination:
 trace:
   max_events_in_state: 400    # 状态文件里保留的事件条数（保留最新的）
 
-# 运行时路径契约。这里只记录约定，真值源是 scripts/paths.py；
-# 脚本、手册、提示词都不写路径字面量（见 ../scripts/paths.py）。
-# 查询：python3 资讯/AI/工程/scripts/workdir.py print
+# 运行时路径契约。这里只记录约定，真值源是 core/paths.py；
+# 脚本、手册、提示词都不写路径字面量（见 ../core/paths.py）。
+# 查询：python3 资讯/AI/工程/core/workdir.py print
 paths:
   root_rule: "默认 <仓库检出目录父级>/.ai-weekly；部署级覆盖 AI_WEEKLY_HOME"
   work: "work/（本次运行 scratch，固定名，由 paths.work_dir 推导）"

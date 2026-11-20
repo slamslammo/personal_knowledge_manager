@@ -16,7 +16,7 @@
 
 周报依次为：本周概览、洞察、新发布与技术 Top 5、GitHub AI 项目热度 Top 5、传播文章 Top 5、热点话题 Top 5。
 
-> 运行期的执行明细 `trace.jsonl` 留在工作目录（由 `工程/scripts/paths.py` 约定）、并按周归档到 `archive/{WEEK}/`，均不入库；正式留痕是 `数据/运行记录/{WEEK}.json` 的 `events` 字段（由 `coord.py` 合并后随状态文件推送到 `main`），可用 `工程/scripts/trace_view.py --week <WEEK>` 还原时间线。
+> 运行期的执行明细 `trace.jsonl` 留在工作目录（由 `工程/core/paths.py` 约定）、并按周归档到 `archive/{WEEK}/`，均不入库；正式留痕是 `数据/运行记录/{WEEK}.json` 的 `events` 字段（由 `coord.py` 合并后随状态文件推送到 `main`），可用 `工程/scripts/trace_view.py --week <WEEK>` 还原时间线。
 
 ## 当前状态
 
