@@ -33,6 +33,13 @@
   fallback，避免双发。
 - P2-7 身份与代理：docs 命令显式 --as user；删除 LARK_CLI_NO_PROXY 全局开关
   （会把另一个仍有效的代理一起禁掉），只移除探测失败的回环代理变量本身。
+
+2026-11-20 版本规划 P0（补交付重复建文档）：
+
+- _doc_state 只有明确 not-found 才判 missing；权限、网络、CLI 输出异常一律
+  unknown（结果不明不能证明文档不存在），避免落到搜索 0 候选 create。
+- cmd_sync 在失败/结果不明时把已知 document_id、url 继承进 feishu.json，
+  下次补交付继续核对原文档，不再因丢 ID 退回搜索而重复新建。
 """
 from __future__ import annotations
 
@@ -481,16 +488,29 @@ def _cached_result(week: str, test: bool) -> dict | None:
     return None
 
 
+# 只有响应明确表示「文档不存在」才能判 missing。权限不足、网络超时、CLI 输出
+# 异常都不能证明文档不存在；若当成 missing，会落到搜索 0 候选 create，在权限
+# 不足或索引延迟时产生重复文档（版本规划 P0）。分类风格同 classify_push_error。
+_NOT_FOUND_MARKERS = ("not_found", "notfound", "not found", "404", "does not exist",
+                      "doc_not_exist", "document not found", "文档不存在")
+
+
 def _doc_state(cli: str, token: str) -> str:
-    """缓存文档状态：exists / missing / unknown（评审 P2-5）。
+    """缓存文档状态：exists / missing / unknown（评审 P2-5、版本规划 P0）。
 
     网络类失败是 unknown——临时读失败被当成不存在，叠加搜索索引延迟会重复 create。
+    权限类失败同样是 unknown：不是 network，但也不能证明文档不存在。
+    只有明确 not-found 才判 missing；无法归类时保守取 unknown（宁可停下人工核查，
+    也不重复建文档）。
     """
     out = run_cli(cli, "docs", "+fetch", "--doc", token, "--as", "user")
     err = out.get("error")
     if not err:
         return "exists"
-    return "unknown" if err.get("type") == "network" else "missing"
+    blob = " ".join(str(err.get(k, "")) for k in ("type", "subtype", "code", "detail")).lower()
+    if err.get("type") != "network" and any(k in blob for k in _NOT_FOUND_MARKERS):
+        return "missing"
+    return "unknown"
 
 
 def cmd_sync(args) -> int:
@@ -563,6 +583,14 @@ def cmd_sync(args) -> int:
         # 本次错误照常报告。查不到、查不全或更新失败都不能证明上次创建未成功。
         # 保留上次结果不明，后续补交付才会继续禁止新建。
         out_obj["action"] = "unknown"
+    if action not in ("created", "updated") and cached and cached.get("document_id"):
+        # 版本规划 P0：失败或结果不明时不得丢掉已知文档 ID。否则下次补交付
+        # _cached_result 拿不到 ID 就会退回搜索，0 候选（索引延迟/权限不足）时
+        # 重复建文档。只有确认原文档不存在（_doc_state=missing）并完成查重后
+        # 新建成功，才会用新的 document_id 覆盖这里。
+        out_obj.setdefault("document_id", cached["document_id"])
+        if cached.get("url"):
+            out_obj.setdefault("url", cached["url"])
     write_json(WORK_DIR / RESULT_FILE, out_obj)
     if action in ("created", "updated"):
         tracelog.log("飞书", "同步", "ok", detail=f"{action} {result.get('document_id')}",
