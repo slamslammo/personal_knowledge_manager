@@ -11,5 +11,6 @@
 | 为何选 WorkBuddy 本机？Codex 定时任务、交互云环境和 GitHub Actions 各验证到了哪一步？ | [11-17 · 运行平台取舍](2026-11-17-运行平台三场景验证与定案.md) |
 | 目录迁移为何影响发布和 CI？W45 的 Git、飞书正文与通知分别有什么证据？ | [11-18 · 迁移与生产发布复盘](2026-11-18-迁移与生产发布复盘.md) |
 | 为什么把 scripts 拆成 core/weekly、入口改名 routine-weekly，并把串联收敛为 prepare/智能段/deliver 三段？月/季独立任务预留了什么？ | [11-20 · 工程分层与周报三段式](2026-11-20-工程分层与周报三段式串联.md) |
+| 全年缺周怎样回补，跨月周和季度榜怎样汇总？ | [11-23 · 全年回补与月季报迭代](2026-11-23-全年周报回补与月季报汇总.md) |
 
-各篇末尾保留整理前的原文。查历史章节编号可回看[当时的开发文档](https://github.com/slamslammo/personal_knowledge_manager/tree/323c3cbf337c665b9a5534c9bef26501064c0b82/资讯/AI/文档)。
+已精简的历史记录在篇末保留原文。查历史章节编号可回看[当时的开发文档](https://github.com/slamslammo/personal_knowledge_manager/tree/323c3cbf337c665b9a5534c9bef26501064c0b82/资讯/AI/文档)。
