@@ -220,6 +220,8 @@ def check(work_dir: pathlib.Path = WORK_DIR, out_dir: pathlib.Path = OUT_DIR) ->
     materials = _read(work_dir / "materials.json")
     rep = run_checks(week, info.get("mode") == "backfill", report_path, data_path, materials=materials)
     if rep.errors:
+        if any(not error.startswith("[") for error in rep.errors) and "GATE_STRUCTURE" not in rep.codes:
+            rep.codes.append("GATE_STRUCTURE")
         steps.append(Step("第 4 步 校验与门槛", False, f"{len(rep.errors)} 个错误：" + "；".join(rep.errors),
                           (rep.codes or ["GATE_STRUCTURE"])[0]))
         for code in rep.codes[1:]:

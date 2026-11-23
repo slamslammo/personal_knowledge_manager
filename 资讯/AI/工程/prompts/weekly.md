@@ -9,7 +9,7 @@
 1. **先协调**：段 A 由 `prepare.py` 决定本次做什么。结果是退出/转交就立即结束，不再往下读。
 2. **数据交给脚本**：采集、链接、数字、排名由脚本给出。不要自己拼链接、手抄数字，也不要拿网站首页去找文章。
 3. **提交只经脚本**：周报和数据写在 `$W/out/` 下，由段 B 的 `deliver.py` 经 `coord.py publish` 提交推送。不要直接用 git 提交、推送、变基或切换分支，也不要改动仓库工作区里的文件。
-4. **重试有上限**：重试与等待由段 A/段 B 脚本内置，上限在 `config/runtime.yaml`。用完就结构化失败退出并告警，不在运行时自行定位修复。
+4. **重试有上限**：段 A 限制采集重试，协调等待与段 B 返工上限见 `config/runtime.yaml`。用完就结构化失败退出并告警，不在运行时自行定位修复。
 5. **出错先记录**：无法恢复时，先按"失败处理"写记录、释放锁，再通知。
 
 
@@ -52,13 +52,13 @@ python3 $S/core/workdir.py check
 python3 $S/weekly/prepare.py --platform <平台名> [--week YYYY-Www | --target-start YYYY-MM-DD] [--test]
 ```
 
-`prepare.py` 依次完成工作目录检查、恢复分支、保留清单式清理、凭据观察、环境自检、模式判定、
-周编号、飞书预检、协调启动与采集；`RESUME=`、`ACTION=`、`COLLECT=` 的分流（含周榜未就绪的
+`prepare.py` 依次完成工作目录检查、报告周判定、恢复分支、清理、凭据观察、环境自检、模式判定、
+飞书预检、协调启动与采集；`RESUME=`、`ACTION=`、`COLLECT=` 的分流（含周榜未就绪的
 内置重试）由脚本处理。只有输出 `PREPARE=ok` 才进入智能段；`resumed` 直接结束，`deferred`
-按 `ACTION=` 对应分支处理，`failed` 按入口规则告警，均不进入采集或写稿。
+表示校验完成或本次退出，`failed` 按入口规则告警，均不进入采集或写稿。
 
 回溯参数原样传给 `prepare.py`，由它交给 `weeks.py`；无回溯参数时按北京时间推算上一周。
-`PREPARE=ok` 输出里的 `WEEK`、`WORK`、`DIGEST` 是后续步骤的唯一信息来源。
+段 A 输出报告周 `WEEK`、工作目录 `WORK`（下文记作 `$W`）、材料摘要 `DIGEST` 和草稿路径 `OUT_REPORT`。路径可能含空格，使用时加双引号。
 
 ## 智能段：判定、排名、搜索与写周报
 
@@ -171,9 +171,10 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
 → `feishu_sync.py sync/verify` → `notify` → `workdir.py archive`。发布是唯一写入口，同步源是
 已发布提交里的周报（`git show <SHA>`），不是候选稿。
 
-- `DELIVER=rework CODES=…`：只重做未通过的部分，改稿后重跑同一命令，最多 3 轮；模型不做流程分析。
-- `DELIVER=ok`：发布、交付与归档完成；飞书同步/读回失败不阻塞 Git 周报，警告写在输出 detail。
-- `DELIVER=failed`：脚本已生成 `notification-failure.txt` 并尽力告警退出；保留现场，按入口规则处理。
+- `DELIVER=rework` 时按 CODES 改稿再运行段 B。脚本按运行 ID 计数。用尽返工机会后，完整稿按门槛结果发布，结构或必需产物缺失则失败。
+- `DELIVER=ok` 表示 Git 已发布，正文读回通过，通知和归档已按运行模式完成。测试通知跳过。
+- `DELIVER=partial` 表示 Git 已发布。按输出中的 SHA、SYNC、READBACK、NOTIFY、ARCHIVE 只补失败环节。通知结果 unknown 时先核对收件。
+- `DELIVER=failed` 时按 CODE 和 STEP 排查。通知未送达时由平台转交失败文本。
 
 | 错误码 | 返工 |
 | --- | --- |
@@ -184,16 +185,9 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
 | `GATE_INCOMPLETE` | 回到 `check_run.py` 指出的步骤补做 |
 | 其他 `validate.py` 错误 | 按报错修改 |
 
-| 检查或发布结果 | 后续动作 |
-| --- | --- |
-| 完整版门槛通过 | 脚本记 `full`，不以人工声明代替 |
-| 完整版 3 轮仍未过、结构完整 | 允许发布 `check_failed`；提交说明和通知标“检查未通过”，报告 H1 不变，不声称质量合格 |
-| 周报残缺或写作中断 | `draft.py --degraded --reason "<原因>"` 生成降级稿，再运行 finalize 和 check_run 后发布；脚本记 `degraded` |
-| `ACTION=published` | 保存完整 SHA，进入段 B |
-| `ACTION=lost` | 未发布，跳过段 B，进入段 B发“未提交”通知；不拿旧 SHA 或默认 main 同步 |
-| `ACTION=error`、输出缺失或未知 | 保留现场，按失败处理，不进入同步 |
+正文残缺时用 `draft.py --degraded --reason "<原因>"` 生成降级稿并重新检查。Git 发布前丢锁时保留现场并报告未提交。
 
-- 输出 `SYNC=error`：**不阻塞**，照常进入段 B，通知用 GitHub 链接并注明错误码。修复飞书环境后，指定应交付的已发布提交，补同步并读回，**不重跑整周**：
+- 输出 `SYNC=error` 时，段 B 保留 Git 发布结果并显示降级，通知使用 GitHub 链接。修复飞书环境后，指定应交付的已发布提交，补同步并读回，**不重跑整周**：
   ```
   python3 $S/core/feishu_sync.py sync --from-published --sha <已发布的完整提交号> --week "$WEEK"
   python3 $S/core/feishu_sync.py verify --sha <同一提交号> --week "$WEEK"
@@ -211,11 +205,7 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
   - ①–⑤ 和洞察的精简版，每个板块 2 到 3 行；GitHub Top 5 列出项目名和本周新增 star。
   - 周榜未就绪、月报到期未生成等情况各用一行说明。
   - 重跑时加一行重跑原因（校验输出的错误码和说明）。
-- **运行结果**：固定三行，取自 `$W/checks.txt` 和段 B的输出：
-  - `校验：通过（N 个警告）` 或列出未通过的错误码；
-  - `完整性：全部完成，联网搜索 N 次` 或列出未完成的步骤；
-  - 正式模式写 `提交：已推送到 main（提交号前 7 位）`，或写明未提交原因；验收模式写 `提交：已推送到本地沙箱（提交号前 7 位），未写入 GitHub`，不能声称推送 main。
-- **结尾**：周报全文链接。正式模式读回通过后用 `feishu.json` 里的飞书文档链接；同步失败、跳过或读回待核时用 GitHub 链接并注明原因。GitHub 链接路径中的中文要做百分号编码（`python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$REPORT_PATH"`，拼在 `https://github.com/slamslammo/personal_knowledge_manager/blob/main/` 后面）。验收模式可列出 `[测试]` 文档链接供核对，飞书未同步时给出本地沙箱提交号与临时产出路径，并在最后输出正文。未提交时，在精简版之后用"—— 全文 ——"分隔，附上周报纯文本全文。通知发送失败按同步脚本实际错误类型与幂等策略处理，不盲目换键重发。
+- 模型只写通知摘要与精简版。发布后，段 B 根据提交收据补质量、搜索次数、提交号与全文链接。飞书读回失败时，正式稿使用该提交的 GitHub 链接。测试模式输出预览供核对。
 
 ## 验收结果（仅验收模式）
 
@@ -231,27 +221,9 @@ python3 $S/weekly/deployment.py finish
 
 
 
-## 校验流程（`ACTION=verify`）
+## 已有周报的独立校验
 
-本周已有另一次运行的产出，本次只做独立校验，由脚本判断：
-
-```
-python3 $S/weekly/verify.py --record
-```
-
-读取输出中的 `ACTION=` 行处理（不是最后一行，也不能仅凭进程退出码判断）：
-
-| 输出 | 做什么 |
-| --- | --- |
-| `ACTION=done` | 校验通过，本周完成。直接结束，不发通知 |
-| `ACTION=run` | 校验不通过，锁已转为本次运行：从智能段开始重写（段 A 不用再做）。通知首句标"重跑"，正文写明 `verify.py` 输出的错误码和说明 |
-| `ACTION=exit` | 校验不通过，且本周的尝试次数已用完，已标为需人工：发一条提醒，首句为 `【AI周报 W{WNUM}｜需人工】<错误码>。` |
-| `ACTION=error` | 按"失败处理"处理 |
-| `ACTION=lost` | 校验锁已失去，保留现场并报告；不转入生成或飞书同步 |
-
-初始协调的 `ACTION=exit` 按段 A结束；本节的 `ACTION=exit` 则按上表发“需人工”提醒。无动作行或动作未知时报告阻塞，不继续生成。
-
-
+段 A 得到校验锁后调用 `verify.py --record`。校验通过即结束。校验失败并取得运行锁后，段 A 重新采集，再交出本轮材料。尝试用尽时按 VERIFY_NEEDS_HUMAN 通知维护者。
 
 ## 失败处理
 

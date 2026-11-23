@@ -74,6 +74,11 @@ class RuntimeRootTest(unittest.TestCase):
             paths.validate_work_dir(pathlib.Path("/"), repo)
         paths.validate_work_dir(repo.parent / ".ai-weekly" / "work", repo)
 
+    def test_workdir_must_not_contain_checkout(self):
+        repo = pathlib.Path("/tmp/checkout/repo")
+        with self.assertRaises(ValueError):
+            paths.validate_work_dir(repo.parent, repo)
+
     def test_file_names_are_fixed(self):
         self.assertEqual(paths.FILES["checks"], "checks.txt")
         self.assertEqual(paths.FILES["manifest"], "MANIFEST.json")
@@ -123,6 +128,13 @@ class CleanAndArchiveTest(unittest.TestCase):
             self.assertTrue((self.work / name).exists(), f"{name} 不应被清理")
         self.assertFalse((self.work / paths.FILES["digest"]).exists())
         self.assertFalse((self.work / "out").exists())
+
+    def test_clean_preserves_unknown_files_and_directories(self):
+        (self.work / "other-project").mkdir()
+        self._write("notes.md", text="keep")
+        self.assertEqual(workdir.main(["clean", "--no-archive"]), 0)
+        self.assertTrue((self.work / "other-project").is_dir())
+        self.assertEqual((self.work / "notes.md").read_text(), "keep")
 
     def test_clean_archives_previous_run_before_removing(self):
         self._write(paths.FILES["week"], {"week": "2026-W41", "report_path": "r/2026-W41.md"})

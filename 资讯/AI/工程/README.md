@@ -6,7 +6,7 @@
 
 | 位置 | 用途 |
 | --- | --- |
-| [core/](core/) | 报告无关的共享基座：路径、协调发布、校验、飞书交付与环境自检。 |
+| [core/](core/) | 共享工具与周报发布基座：路径、协调发布、校验、飞书交付与环境自检。 |
 | [weekly/](weekly/) | 周报专属脚本：采集、排名、草稿、整理与运行检查。 |
 | [monthly/](monthly/) · [quarterly/](quarterly/) | 月报、季报占位（规划中，见各自 README）。 |
 | [tests/](tests/) | 离线回归用例（必须用 `unittest discover` 整体运行）。 |
@@ -16,9 +16,9 @@
 
 ## 一期周报的流程
 
-1. **准备。** 读取运行模式和当周状态，确定本次该生成、校验、等待还是退出。[deployment.py](weekly/deployment.py) · [coord.py](core/coord.py)
+1. **准备。** [prepare.py](weekly/prepare.py) 交出周编号、摘要和工作目录。它读取运行模式和当周状态，确定本次该生成、校验、等待还是退出。[deployment.py](weekly/deployment.py) · [coord.py](core/coord.py)
 2. **成稿。** 脚本采集、排名并生成草稿，模型核实来源、选题和写作。[采集](weekly/collect_all.py) · [排名](weekly/rank_github.py) · [草稿](weekly/draft.py)
-3. **检查与交付。** 整理数据说明，校验正文和本次运行记录，经 `coord.py` 发布到 Git，再同步飞书并通知。[整理](weekly/finalize.py) · [内容校验](core/validate.py) · [运行检查](weekly/check_run.py) · [飞书交付](core/feishu_sync.py)
+3. **检查与交付。** [deliver.py](weekly/deliver.py) 接收写好的周报和通知摘要，逐项报告 Git、飞书、通知与归档结果。它整理数据说明，校验正文和本次运行记录，经 `coord.py` 发布到 Git，再同步飞书并通知。[整理](weekly/finalize.py) · [内容校验](core/validate.py) · [运行检查](weekly/check_run.py) · [飞书交付](core/feishu_sync.py)
 
 ## 本地开发
 

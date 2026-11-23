@@ -364,8 +364,10 @@ def search_candidates(cli: str, week: str, test: bool, max_pages: int = 10) -> l
         out = run_cli(cli, *argv)
         if out.get("error"):
             return None
-        data = out.get("data") or {}
-        for r in data.get("results") or []:
+        data = out.get("data")
+        if not isinstance(data, dict) or not isinstance(data.get("results"), list):
+            return None
+        for r in data["results"]:
             meta = r.get("result_meta") or {}
             if meta.get("doc_types") != "DOCX":
                 continue
@@ -428,7 +430,7 @@ def _create(cli: str, title: str, content_file: pathlib.Path, folder: str) -> di
         return {"action": "failed", "error": {"type": "business", "subtype": "partial_write", "detail": why}}
     doc = (out.get("data") or {}).get("document") or {}
     if not doc.get("document_id"):
-        return {"action": "failed", "error": {"type": "business", "subtype": "no_document_id",
+        return {"action": "unknown", "error": {"type": "business", "subtype": "no_document_id",
                                               "detail": "create 返回缺少 document_id"}}
     return {"action": "created", "document_id": doc["document_id"], "url": doc.get("url")}
 
@@ -491,10 +493,6 @@ def _cached_result(week: str, test: bool) -> dict | None:
 # 只有响应明确表示「文档不存在」才能判 missing。权限不足、网络超时、CLI 输出
 # 异常都不能证明文档不存在；若当成 missing，会落到搜索 0 候选 create，在权限
 # 不足或索引延迟时产生重复文档（版本规划 P0）。分类风格同 classify_push_error。
-_NOT_FOUND_MARKERS = ("not_found", "notfound", "not found", "404", "does not exist",
-                      "doc_not_exist", "document not found", "文档不存在")
-
-
 def _doc_state(cli: str, token: str) -> str:
     """缓存文档状态：exists / missing / unknown（评审 P2-5、版本规划 P0）。
 
@@ -506,9 +504,12 @@ def _doc_state(cli: str, token: str) -> str:
     out = run_cli(cli, "docs", "+fetch", "--doc", token, "--as", "user")
     err = out.get("error")
     if not err:
-        return "exists"
-    blob = " ".join(str(err.get(k, "")) for k in ("type", "subtype", "code", "detail")).lower()
-    if err.get("type") != "network" and any(k in blob for k in _NOT_FOUND_MARKERS):
+        data = out.get("data")
+        doc = data.get("document") if isinstance(data, dict) else None
+        return "exists" if isinstance(doc, dict) and doc.get("document_id") == token else "unknown"
+    if err.get("type") == "business" and (
+        str(err.get("code")) == "404" or err.get("subtype") in ("doc_not_exist", "document_not_found")
+    ):
         return "missing"
     return "unknown"
 
@@ -549,9 +550,8 @@ def cmd_sync(args) -> int:
 
     result = None
     cached = _cached_result(week, test)
-    forbid_create = bool(cached and cached.get("action") == "unknown"
-                         and not cached.get("document_id"))
-    if cached and cached.get("document_id"):
+    forbid_create = bool(cached and cached.get("action") == "unknown")
+    if cached and cached.get("document_id") and not forbid_create:
         state = _doc_state(cli, cached["document_id"])
         if state == "exists":
             # 命中同机缓存：直接 overwrite，绕开搜索索引延迟窗口
@@ -583,7 +583,7 @@ def cmd_sync(args) -> int:
         # 本次错误照常报告。查不到、查不全或更新失败都不能证明上次创建未成功。
         # 保留上次结果不明，后续补交付才会继续禁止新建。
         out_obj["action"] = "unknown"
-    if action not in ("created", "updated") and cached and cached.get("document_id"):
+    if action not in ("created", "updated", "unknown") and not forbid_create and cached and cached.get("document_id"):
         # 版本规划 P0：失败或结果不明时不得丢掉已知文档 ID。否则下次补交付
         # _cached_result 拿不到 ID 就会退回搜索，0 候选（索引延迟/权限不足）时
         # 重复建文档。只有确认原文档不存在（_doc_state=missing）并完成查重后
@@ -648,6 +648,8 @@ def cmd_verify(args) -> int:
     actual = document.get("content") if isinstance(document, dict) else None
     if not isinstance(actual, str) or not actual or document.get("document_id", token) != token:
         return record("pending", "FEISHU_READBACK_UNAVAILABLE")
+    if getattr(args, "test_document", False):
+        expected = re.sub(r"(?m)^# ", "# [测试] ", expected, count=1)
     comparison = compare_documents(expected, actual)
     receipt.update(comparison)
     if comparison["content_match"] != "normalized_equal":
@@ -728,6 +730,7 @@ def main() -> int:
     sp.add_argument("--week", help="ISO 周（缺省读 week.json）")
     sp.add_argument("--report", help="仓库内周报相对路径（缺省按周推导）")
     sp = sub.add_parser("verify", help="只读核对正式飞书文档与指定已发布提交")
+    sp.add_argument("--test-document", action="store_true", help="按测试文档 H1 前缀核对")
     sp.add_argument("--sha", required=True, help="已发布的完整提交号")
     sp.add_argument("--week", help="ISO 周（缺省读 week.json）")
     sp.add_argument("--doc", help="文档 ID（缺省读本周正式同步结果）")

@@ -900,7 +900,7 @@ def cmd_publish(args) -> int:
             tracelog.log("提交", "周报被手工修改", "warn", "MANUAL_EDIT", "未覆盖周报，只提交了数据和状态",
                          work_dir=ctx.work)
         tracelog.log("提交", "已推送", "ok", detail=sha, work_dir=ctx.work, files=sorted(files))
-        save_ctx(ctx, published_commit=sha)
+        save_ctx(ctx, published_commit=sha, published_quality=state["produced"]["quality"])
         lines = f"commit={sha}" + ("；周报被手工修改过，未覆盖" if dropped else "")
         return "published", lines
 

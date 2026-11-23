@@ -53,7 +53,7 @@ class PrepareTest(unittest.TestCase):
 
     def base_responses(self):
         return {
-            "weeks.py": done("WEEK=2026-W43\nOUT_REPORT=out/report.md\n"),
+            "weeks.py": done(json.dumps({"week": "2026-W43"})),
             "deployment.py": [done("RUN_MODE=production\n"), done("ACTION=run\n")],
             "collect_all.py": done("COLLECT=ok\n"),
         }
@@ -82,16 +82,17 @@ class PrepareTest(unittest.TestCase):
 
     def test_resume_completed_stops_early(self):
         (self.work / "coord.json").write_text(json.dumps({"week": "2026-W43"}), encoding="utf-8")
-        self.responses = {"deployment.py": done("RESUME=completed\n")}
+        self.responses = self.base_responses()
+        self.responses["deployment.py"] = done("RESUME=completed\n")
         rc, out = self.run_prepare()
         self.assertEqual(rc, 0)
         self.assertIn("PREPARE=resumed", out)
-        self.assertEqual([s for s, _ in self.calls], ["deployment.py"])
+        self.assertNotIn("workdir.py", [s for s, _ in self.calls])
 
     def test_trendshift_retry_then_ok(self):
         self.responses = self.base_responses()
         self.responses["collect_all.py"] = [
-            done("COLLECT=trendshift_not_ready\n"), done("COLLECT=ok\n")]
+            done("COLLECT=trendshift_not_ready\n", rc=3), done("COLLECT=ok\n")]
         rc, out = self.run_prepare()
         self.assertEqual(rc, 0)
         self.assertIn("PREPARE=ok", out)
@@ -99,14 +100,40 @@ class PrepareTest(unittest.TestCase):
 
     def test_retry_exhausted_fails(self):
         self.responses = self.base_responses()
-        self.responses["collect_all.py"] = done("COLLECT=trendshift_not_ready\n")
+        self.responses["collect_all.py"] = done("COLLECT=trendshift_not_ready\n", rc=3)
         rc, out = self.run_prepare("--collect-retries", "1")
         self.assertEqual(rc, 1)
         self.assertIn("PREPARE=failed", out)
         self.assertIn("COLLECT_TRENDSHIFT_NOT_READY", out)
 
+    def test_restore_previous_week_continues_requested_week(self):
+        (self.work / "coord.json").write_text('{"week":"2026-W42"}')
+        self.responses = self.base_responses()
+        self.responses["deployment.py"].insert(0, done("RESUME=completed"))
+        rc, out = self.run_prepare()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("PREPARE=ok WEEK=2026-W43", out)
+
+    def test_resume_error_preserves_work(self):
+        (self.work / "coord.json").write_text('{"week":"2026-W43"}')
+        self.responses = self.base_responses()
+        self.responses["deployment.py"] = done("broken", rc=1)
+        rc, out = self.run_prepare()
+        self.assertNotEqual(rc, 0)
+        self.assertIn("RESUME_PENDING", out)
+        self.assertNotIn("workdir.py", [s for s, _ in self.calls])
+
+    def test_verify_handoff_collects_after_acquiring_existing_lock(self):
+        self.responses = self.base_responses()
+        self.responses["deployment.py"][-1] = done("ACTION=verify")
+        self.responses["verify.py"] = done("VERIFY=fail\nACTION=run")
+        rc, out = self.run_prepare()
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.calls[-2:], [("verify.py", ["--record"]), ("collect_all.py", [])])
+
     def test_env_step_failure_reports_step(self):
-        self.responses = {"workdir.py": done("boom", rc=1)}
+        self.responses = self.base_responses()
+        self.responses["workdir.py"] = done("boom", rc=1)
         rc, out = self.run_prepare()
         self.assertEqual(rc, 1)
         self.assertIn("PREPARE=failed", out)
