@@ -60,7 +60,7 @@ def cmd_check(args) -> int:
 
 
 def cmd_clean(args) -> int:
-    """保留清单式清理：先归档本次证据，再删除可再生的 scratch。
+    """先归档本次证据，再清理脚本定义的临时文件。
 
     与旧的 rm -rf 不同，CLEAN_PRESERVE 中的跨运行状态必须留下，
     否则飞书防重状态与交付收据会丢失。
@@ -77,9 +77,9 @@ def cmd_clean(args) -> int:
 
     removed = []
     for entry in sorted(WORK_DIR.iterdir(), key=lambda p: p.name):
-        if entry.name in paths.CLEAN_PRESERVE:
+        if entry.name not in paths.CLEAN_SCRATCH:
             continue
-        if entry.is_dir():
+        if entry.is_dir() and not entry.is_symlink():
             shutil.rmtree(entry)
         else:
             entry.unlink()

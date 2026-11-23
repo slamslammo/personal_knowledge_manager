@@ -68,6 +68,7 @@ FILES = {
     "hf": "hf.json",
     "draft": "draft.json",
     "judgments": "judgments.json",
+    "rework": "rework.json",
     "checks": "checks.txt",
     "trace": "trace.jsonl",
     "searches": "searches.txt",
@@ -88,6 +89,13 @@ CLEAN_PRESERVE = frozenset({
     FILES["feishu_notify_receipt"],
     FILES["deployment"],
 })
+
+# clean 只移除本项目生成的内容。兼容路径即使配错，也保留目录里的其他文件。
+CLEAN_SCRATCH = (set(FILES.values()) - CLEAN_PRESERVE) | {
+    "out", "verify", "sandbox.git", "coord.index", "rank_report.json", "report.partial.md",
+    "trendshift.json", "acceptance.json", "resume.json", "feishu-readback.md",
+    "notification-failure.txt",
+}
 
 # 归档只留不可再生的关键证据；采集原文、素材、摘要等可再生数据不归档。
 ARCHIVE_EVIDENCE = (
@@ -169,6 +177,8 @@ def validate_work_dir(work: pathlib.Path, repo: pathlib.Path) -> None:
     repo = pathlib.Path(repo).resolve()
     if str(work) in ("", "/", "."):
         raise ValueError(f"工作目录非法：{work}")
+    if work in repo.parents or work == pathlib.Path.home().resolve() or (work / ".git").exists():
+        raise ValueError(f"工作目录不能是检出目录的上级、用户主目录或另一仓库：{work}")
     if work == repo or repo in work.parents:
         raise ValueError(f"工作目录不得落在仓库内：{work}（仓库 {repo}）")
     for parent in (work, *work.parents):

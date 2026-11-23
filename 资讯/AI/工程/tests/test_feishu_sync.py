@@ -96,8 +96,8 @@ class Base(unittest.TestCase):
 class ReadbackTest(Base):
     SHA = "a" * 40
 
-    def verify(self, fetched, *, sha=SHA, doc=None):
-        args = types.SimpleNamespace(sha=sha, week=WEEK, doc=doc)
+    def verify(self, fetched, *, sha=SHA, doc=None, test_document=False):
+        args = types.SimpleNamespace(sha=sha, week=WEEK, doc=doc, test_document=test_document)
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf), \
              mock.patch.object(feishu_sync, "git_show", return_value=REPORT) as source, \
@@ -128,6 +128,12 @@ class ReadbackTest(Base):
         self.assertEqual(rc, 1)
         self.assertIn("READBACK=pending CODE=FEISHU_READBACK_MISMATCH", out)
         self.assertEqual(result.read_text(), original)
+
+    def test_test_document_prefix_is_part_of_expected_content(self):
+        response = {"ok": True, "data": {"document": {"content": REPORT.replace("# ", "# [测试] ", 1)}}}
+        rc, out, _, _ = self.verify(response, doc="doc1", test_document=True)
+        self.assertEqual(rc, 0, out)
+        self.assertNotEqual(self.verify(response, doc="doc1")[0], 0)
 
     def test_read_error_cannot_turn_into_success(self):
         rc, out, _, _ = self.verify(cli_err(), doc="doc1")
@@ -596,6 +602,17 @@ class SyncTest(Base):
         self.assertEqual(result.get("document_id"), "doc1")
         cr.assert_not_called()
 
+    def test_missing_doc_replacement_timeout_remains_unknown(self):
+        self.write_cache()
+        with self.p0_fetch(self.NOT_FOUND), self.candidates([]), mock.patch.object(
+                feishu_sync, "_create", return_value={"action": "unknown"}) as create:
+            for _ in range(3):
+                self.assertEqual(self.run_sync()[0], 1)
+                receipt = feishu_sync._cached_result(WEEK, False)
+                self.assertEqual(receipt["action"], "unknown")
+                self.assertNotIn("document_id", receipt)
+            create.assert_called_once()
+
     def test_confirmed_missing_allows_create_after_search(self):
         # 正常路径仍可用：确认原文档不存在 + 搜索查重 0 候选 → 允许新建，新 ID 覆盖旧 ID
         self.write_cache()
@@ -721,11 +738,18 @@ class DocStateTest(unittest.TestCase):
     def test_success_is_exists(self):
         self.assertEqual(self.state(cli_ok({"data": {"document": {"document_id": "doc1"}}})), "exists")
 
+    def test_empty_fetch_is_unknown(self):
+        self.assertEqual(self.state({"ok": True, "data": {}}), "unknown")
+
     def test_network_timeout_is_unknown(self):
         self.assertEqual(self.state(cli_err("network", "timeout")), "unknown")
 
     def test_permission_denied_is_unknown_not_missing(self):
         self.assertEqual(self.state(cli_err("permission", "forbidden", code=99991672)), "unknown")
+
+    def test_permission_message_with_404_is_not_deletion(self):
+        error = {"type": "permission", "detail": "denied, request_id=404123"}
+        self.assertEqual(self.state({"ok": False, "error": error}), "unknown")
 
     def test_bad_output_is_unknown(self):
         self.assertEqual(self.state({"ok": False, "error": {"type": "cli", "subtype": "bad_output"}}), "unknown")
@@ -761,7 +785,7 @@ class BusinessResultTest(Base):
         payload = cli_ok({"data": {"document": {"url": "u"}}})  # 缺 document_id
         with mock.patch.object(feishu_sync, "run_cli", return_value=payload):
             r = feishu_sync._create("/bin/lark-cli", "t", self.work / "x.md", "")
-        self.assertEqual(r["action"], "failed")
+        self.assertEqual(r["action"], "unknown")
         self.assertEqual(r["error"]["subtype"], "no_document_id")
 
     def test_create_network_error_is_unknown(self):
@@ -776,6 +800,10 @@ class BusinessResultTest(Base):
 
 
 class SearchCandidatesTest(unittest.TestCase):
+    def test_missing_result_set_is_not_an_empty_search(self):
+        with mock.patch.object(feishu_sync, "run_cli", return_value={"ok": True, "data": {}}):
+            self.assertIsNone(feishu_sync.search_candidates("cli", WEEK, False))
+
     def test_filters_and_strips_highlight(self):
         payload = search_json([
             (f"AI 周报 · <h>{WEEK}</h>（11/2–11/8）", "docA", "DOCX"),
