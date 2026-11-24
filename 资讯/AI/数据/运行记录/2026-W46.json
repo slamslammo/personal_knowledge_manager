@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "task": "ai-weekly",
+  "week": "2026-W46",
+  "phase": "running",
+  "lock": {
+    "purpose": "run",
+    "run_id": "workbuddy-20261120-185111-p8nu",
+    "platform": "workbuddy",
+    "acquired_at": "2026-11-24T14:12:58+08:00",
+    "lease_until": "2026-11-24T15:12:58+08:00"
+  },
+  "attempts": 1,
+  "produced": null,
+  "verified": null,
+  "runs": [
+    {
+      "run_id": "workbuddy-20261120-185111-p8nu",
+      "platform": "workbuddy",
+      "started_at": "2026-11-24T14:12:58+08:00",
+      "action": "run",
+      "mode": "normal",
+      "reason": "本周还没有运行",
+      "outcome": "running"
+    }
+  ],
+  "events": [
+    {
+      "ts": "2026-11-20T18:57:08+08:00",
+      "seq": 35,
+      "run_id": "workbuddy-20261120-185111-p8nu",
+      "step": "提交",
+      "event": "已推送",
+      "status": "ok",
+      "detail": "b78e14d8f8353a27e7f5f4fc571a484cb69c3155",
+      "data": {
+        "files": [
+          "资讯/AI/数据/github-weekly/2026-W46.json",
+          "资讯/AI/数据/周报/2026/2026-W46.md"
+        ]
+      }
+    },
+    {
+      "ts": "2026-11-20T18:57:08+08:00",
+      "seq": 36,
+      "run_id": "workbuddy-20261120-185111-p8nu",
+      "step": "飞书",
+      "event": "预检",
+      "status": "ok"
+    },
+    {
+      "ts": "2026-11-20T18:57:12+08:00",
+      "seq": 37,
+      "run_id": "workbuddy-20261120-185111-p8nu",
+      "step": "飞书",
+      "event": "同步",
+      "status": "ok",
+      "detail": "created ClXydN2lroFzCExbAfycgxoqnec",
+      "data": {
+        "document_id": "ClXydN2lroFzCExbAfycgxoqnec",
+        "url": "https://mcnx8y9g5bnw.feishu.cn/docx/ClXydN2lroFzCExbAfycgxoqnec"
+      }
+    },
+    {
+      "ts": "2026-11-20T18:57:12+08:00",
+      "seq": 38,
+      "run_id": "workbuddy-20261120-185111-p8nu",
+      "step": "飞书",
+      "event": "正文核对",
+      "status": "warn",
+      "code": "FEISHU_READBACK_DOC_REQUIRED",
+      "data": {
+        "source_sha": "b78e14d8f8353a27e7f5f4fc571a484cb69c3155",
+        "document_id": null
+      }
+    },
+    {
+      "ts": "2026-11-24T14:12:58+08:00",
+      "seq": 39,
+      "run_id": "workbuddy-20261120-185111-p8nu",
+      "step": "协调",
+      "event": "start",
+      "status": "info",
+      "detail": "workbuddy 2026-W46 远端 origin",
+      "data": {
+        "run_id": "workbuddy-20261120-185111-p8nu",
+        "test": false
+      }
+    }
+  ]
+}
