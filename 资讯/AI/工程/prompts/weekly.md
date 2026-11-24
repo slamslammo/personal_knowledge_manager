@@ -21,8 +21,8 @@
 
 | 项目模式或本次参数 | 行为 |
 | --- | --- |
-| `mode: acceptance`（项目配置） | 完整生成周报；协调提交和推送走本地沙箱；飞书文档带 `[测试]`；真实通知跳过；最后出具本次验收结果，不自动切正式 |
-| `mode: production`（项目配置） | 正式运行，报告周为上一周；提交推送到 `main`；按交付状态同步飞书并通知 |
+| `mode: acceptance`（项目配置） | 完整生成周报；协调提交和推送走本地沙箱；年度表与真实通知均跳过；最后出具本次验收结果，不自动切正式 |
+| `mode: production`（项目配置） | 正式运行，报告周为上一周；提交推送到 `main`；更新年度表并通知 |
 | `TARGET_START=YYYY-MM-DD`（周一）或 `TARGET_WEEK=YYYY-Www` | 指定回溯周，标题加“（回溯版）”，已有榜单数据可复用；验收/正式隔离仍由部署模式决定 |
 | 显式 `TEST_RUN=1` | 开发会话的测试覆盖，优先使用沙箱；定时任务首次验收不需要临时加这个参数 |
 
@@ -169,12 +169,11 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
 ```
 
 `deliver.py` 依次执行 `finalize.py` → `check_run.py`（含 `validate.py` 全部校验）→ `coord.py publish`
-→ `feishu_sync.py sync/verify` → `notify` → `workdir.py archive`。发布是唯一写入口，同步源是
-已发布提交里的周报（`git show <SHA>`），不是候选稿。
+→ 更新年度表 → 通知 → 归档。索引与正文链接取自本次 Git 提交。
 
-- `DELIVER=rework` 时按 CODES 改稿再运行段 B。脚本按运行 ID 计数。用尽返工机会后，完整稿按门槛结果发布，结构或必需产物缺失则失败。
-- `DELIVER=ok` 表示 Git 已发布，正文读回通过，通知和归档已按运行模式完成。测试通知跳过。
-- `DELIVER=partial` 表示 Git 已发布。按输出中的 SHA、SYNC、READBACK、NOTIFY、ARCHIVE 只补失败环节。通知结果 unknown 时先核对收件。
+- `DELIVER=rework` 时按 CODES 改稿，保留运行 ID 和返工计数。
+- `DELIVER=ok` 表示 Git 已发布，年度表、通知和归档已按模式完成。沙箱跳过飞书写入。
+- `DELIVER=partial` 时按 INDEX、NOTIFY、ARCHIVE 分别补失败环节。通知 unknown 时先核对收件。
 - `DELIVER=failed` 时按 CODE 和 STEP 排查。通知未送达时由平台转交失败文本。
 
 | 错误码 | 返工 |
@@ -188,13 +187,7 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
 
 正文残缺时用 `draft.py --degraded --reason "<原因>"` 生成降级稿并重新检查。Git 发布前丢锁时保留现场并报告未提交。
 
-- 输出 `SYNC=error` 时，段 B 保留 Git 发布结果并显示降级，通知使用 GitHub 链接。修复飞书环境后，指定应交付的已发布提交，补同步并读回，**不重跑整周**：
-  ```
-  python3 $S/core/feishu_sync.py sync --from-published --sha <已发布的完整提交号> --week "$WEEK"
-  python3 $S/core/feishu_sync.py verify --sha <同一提交号> --week "$WEEK"
-  ```
-
-- `FEISHU_SYNC_UNKNOWN` 表示新建结果仍不明。保留原同步记录；搜索为空或失败都不能证明未创建。后续搜索唯一命中时由同步脚本复用该文档；不得删除记录后盲目再次新建。进一步人工恢复见部署指南。
+- 更新年度表失败时，只运行 `python3 $S/core/annual_index.py --period "$WEEK" --sha <已发布的完整提交号>`。脚本检查正文仍是当前版本、更新同一期间行并读回。勿重发已成功的通知。
 
 ### 通知文本规范（智能段写好文件，段 B 负责发送）
 
@@ -206,7 +199,7 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
   - ①–⑤ 和洞察的精简版，每个板块 2 到 3 行；GitHub Top 5 列出项目名和本周新增 star。
   - 周榜未就绪、月报到期未生成等情况各用一行说明。
   - 重跑时加一行重跑原因（校验输出的错误码和说明）。
-- 模型只写通知摘要与精简版。发布后，段 B 根据提交收据补质量、搜索次数、提交号与全文链接。飞书读回失败时，正式稿使用该提交的 GitHub 链接。测试模式输出预览供核对。
+- 模型只写通知摘要与精简版。发布后，段 B 根据提交收据补质量、搜索次数、提交号与全文链接。正式稿使用该提交的 GitHub 链接。测试模式输出预览供核对。
 
 ## 验收结果（仅验收模式）
 
@@ -216,9 +209,7 @@ python3 $S/weekly/deliver.py --week $WEEK [--test]
 python3 $S/weekly/deployment.py finish
 ```
 
-该命令核对本次真实检查、沙箱发布、测试文档及实际 user 读取结果。`ACCEPTANCE=passed/pending/failed` 只描述本次沙箱验收，不等于完整上线批准；完整性失败、飞书未交付或读回差异不得写成通过。保留输出中的报告位置、沙箱提交号、测试文档链接，便于用户核对正文。
-
-跨任务凭据状态另以 `credential_probe.py` 观察：同一实例重跑不等于独立任务；自然过期后的 API 调用和新状态被后续任务继承要分别有证据。bot 通知到达在验收模式仍未验证，不能因 `NOTIFY=skipped` 标为通过。未完成项写入最后输出，**不自行切 `production`、不自行启用长期调度**。
+验收核对沙箱分支、运行记录、真实门槛及 Git blob 与候选稿字节。沙箱的正文与预览在本地；年度表写入和 bot 收件需在正式交付中分别核验。
 
 
 
@@ -234,7 +225,7 @@ python3 $S/weekly/deployment.py finish
 2. 段 B 会生成失败通知文件并尽力以飞书应用身份发送；平台没有 lark-cli 或预检降级时输出失败文本，由调度方转发。
 3. 本次持有运行锁且提交失败时，仍需按 `python3 $S/core/coord.py fail --code <错误码> --detail "<停在哪一段、原因>"` 释放锁并保存记录；错误码见 `python3 $S/core/tracelog.py codes`。
 4. 测试模式同样执行，只是不发通知，把通知内容在最后原样输出。
-5. 定位与修复属于开发流程；飞书失败时 Git 周报照常发布，修复后按补交付流程单独同步，不重跑整周。
+5. 定位与修复属于开发流程；飞书失败时 Git 周报照常发布，修复后按补交付流程单独更新索引，不重跑整周。
 
 ## 执行记录
 

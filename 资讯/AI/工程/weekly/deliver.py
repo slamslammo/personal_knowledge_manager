@@ -157,6 +157,9 @@ def deliver() -> int:
     # 通知仍走飞书 bot（送达渠道），正文链接指向本次已发布的 commit（不可变）。
     target = "本地沙箱" if test else "main"
     url = f"https://github.com/slamslammo/personal_knowledge_manager/blob/{sha}/{quote(ctx['report_path'])}"
+    if test:
+        url = str(work / "out" / ctx["report_path"])
+    index = "skipped" if test else stage("annual_index.py", "INDEX", "--period", args.week, "--sha", sha)
     quality_text = {"full": "通过", "degraded": "降级", "check_failed": "检查未通过"}[quality]
     completeness = "通过" if check.returncode == 0 else codes
     footer = (f"校验：{quality_text}\n完整性：{completeness}，联网搜索 {tracelog.search_count(work)} 次"
@@ -170,9 +173,9 @@ def deliver() -> int:
     if notify != "sent":
         print(note.read_text(encoding="utf-8"))
     archive = stage("workdir.py", "ARCHIVE", "archive", "--week", args.week)
-    ok = (archive == "ok" and notify == ("skipped" if test else "sent"))
+    ok = (index == ("skipped" if test else "updated") and archive == "ok" and notify == ("skipped" if test else "sent"))
     emit("ok" if ok else "partial", week=args.week, sha=sha, quality=quality,
-         notify=notify, archive=archive, url=url)
+         notify=notify, archive=archive, index=index, url=url)
     return 0 if ok else 1
 
 

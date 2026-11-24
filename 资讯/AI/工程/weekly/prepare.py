@@ -116,7 +116,6 @@ def prepare() -> int:
     # 第 0 步：清理、凭据观察、环境自检、模式判定
     try:
         run.check("workdir.py", "clean")
-        run("credential_probe.py", "--resume")   # 缺历史观察只报 pending，不阻断
         run.check("env_check.py", "ensure")
         plan = run.check("deployment.py", "plan")
     except (RuntimeError, subprocess.TimeoutExpired) as e:

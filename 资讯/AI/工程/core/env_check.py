@@ -110,7 +110,7 @@ def check_binding(cli_ok: bool, cli: str | None) -> tuple[str, str, str]:
 
 
 def check_identities(cli_ok: bool, cli: str | None) -> tuple[tuple[str, str, str], tuple[str, str, str]]:
-    """C5+C6：bot ready（通知）、user available（建文档）。user 缺失需 device flow 人工授权。"""
+    """C5+C6：bot ready（通知）、user available（年度表）。user 缺失需 device flow 人工授权。"""
     if not cli_ok or not cli:
         return (("MISSING", "bot身份", "lark-cli 就绪后重查"),
                 ("MISSING", "user身份", "lark-cli 就绪后重查"))
@@ -142,12 +142,12 @@ def check_outbound(cli_ok: bool) -> tuple[str, str, str]:
             (identities.get(kind) or {}).get("verified") is True and
             (identities.get(kind) or {}).get("available") is True
             for kind in ("bot", "user"))):
-        return "PASS", "飞书出站", "auth status --verify 服务端验证通过；文档权限另以实际读写验收"
-    return "FAIL", "飞书出站", "服务端未确认 user/bot 均可用；文档交付降级，继续 Git 周报"
+        return "PASS", "飞书出站", "auth status --verify 服务端验证通过；年度表权限另以实际读写验收"
+    return "FAIL", "飞书出站", "服务端未确认 user/bot 均可用；年度表交付降级，继续 Git 周报"
 
 
 MANUAL_ITEMS = [
-    ("MANUAL", "身份边界", "文档显式使用 user 实测读写；通知使用 bot 实测到达；不要求 bot 无文档权限"),
+    ("MANUAL", "身份边界", "年度表显式使用 user 读写；通知使用 bot 并核对实际收件"),
     ("MANUAL", "凭据持久化", "核实平台的跨任务状态保存机制；两个独立任务免扫码，过期调用刷新，后续任务继承刷新状态"),
 ]
 

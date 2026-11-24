@@ -71,6 +71,7 @@ class DeliverTest(unittest.TestCase):
             "check_run.py": done("检查通过\n"),
             "coord.py": done(f"ACTION=published\ncommit={SHA}\n"),
             "feishu_sync.py": [done("NOTIFY=sent\n")],
+            "annual_index.py": done("INDEX=updated"),
             "workdir.py": done("ARCHIVE=ok\n"),
         }
 

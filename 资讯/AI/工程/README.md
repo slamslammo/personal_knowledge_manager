@@ -8,7 +8,7 @@
 | --- | --- |
 | [core/](core/) | 共享工具与周报发布基座：路径、协调发布、校验、飞书交付与环境自检。 |
 | [weekly/](weekly/) | 周报专属脚本：采集、排名、草稿、整理与运行检查。 |
-| [monthly/](monthly/) · [quarterly/](quarterly/) | 月报、季报占位（规划中，见各自 README）。 |
+| [monthly/](monthly/) · [quarterly/](quarterly/) | 月季报独立入口，准备和发布按同一期间执行。 |
 | [tests/](tests/) | 离线回归用例（必须用 `unittest discover` 整体运行）。 |
 | [prompts/](prompts/) | 任务入口、环境初始化指引和执行手册。 |
 | [config/](config/) · [templates/](templates/) | 信息源、榜单参数、运行配置和周报模板。 |

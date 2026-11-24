@@ -13,32 +13,25 @@
 from __future__ import annotations
 
 import argparse
-import datetime as dt
+import re
+
+import paths
+import weeks as calendar
 import json
 import pathlib
 import sys
 
-# core/ 位于 仓库根/资讯/AI/工程/core/；向上 4 层即仓库根。
-# 用含 .git 的祖先兜底，避免目录层级调整后静默读错路径。
-REPO_DIR = next(
-    (p for p in (pathlib.Path(__file__).resolve().parents[4], )
-     if (p / ".git").exists()),
-    pathlib.Path(__file__).resolve().parents[4],
-)
-DATA_DIR = REPO_DIR / "资讯" / "AI" / "数据"
-WEEKLY_DIR = DATA_DIR / "github-weekly"
+WEEKLY_DIR = paths.repo_root(pathlib.Path(__file__).resolve().parent) / paths.DATA_REL / "github-weekly"
 
 
 def weeks_for(period: str) -> list[str]:
-    """周四定月：按 natural month/quarter 列出归属周编号（ISO 周）。"""
-    m = __import__("weeks")
-    if len(period) == 7 and period[5] == "Q":  # YYYY-QN（先判，避免与 YYYY-MM 的第 4 位 '-' 混淆）
-        y, q = int(period[:4]), int(period[6])
-        return [w.label for w in m.weeks_in_quarter(y, q)]
-    if len(period) == 7 and period[4] == "-":  # YYYY-MM
-        y, mo = int(period[:4]), int(period[5:7])
-        return [w.label for w in m.weeks_in_month(y, mo)]
-    raise ValueError(f"非法期间：{period!r}，应为 YYYY-MM 或 YYYY-QN")
+    if re.fullmatch(r"[0-9]{4}-Q[1-4]", period):
+        span = calendar.weeks_in_quarter(int(period[:4]), int(period[-1]))
+    elif re.fullmatch(r"[0-9]{4}-(0[1-9]|1[0-2])", period):
+        span = calendar.weeks_in_month(int(period[:4]), int(period[-2:]))
+    else:
+        raise ValueError(f"非法期间：{period}")
+    return [w.label for w in span]
 
 
 def _num(v) -> bool:
@@ -56,11 +49,20 @@ def aggregate(period: str, weeks: list[str] | None = None,
             missing.append(label)
             continue
         data = json.loads(p.read_text(encoding="utf-8"))
-        for r in data.get("repos", []):
+        if data.get("week") != label or not isinstance(data.get("repos"), list):
+            raise ValueError(f"榜单期间或格式错误：{label}")
+        seen = set()
+        for r in data["repos"]:
+            if r.get("status") not in {"candidate", "new", "top5"}:
+                continue
             name = r.get("full_name")
             if not isinstance(name, str) or not name:
                 continue
-            item = rows.setdefault(name, {
+            key = name.casefold()
+            if key in seen:
+                raise ValueError(f"{label} 榜单仓库重复：{name}")
+            seen.add(key)
+            item = rows.setdefault(key, {
                 "full_name": name, "total": 0, "contributing_weeks": [],
                 "days_covered": 0, "no_star_weeks": [], "best_position": None,
                 "appearances": 0,
