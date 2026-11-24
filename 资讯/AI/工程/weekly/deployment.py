@@ -22,7 +22,6 @@ import subprocess
 import sys
 
 from common import CORE_DIR, REPO_DIR, WORK_DIR, load_config, read_json, write_json
-import feishu_sync as fs
 from document_compare import compare_documents, document_parts
 
 
@@ -105,36 +104,28 @@ def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
     try:
         evidence = sandbox_evidence(work)
         result.update(week=evidence["week"], sandbox_commit=evidence["commit"], quality="full", sandbox="passed")
-        synced = read_json(work / "feishu.json")
-        if (synced.get("test") is not True or synced.get("week") != evidence["week"]
-                or synced.get("action") not in ("created", "updated") or not synced.get("document_id")):
-            raise ValueError("测试文档未完整同步，不能认定验收通过")
-        cfg = fs.cfg_load() or {}
-        cli = fs.find_cli(cfg)
-        if not cli:
-            raise ValueError("未找到飞书 CLI，无法读回测试文档")
-        # 此 probe 先读，确保自然到期后的第一次 API 调用留有证据。
-        import credential_probe
-        probe, code = credential_probe.run_probe(synced["document_id"])
-        result["c9"] = probe.get("c9", "pending")
-        if code:
-            raise ValueError("实际 user 文档读取失败")
-        fetched = fs.run_cli(cli, "docs", "+fetch", "--doc", synced["document_id"], "--as", "user")
-        if fetched.get("error") or fs._business_failure(fetched):
-            raise ValueError("正文读回失败")
-        document = (fetched.get("data") or {}).get("document") or {}
-        actual = document.get("content")
-        if not isinstance(actual, str) or not actual:
-            raise ValueError("正文读回为空")
-        (work / "feishu-readback.md").write_text(actual, encoding="utf-8")
-        expected = re.sub(r"(?m)^# ", "# [测试] ", evidence["content"], count=1)
-        result.update(document_id=synced["document_id"], url=synced.get("url"),
-                      notification="skipped", api_read="ok", document_delivery="read_back")
-        comparison = compare_documents(expected, actual)
-        result.update(comparison)
-        if comparison["content_match"] != "normalized_equal":
+        # 交付源收敛：全文只在 Git。验收读回改为「沙箱提交正文 vs 工作目录候选稿」，
+        # 不再创建/更新/读回飞书 docx。C9 凭据探测降级为观测字段，不作为通过条件。
+        ctx = read_json(work / "coord.json")
+        report_rel = ctx["report_path"]
+        actual = (work / "out" / report_rel).read_text(encoding="utf-8")
+        if not actual.strip():
+            raise ValueError("工作目录候选稿为空")
+        (work / "local-readback.md").write_text(evidence["content"], encoding="utf-8")
+        result.update(notification="skipped", api_read="not_applicable_no_docx",
+                      document_delivery="local_commit_readback")
+        try:
+            comparison = compare_documents(evidence["content"], actual)
+        except (ValueError, TypeError) as e:
+            result.update(acceptance="pending", comparison_error=str(e)[:120],
+                          reason="正文格式无法归一化比对，需人工核对")
+        else:
+            result.update(comparison)
+        if result.get("acceptance") == "pending":
+            pass
+        elif result.get("content_match") != "normalized_equal":
             result.update(acceptance="pending",
-                          reason="读回正文与发布稿存在内容差异或不支持的格式，请对照 feishu-content.md 与 feishu-readback.md")
+                          reason="沙箱提交正文与工作目录候选稿存在差异，请对照 local-readback.md 与 out/ 下候选稿")
         else:
             result.update(acceptance="passed", document_delivery="passed")
         if not (work / "notification.txt").is_file():
@@ -148,23 +139,10 @@ def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
             raise ValueError("通知隔离未通过")
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
         # 不输出子进程 stderr、CLI 错误或配置原文。
-        result["reason"] = "沙箱提交、质量门槛或飞书正文未完成验收；查看本次非敏感运行产物定位"
+        result["reason"] = "沙箱提交、质量门槛或候选稿正文未完成验收；查看本次非敏感运行产物定位"
         result["acceptance"] = "failed"
     write_json(work / "acceptance.json", result)
     return result, 0 if result["acceptance"] == "passed" else 1
-
-
-def _sync_published(work: pathlib.Path, context: dict) -> int:
-    """只补交付已发布的沙箱稿；不重跑采集、写稿或协调发布。"""
-    env = dict(os.environ, AI_WEEKLY_TMP=str(work), TEST_RUN="1")
-    p = subprocess.run([sys.executable, str(CORE_DIR / "feishu_sync.py"), "sync",
-                        "--from-published", "--sha", context["published_commit"],
-                        "--week", context["week"], "--report", context["report_path"]],
-                       capture_output=True, text=True, env=env, timeout=300)
-    for line in p.stdout.splitlines():
-        if line.startswith("SYNC="):
-            print(line)
-    return p.returncode
 
 
 def resume(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
@@ -179,22 +157,9 @@ def resume(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
             return result, 0
         evidence = sandbox_evidence(work)
         result.update(resume="pending", sandbox_commit=evidence["commit"], week=evidence["week"])
-        # 扫码配置页面可选择不同应用；核对本项目指定身份后才允许任何补写入。
-        import env_check
-        cli = fs.find_cli(fs.cfg_load() or {})
-        if not cli or env_check.check_binding(True, cli)[0] != "PASS":
-            result["reason"] = "当前 CLI 尚未绑定指定应用；扫码选择小龙虾1号并核对 App ID 后再恢复"
-            write_json(work / "resume.json", result)
-            return result, 1
-        # 在补同步可能触发刷新之前先观察，不能让恢复路径丢掉自然到期证据。
-        import credential_probe
-        observed, _ = credential_probe.run_probe(resume=True)
-        result["c9"] = observed.get("c9", "pending")
-        if _sync_published(work, context):
-            result["reason"] = "飞书补交付未成功；按部署报告补齐现有应用配置与 user 授权后再恢复"
-        else:
-            accepted, code = finish(work)
-            result.update(resume="completed" if code == 0 else "pending", acceptance=accepted)
+        # 交付源收敛：没有 docx 补交付，恢复路径直接用本地沙箱提交重做验收。
+        accepted, code = finish(work)
+        result.update(resume="completed" if code == 0 else "pending", acceptance=accepted)
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
         result.update(resume="pending", reason="已有沙箱验收恢复未完成；保留临时产物，核对配置和本地提交后再恢复")
     write_json(work / "resume.json", result)

@@ -153,34 +153,14 @@ def deliver() -> int:
             return "error"
         return status or "unknown"
 
-    sync = stage("feishu_sync.py", "SYNC", "sync", "--from-published", "--sha", sha, "--week", args.week)
-    readback = "skipped"
-    url = ""
-    if sync in ("updated", "created"):
-        try:
-            receipt = read_json(work / paths.FILES["feishu"])
-        except (OSError, ValueError):
-            receipt = {}
-        doc = receipt.get("document_id") if isinstance(receipt, dict) else None
-        if (isinstance(doc, str) and doc and receipt.get("action") == sync and receipt.get("week") == args.week
-                and receipt.get("test") is test):
-            flags = ["--test-document"] if test else []
-            readback = stage("feishu_sync.py", "READBACK", "verify", "--sha", sha, "--week",
-                             args.week, "--doc", doc, *flags)
-            if readback == "passed":
-                url = receipt.get("url") or ""
-        else:
-            readback = "unknown"
-
+    # 交付源收敛：GitHub 是唯一全文源，不再创建/更新/读回飞书 docx 副本。
+    # 通知仍走飞书 bot（送达渠道），正文链接指向本次已发布的 commit（不可变）。
     target = "本地沙箱" if test else "main"
-    if not url and not test:
-        url = f"https://github.com/slamslammo/personal_knowledge_manager/blob/{sha}/{quote(ctx['report_path'])}"
+    url = f"https://github.com/slamslammo/personal_knowledge_manager/blob/{sha}/{quote(ctx['report_path'])}"
     quality_text = {"full": "通过", "degraded": "降级", "check_failed": "检查未通过"}[quality]
     completeness = "通过" if check.returncode == 0 else codes
     footer = (f"校验：{quality_text}\n完整性：{completeness}，联网搜索 {tracelog.search_count(work)} 次"
-              f"\n提交：已推送到{target}（{sha[:7]}）\n飞书：同步 {sync}，读回 {readback}")
-    if url:
-        footer += f"\n{url}"
+              f"\n提交：已推送到{target}（{sha[:7]}）\n全文：{url}")
     for path in (note, short):
         body = path.read_text(encoding="utf-8").rstrip()
         if quality != "full":
@@ -190,10 +170,9 @@ def deliver() -> int:
     if notify != "sent":
         print(note.read_text(encoding="utf-8"))
     archive = stage("workdir.py", "ARCHIVE", "archive", "--week", args.week)
-    ok = (sync in ("created", "updated") and readback == "passed" and archive == "ok"
-          and notify == ("skipped" if test else "sent"))
-    emit("ok" if ok else "partial", week=args.week, sha=sha, quality=quality, sync=sync,
-         readback=readback, notify=notify, archive=archive)
+    ok = (archive == "ok" and notify == ("skipped" if test else "sent"))
+    emit("ok" if ok else "partial", week=args.week, sha=sha, quality=quality,
+         notify=notify, archive=archive, url=url)
     return 0 if ok else 1
 
 

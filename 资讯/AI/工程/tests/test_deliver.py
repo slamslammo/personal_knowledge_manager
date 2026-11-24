@@ -70,7 +70,7 @@ class DeliverTest(unittest.TestCase):
             "finalize.py": done(),
             "check_run.py": done("检查通过\n"),
             "coord.py": done(f"ACTION=published\ncommit={SHA}\n"),
-            "feishu_sync.py": [done("SYNC=updated\n"), done("READBACK=passed\n"), done("NOTIFY=sent\n")],
+            "feishu_sync.py": [done("NOTIFY=sent\n")],
             "workdir.py": done("ARCHIVE=ok\n"),
         }
 
@@ -84,6 +84,11 @@ class DeliverTest(unittest.TestCase):
         for s in ("finalize.py", "check_run.py", "coord.py", "feishu_sync.py", "workdir.py"):
             self.assertIn(s, scripts)
         self.assertTrue((self.work / paths.FILES["checks"]).exists())
+        feishu_args = [a for s, a in self.calls if s == "feishu_sync.py"]
+        self.assertEqual([a[0] for a in feishu_args], ["notify"])
+        notice = (self.work / paths.FILES["notification"]).read_text(encoding="utf-8")
+        self.assertIn("/blob/" + SHA, notice)
+        self.assertNotIn("飞书：同步", notice)
 
     def test_codes_triggers_rework_without_publish(self):
         self.responses = self.ok_chain()
@@ -104,37 +109,34 @@ class DeliverTest(unittest.TestCase):
         self.assertTrue(notice.exists())
         self.assertIn("｜失败】", notice.read_text(encoding="utf-8"))
 
-    def test_test_mode_verify_passes_doc(self):
+    def test_test_mode_only_notifies_no_docx(self):
         self.responses = self.ok_chain()
-        self.responses["feishu_sync.py"] = [
-            done("SYNC=updated document_id=doc1\n"), done("READBACK=passed\n"), done("NOTIFY=skipped\n")]
+        self.responses["feishu_sync.py"] = [done("NOTIFY=skipped\n")]
         rc, out = self.run_deliver("--test")
         self.assertEqual(rc, 0, out)
-        verify = [a for s, a in self.calls if s == "feishu_sync.py" and "verify" in a]
-        self.assertEqual(len(verify), 1)
-        self.assertIn("--doc", verify[0])
-        self.assertIn("doc1", verify[0])
-        self.assertIn("--test-document", verify[0])
+        feishu_args = [a for s, a in self.calls if s == "feishu_sync.py"]
+        self.assertEqual([a[0] for a in feishu_args], ["notify"])
+        self.assertNotIn("SYNC=", out)
+        self.assertNotIn("READBACK=", out)
 
-    def test_sync_error_does_not_block_delivery(self):
+    def test_notify_failure_reports_partial_without_undoing_publish(self):
         self.responses = self.ok_chain()
-        self.responses["feishu_sync.py"] = [done("SYNC=error\n"), done("NOTIFY=sent\n")]
+        self.responses["feishu_sync.py"] = [done("NOTIFY=unknown", rc=1)]
         rc, out = self.run_deliver()
         self.assertEqual(rc, 1, out)
         self.assertIn("DELIVER=partial", out)
-        self.assertIn("SYNC=error", out)
+        self.assertIn("NOTIFY=unknown", out)
+        self.assertIn(SHA, out)
         self.assertIn("workdir.py", [s for s, _ in self.calls])
 
-    def test_readback_notify_and_archive_failure_reported_separately(self):
+    def test_notify_and_archive_failure_reported_separately(self):
         self.responses = self.ok_chain()
-        self.responses["feishu_sync.py"] = [
-            done("SYNC=updated document_id=doc1"), done("READBACK=pending", rc=1),
-            done("NOTIFY=unknown", rc=1)]
+        self.responses["feishu_sync.py"] = [done("NOTIFY=unknown", rc=1)]
         self.responses["workdir.py"] = done("disk full", rc=1)
         rc, out = self.run_deliver()
         self.assertNotEqual(rc, 0)
         self.assertIn("DELIVER=partial", out)
-        self.assertIn("READBACK=pending NOTIFY=unknown ARCHIVE=error", out)
+        self.assertIn("NOTIFY=unknown ARCHIVE=error", out)
         self.assertIn("/blob/" + SHA, out)
 
     def test_sandbox_context_without_flag_uses_test_h1(self):
@@ -142,8 +144,8 @@ class DeliverTest(unittest.TestCase):
         self.responses = self.ok_chain()
         self.responses["feishu_sync.py"][-1] = done("NOTIFY=skipped test=1")
         self.assertEqual(self.run_deliver()[0], 0)
-        verify = next(args for _, args in self.calls if args and args[0] == "verify")
-        self.assertIn("--test-document", verify)
+        feishu_args = [a for s, a in self.calls if s == "feishu_sync.py"]
+        self.assertEqual([a[0] for a in feishu_args], ["notify"])
 
     def test_rework_budget_and_structural_stop(self):
         for code, terminal in [("GATE_SEARCH_MIN", "DELIVER=ok"), ("GATE_STRUCTURE", "REWORK_EXHAUSTED")]:
@@ -158,8 +160,8 @@ class DeliverTest(unittest.TestCase):
         self.responses = self.ok_chain()
         self.responses["coord.py"] = done(f"ACTION=published\ncommit={SHA}；周报被手工修改过，未覆盖")
         self.assertEqual(self.run_deliver()[0], 0)
-        sync = next(args for _, args in self.calls if args and args[0] == "sync")
-        self.assertEqual(sync[sync.index("--sha") + 1], SHA)
+        notice = (self.work / paths.FILES["notification"]).read_text(encoding="utf-8")
+        self.assertIn("/blob/" + SHA, notice)
 
     def test_missing_notification_files_fails_early(self):
         (self.work / paths.FILES["notification"]).unlink()
@@ -171,7 +173,7 @@ class DeliverTest(unittest.TestCase):
 
 
 class DeliveryGitIntegration(unittest.TestCase):
-    def test_sync_outage_preserves_real_git_publication_and_archive(self):
+    def test_notify_outage_preserves_real_git_publication_and_archive(self):
         import os
         import fixture
         from test_coord import Lab
@@ -189,10 +191,8 @@ class DeliveryGitIntegration(unittest.TestCase):
             def run(runner, script, *args):
                 if script != "feishu_sync.py":
                     return original(runner, script, *args)
-                if args[0] == "sync":
-                    return done("SYNC=error", rc=1)
                 self.assertEqual(args[0], "notify")
-                return done("NOTIFY=skipped test=1")
+                return done("NOTIFY=unknown", rc=1)
 
             env = dict(agent.env(), AI_WEEKLY_HOME=str(root / "runtime"))
             buf = io.StringIO()
