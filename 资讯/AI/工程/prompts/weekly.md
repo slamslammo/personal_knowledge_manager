@@ -26,7 +26,7 @@
 | `TARGET_START=YYYY-MM-DD`（周一）或 `TARGET_WEEK=YYYY-Www` | 指定回溯周，标题加“（回溯版）”，已有榜单数据可复用；验收/正式隔离仍由部署模式决定 |
 | 显式 `TEST_RUN=1` | 开发会话的测试覆盖，优先使用沙箱；定时任务首次验收不需要临时加这个参数 |
 
-测试判定有三处来源：项目部署模式、显式 `TEST_RUN=1`、`coord.json` 的 `test: true`，任一为真即按测试隔离。`deployment.py start` 在验收模式自动给 `coord.py` 传 `--test`；交付脚本还直接读取项目模式，配置缺失或非法时也按测试保护，即便协调尚未启动也不发真实通知。必须经部署启动入口建立本地沙箱，不能只让交付脚本处于测试而将协调提交到正式远端。测试文档保留为验收证据，不删除。
+测试判定有三处来源：项目部署模式、显式 `TEST_RUN=1`、`coord.json` 的 `test: true`，任一为真即按测试隔离。`deployment.py start` 在验收模式自动给 `coord.py` 传 `--test`；交付脚本还直接读取项目模式，配置缺失或非法时也按测试保护，即便协调尚未启动也不发真实通知。必须经部署启动入口建立本地沙箱，不能只让交付脚本处于测试而将协调提交到正式远端。验收保留本地沙箱提交、正文比对结果与通知预览。
 
 ## 三段式总览
 
@@ -52,7 +52,7 @@ python3 $S/core/workdir.py check
 python3 $S/weekly/prepare.py --platform <平台名> [--week YYYY-Www | --target-start YYYY-MM-DD] [--test]
 ```
 
-`prepare.py` 依次完成工作目录检查、报告周判定、恢复分支、清理、凭据观察、环境自检、模式判定、
+`prepare.py` 依次完成工作目录检查、报告周判定、恢复分支、清理、环境自检、模式判定、
 飞书预检、协调启动与采集；`RESUME=`、`ACTION=`、`COLLECT=` 的分流（含周榜未就绪的
 内置重试）由脚本处理。只有输出 `PREPARE=ok` 才进入智能段；`resumed` 直接结束，`deferred`
 表示校验完成或本次退出，`failed` 按入口规则告警，均不进入采集或写稿。
