@@ -153,6 +153,34 @@ def work_dir(repo: pathlib.Path | None = None,
     return runtime_root(repo, env) / WORK_DIR_NAME
 
 
+# 报告类型与期间的合法取值，供 period_work_dir 校验。
+PERIOD_TYPES = ("weekly", "monthly", "quarterly")
+PERIOD_PATTERN = {
+    "weekly": re.compile(r"^\d{4}-W\d{2}$"),
+    "monthly": re.compile(r"^\d{4}-\d{2}$"),
+    "quarterly": re.compile(r"^\d{4}-Q[1-4]$"),
+}
+
+
+def period_work_dir(report_type: str, period: str,
+                    repo: pathlib.Path | None = None,
+                    env: dict | None = None) -> pathlib.Path:
+    """按报告类型与期间隔离的工作子根；子根内部仍复用 FILES 固定文件名。
+
+    AI_WEEKLY_TMP 为显式覆盖（兼容入口/测试），此时不做类型拼装。
+    非法类型或期间格式显式失败，不静默落到别处。
+    """
+    if report_type not in PERIOD_TYPES:
+        raise ValueError(f"非法报告类型：{report_type!r}，应为 {PERIOD_TYPES}")
+    if not PERIOD_PATTERN[report_type].fullmatch(period or ""):
+        raise ValueError(f"非法期间：{period!r}，类型 {report_type} 格式不符")
+    env = os.environ if env is None else env
+    legacy = env.get("AI_WEEKLY_TMP")
+    if legacy:
+        return pathlib.Path(legacy).expanduser().resolve()
+    return runtime_root(repo, env) / WORK_DIR_NAME / report_type / period
+
+
 def archive_dir(week: str, repo: pathlib.Path | None = None,
                 env: dict | None = None) -> pathlib.Path:
     """按周归档目录，一周一份；周编号格式不合法时显式失败。"""

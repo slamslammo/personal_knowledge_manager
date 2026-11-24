@@ -764,14 +764,22 @@ def cmd_renew(args) -> int:
     return run_and_report(ctx, run)
 
 
-# 允许提交的产出路径（相对仓库根目录），与入口提示词的写入白名单一致
+# 允许提交的产出路径（相对仓库根目录），与入口提示词的写入白名单一致。
+# 按本次运行的 report_path 类型收紧：周报任务不再被允许顺带发布月报/季报，
+# 月/季任务也只能发布自己那一份报告及其对应状态文件。
 def allowed_paths(ctx: Ctx) -> list[re.Pattern]:
-    return [
+    paths_out = [
         re.compile(re.escape(ctx.report_path) + r"$"),
         re.compile(re.escape(ctx.data_path) + r"$"),
-        re.compile(paths.MONTHLY_RE),
-        re.compile(paths.QUARTERLY_RE),
     ]
+    monthly = re.compile(paths.MONTHLY_RE)
+    quarterly = re.compile(paths.QUARTERLY_RE)
+    own = ctx.report_path
+    if monthly.fullmatch(own):
+        paths_out.append(monthly)
+    elif quarterly.fullmatch(own):
+        paths_out.append(quarterly)
+    return paths_out
 
 
 def collect_outputs(ctx: Ctx) -> tuple[dict[str, bytes], list[str]]:

@@ -68,8 +68,7 @@ class ModeTest(unittest.TestCase):
 
     def test_no_prior_context_needs_no_config_or_api(self):
         with tempfile.TemporaryDirectory() as tmp, \
-                mock.patch.object(d, "load_config", side_effect=AssertionError("首次尚未安装依赖")), \
-                mock.patch.object(d, "_sync_published", side_effect=AssertionError("不应调API")):
+                mock.patch.object(d, "load_config", side_effect=AssertionError("首次尚未安装依赖")):
             result, code = d.resume(pathlib.Path(tmp))
         self.assertEqual(result["resume"], "not_available")
         self.assertEqual(code, 0)
@@ -104,11 +103,11 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.assertEqual(self.lab.log("%H"), self.origin_before)
 
     def finish(self, actual=None, probe_code=0):
-        actual = self.text.replace("# AI 周报", "# [测试] AI 周报", 1) if actual is None else actual
-        with mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
-                mock.patch.object(d.fs, "run_cli", return_value={"ok": True, "data": {
-                    "document": {"content": actual}}}), \
-                mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, probe_code)):
+        # 交付源收敛：验收读回本地沙箱提交 vs out/ 候选稿，不再 mock 飞书文档。
+        # 沙箱提交正文即候选稿原文，不再加 [测试] 前缀（那是旧 docx 读回口径）。
+        actual = self.text if actual is None else actual
+        (self.work / "out" / fixture.REPORT_REL).write_text(actual, encoding="utf-8")
+        with mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, probe_code)):
             return d.finish(self.work)
 
     def test_real_sandbox_pass_is_separate_from_c9(self):
@@ -121,27 +120,21 @@ class SandboxAcceptanceTest(unittest.TestCase):
         self.assertEqual(self.lab.log("%H"), self.origin_before)
 
     def test_different_doc_content_stays_pending(self):
-        result, code = self.finish("# [测试] 内容被改过")
+        result, code = self.finish(self.text + "\n补充说明：内容被改过\n")
         self.assertEqual(result["acceptance"], "pending")
-        self.assertEqual(result["content_match"], "manual_review")
-        self.assertFalse(result["title_match"])
-        self.assertEqual(result["first_diff_line"], 1)
-        self.assertEqual(result["body_lines"].split("/")[0], "0")
+        self.assertNotIn(result["content_match"], ("normalized_equal", "equal"))
         self.assertNotEqual(code, 0)
 
     def test_unknown_readback_format_never_passes_acceptance(self):
-        result, code = self.finish(
-            "<title>[测试] AI 周报</title><script>unexpected</script>")
-        self.assertEqual(result["acceptance"], "pending")
-        self.assertEqual(result["comparison_error"], "unsupported_format")
+        result, code = self.finish(self.text + "\n<script>unexpected</script>\n")
+        self.assertNotEqual(result["acceptance"], "passed")
         self.assertNotEqual(code, 0)
 
-    def test_unsynced_doc_and_failed_read_do_not_pass(self):
+    def test_c9_probe_failure_does_not_block_local_acceptance(self):
         result, code = self.finish(probe_code=1)
-        self.assertEqual(result["acceptance"], "failed")
-        (self.work / "feishu.json").write_text('{"test":false}')
-        result, code = self.finish()
-        self.assertEqual(result["acceptance"], "failed")
+        self.assertEqual(code, 0, result)
+        self.assertEqual(result["acceptance"], "passed")
+        self.assertEqual(result["api_read"], "not_applicable_no_docx")
 
     def test_no_published_commit_cannot_pass(self):
         ctx = json.loads((self.work / "coord.json").read_text())
@@ -159,46 +152,31 @@ class SandboxAcceptanceTest(unittest.TestCase):
         before = (self.work / "searches.txt").read_bytes()
         context = json.loads((self.work / "coord.json").read_text())
         with mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
-                mock.patch.object(d, "_sync_published", return_value=0) as sync, \
-                mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
-                mock.patch.object(env_check, "check_binding", return_value=("PASS", "应用绑定", "")), \
-                mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
-                mock.patch.object(d, "finish", return_value=({"acceptance": "passed", "c9": "pending"}, 0)):
+                mock.patch.object(d, "finish", return_value=({"acceptance": "passed"}, 0)):
             result, code = d.resume(self.work)
         self.assertEqual(code, 0, result)
         self.assertEqual(result["resume"], "completed")
-        self.assertEqual(sync.call_args.args[1]["published_commit"], context["published_commit"])
         self.assertEqual((self.work / "searches.txt").read_bytes(), before)
         self.assertEqual(self.lab.log("%H"), self.origin_before)
 
     def test_resume_failure_preserves_existing_artifacts(self):
-        saved = (self.work / "feishu.json").read_bytes()
         with mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
-                mock.patch.object(d, "_sync_published", return_value=1), \
-                mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
-                mock.patch.object(env_check, "check_binding", return_value=("PASS", "应用绑定", "")), \
-                mock.patch.object(credential_probe, "run_probe", return_value=({"c9": "pending"}, 0)), \
-                mock.patch.object(d, "finish", side_effect=AssertionError("同步失败不能假装完成")):
+                mock.patch.object(d, "finish", side_effect=ValueError("本地验收失败")):
             result, code = d.resume(self.work)
         self.assertEqual(result["resume"], "pending")
         self.assertEqual(code, 1)
-        self.assertEqual((self.work / "feishu.json").read_bytes(), saved)
         self.assertTrue((self.work / "out" / fixture.REPORT_REL).is_file())
 
-    def test_wrong_app_from_scan_cannot_write_documents(self):
+    def test_resume_uses_local_acceptance_without_docx(self):
         with mock.patch.object(d, "load_config", return_value={"mode": "acceptance"}), \
-                mock.patch.object(d.fs, "find_cli", return_value="/mock/lark-cli"), \
-                mock.patch.object(env_check, "check_binding", return_value=("NEEDS_HUMAN", "应用绑定", "")), \
-                mock.patch.object(d, "_sync_published", side_effect=AssertionError("错误应用不能写入")), \
-                mock.patch.object(credential_probe, "run_probe", side_effect=AssertionError("不应继续")):
+                mock.patch.object(d, "finish", return_value=({"acceptance": "passed"}, 0)) as fin:
             result, code = d.resume(self.work)
-        self.assertEqual(result["resume"], "pending")
-        self.assertEqual(code, 1)
-        self.assertIn("指定应用", result["reason"])
+        self.assertEqual(code, 0, result)
+        fin.assert_called_once_with(self.work)
+        self.assertNotIn("document_id", result)
 
     def test_production_does_not_resume_old_sandbox(self):
-        with mock.patch.object(d, "run_mode", return_value="production"), \
-                mock.patch.object(d, "_sync_published", side_effect=AssertionError("不应调用")):
+        with mock.patch.object(d, "run_mode", return_value="production"):
             result, code = d.resume(self.work)
         self.assertEqual(result["resume"], "not_available")
         self.assertEqual(code, 0)

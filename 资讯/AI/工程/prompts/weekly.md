@@ -155,9 +155,10 @@ python3 $S/weekly/prepare.py --platform <平台名> [--week YYYY-Www | --target-
 
 ## 月报与季报
 
-读 `$W/week.json` 的 `monthly` 和 `quarterly`：
-- `generate` 为 true 时，如果 `资讯/AI/工程/prompts/monthly.md`（季报为 `quarterly.md`）存在且第一行是对应的任务标记，就按它生成，写到 `$W/out/` 下与仓库相同的相对路径。手册还不存在就跳过，在数据说明里写"{期间} 月报到期，月报手册尚未就绪"。
-- `due` 为 true 但 `missing_weeks` 不为空时，不生成，在数据说明里写"{期间} 月报到期，缺少周报 {missing_weeks}，暂不生成"。
+读 `$W/week.json` 的 `monthly` 和 `quarterly`，**只做到期提示，不在周报运行中生成月报或季报**：
+- `generate` 为 true 时，在数据说明里写"{期间} 月报已到期，由独立月报任务生成；本期周报不产出月报"。
+- `due` 为 true 但 `missing_weeks` 不为空时，在数据说明里写"{期间} 月报到期，缺少周报 {missing_weeks}，暂不生成"。
+- 月报/季报是独立任务，入口与手册在 `prompts/routine-monthly.md`、`routine-quarterly.md`；周报的写入白名单不含这些路径。
 
 
 

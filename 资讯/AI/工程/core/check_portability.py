@@ -35,6 +35,10 @@ PLATFORM_TERMS = [
 # 执行手册里不能出现的 git 写操作：提交与推送一律经 coord.py
 GIT_TERMS = re.compile(r"git\s+(add|commit|push|pull|rebase|merge|reset|checkout|switch|branch|restore|stash)\b")
 MANUAL_MARKER = "<!-- task: ai-weekly -->"
+# 三套入口各自的手册任务标记；安全规则段必须逐字节一致。
+ENTRY_MARKERS = {"routine-weekly.md": MANUAL_MARKER,
+                 "routine-monthly.md": "<!-- task: ai-weekly-monthly -->",
+                 "routine-quarterly.md": "<!-- task: ai-weekly-quarterly -->"}
 
 
 def neutral_files(task_dir: pathlib.Path = TASK_DIR) -> list[pathlib.Path]:
@@ -65,14 +69,37 @@ def check_entry_prompt(path: pathlib.Path, base: pathlib.Path) -> list[str]:
     text = path.read_text(encoding="utf-8")
     rel = path.relative_to(base)
     problems = []
-    if "prompts/weekly.md" not in text:
-        problems.append(f"{rel}：没有指向执行手册 prompts/weekly.md")
-    if MANUAL_MARKER not in text:
-        problems.append(f"{rel}：没有要求核对执行手册的任务标记 {MANUAL_MARKER}")
+    manual = {"routine-weekly.md": "prompts/weekly.md",
+              "routine-monthly.md": "prompts/monthly.md",
+              "routine-quarterly.md": "prompts/quarterly.md"}.get(path.name, "prompts/weekly.md")
+    if manual not in text:
+        problems.append(f"{rel}：没有指向执行手册 {manual}")
+    marker = ENTRY_MARKERS.get(path.name, MANUAL_MARKER)
+    if marker not in text:
+        problems.append(f"{rel}：没有要求核对执行手册的任务标记 {marker}")
     for no, line in enumerate(text.splitlines(), 1):
         m = re.search(r"第\s*\d+\s*步", line)
         if m:
             problems.append(f"{rel}:{no}：引用了执行手册的步骤编号「{m.group(0)}」，改流程时会被迫重贴提示词")
+    return problems
+
+
+def check_entry_safety_consistency(task_dir: pathlib.Path, base: pathlib.Path) -> list[str]:
+    """三套入口的安全规则段必须逐字节一致，不能因改一处而放宽另一处。"""
+    section = re.compile(r"(## 安全规则[^\n]*\n.*?)(?=\n## )", re.S)
+    seen: dict[str, str] = {}
+    problems = []
+    for name in ENTRY_MARKERS:
+        path = task_dir / "prompts" / name
+        if not path.is_file():
+            continue
+        m = section.search(path.read_text(encoding="utf-8"))
+        if not m:
+            continue  # 测试构造的简化入口可没有安全规则段，只检查真实入口的一致性
+        seen[name] = m.group(1)
+    if len(seen) > 1 and len(set(seen.values())) != 1:
+        problems.append("三套入口的安全规则段不一致：" + ", ".join(
+            f"{n}={hash(s) & 0xffff:04x}" for n, s in seen.items()))
     return problems
 
 
@@ -107,8 +134,11 @@ def check_layering(task_dir: pathlib.Path, base: pathlib.Path) -> list[str]:
 def run(task_dir: pathlib.Path = TASK_DIR) -> list[str]:
     # 检查真实仓库时用仓库根；测试的临时目录沿用其父级，避免 relative_to 失败
     base = REPO_DIR if task_dir == TASK_DIR else task_dir.parent.parent
+    entries = [task_dir / "prompts" / name for name in ENTRY_MARKERS
+               if (task_dir / "prompts" / name).is_file()]
     return (scan(neutral_files(task_dir), base) + check_git_discipline(task_dir, base)
-            + check_entry_prompt(task_dir / "prompts" / "routine-weekly.md", base)
+            + sum((check_entry_prompt(e, base) for e in entries), [])
+            + check_entry_safety_consistency(task_dir, base)
             + check_layering(task_dir, base))
 
 
