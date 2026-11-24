@@ -93,7 +93,8 @@ def sandbox_evidence(work: pathlib.Path) -> dict:
     produced = state.get("produced") or {}
     if produced.get("quality") != "full" or produced.get("run_id") != ctx.get("run_id"):
         raise ValueError("实际发布结果不是本次 full 周报")
-    content = _git(repo, "show", f"{sha}:{ctx['report_path']}")
+    content = subprocess.check_output(["git", "-C", str(remote), "cat-file", "blob",
+                                       f"{sha}:{ctx['report_path']}"], timeout=30)
     return {"week": week["week"], "commit": sha, "content": content}
 
 
@@ -108,26 +109,17 @@ def finish(work: pathlib.Path = WORK_DIR) -> tuple[dict, int]:
         # 不再创建/更新/读回飞书 docx。C9 凭据探测降级为观测字段，不作为通过条件。
         ctx = read_json(work / "coord.json")
         report_rel = ctx["report_path"]
-        actual = (work / "out" / report_rel).read_text(encoding="utf-8")
+        actual = (work / "out" / report_rel).read_bytes()
         if not actual.strip():
             raise ValueError("工作目录候选稿为空")
-        (work / "local-readback.md").write_text(evidence["content"], encoding="utf-8")
+        (work / "local-readback.md").write_bytes(evidence["content"])
         result.update(notification="skipped", api_read="not_applicable_no_docx",
                       document_delivery="local_commit_readback")
-        try:
-            comparison = compare_documents(evidence["content"], actual)
-        except (ValueError, TypeError) as e:
-            result.update(acceptance="pending", comparison_error=str(e)[:120],
-                          reason="正文格式无法归一化比对，需人工核对")
+        if actual == evidence["content"]:
+            result.update(content_match="byte_equal", acceptance="passed", document_delivery="passed")
         else:
-            result.update(comparison)
-        if result.get("acceptance") == "pending":
-            pass
-        elif result.get("content_match") != "normalized_equal":
-            result.update(acceptance="pending",
-                          reason="沙箱提交正文与工作目录候选稿存在差异，请对照 local-readback.md 与 out/ 下候选稿")
-        else:
-            result.update(acceptance="passed", document_delivery="passed")
+            result.update(content_match="different", acceptance="pending",
+                          reason="Git 正文字节与候选稿不同，请对照 local-readback.md")
         if not (work / "notification.txt").is_file():
             raise ValueError("缺少本次通知预览")
         # 再实际调用一次通知入口，验证其脚本级隔离，绝不借验收发真实消息。

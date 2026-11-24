@@ -38,6 +38,14 @@ def quarterly(year: int, quarter: int) -> str:
     return f"{OUTPUT_REL}/季报/{year}/{year}-Q{quarter}.md"
 
 
+def period_report(period: str) -> str:
+    if re.fullmatch(r"[0-9]{4}-Q[1-4]", period):
+        return quarterly(int(period[:4]), int(period[-1]))
+    if re.fullmatch(r"[0-9]{4}-(0[1-9]|1[0-2])", period):
+        return monthly(int(period[:4]), int(period[-2:]))
+    raise ValueError(f"非法月季报期间：{period}")
+
+
 # coord.py 的写入白名单正则；迁移时随 OUTPUT_REL 自动更新。
 MONTHLY_RE = re.escape(OUTPUT_REL) + r"/月报/\d{4}/\d{4}-\d{2}\.md$"
 QUARTERLY_RE = re.escape(OUTPUT_REL) + r"/季报/\d{4}/\d{4}-Q[1-4]\.md$"
@@ -167,7 +175,7 @@ def period_work_dir(report_type: str, period: str,
                     env: dict | None = None) -> pathlib.Path:
     """按报告类型与期间隔离的工作子根；子根内部仍复用 FILES 固定文件名。
 
-    AI_WEEKLY_TMP 为显式覆盖（兼容入口/测试），此时不做类型拼装。
+    AI_WEEKLY_TMP 覆盖父目录，期间子目录仍按类型和期间隔离。
     非法类型或期间格式显式失败，不静默落到别处。
     """
     if report_type not in PERIOD_TYPES:
@@ -177,7 +185,7 @@ def period_work_dir(report_type: str, period: str,
     env = os.environ if env is None else env
     legacy = env.get("AI_WEEKLY_TMP")
     if legacy:
-        return pathlib.Path(legacy).expanduser().resolve()
+        return pathlib.Path(legacy).expanduser().resolve() / report_type / period
     return runtime_root(repo, env) / WORK_DIR_NAME / report_type / period
 
 

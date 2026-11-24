@@ -117,6 +117,10 @@ def load_ctx(work: pathlib.Path = WORK_DIR) -> Ctx:
 
 
 def ctx_from(saved: dict, work: pathlib.Path) -> Ctx:
+    try:
+        weekly_paths(saved)
+    except (ValueError, KeyError) as exc:
+        raise CoordError("STATE_INVALID", "周报期间与路径不符") from exc
     return Ctx(
         repo=pathlib.Path(saved["repo"]), work=work, remote=saved["remote"], branch=saved["branch"],
         week=saved["week"], mode=saved["mode"], report_path=saved["report_path"],
@@ -656,8 +660,9 @@ def cmd_start(args) -> int:
         return EXIT_ERROR
     try:
         info = read_json(work / "week.json")
-    except OSError:
-        emit("error", f"没有 {work / 'week.json'}：先运行 weeks.py")
+        weekly_paths(info)
+    except (OSError, ValueError, KeyError):
+        emit("error", f"无有效的 {work / 'week.json'}：先运行 weeks.py")
         return EXIT_ERROR
     cfg = coord_config()
     repo = pathlib.Path(os.environ.get("AI_WEEKLY_REPO", REPO_DIR))
@@ -764,31 +769,23 @@ def cmd_renew(args) -> int:
     return run_and_report(ctx, run)
 
 
-# 允许提交的产出路径（相对仓库根目录），与入口提示词的写入白名单一致。
-# 按本次运行的 report_path 类型收紧：周报任务不再被允许顺带发布月报/季报，
-# 月/季任务也只能发布自己那一份报告及其对应状态文件。
-def allowed_paths(ctx: Ctx) -> list[re.Pattern]:
-    paths_out = [
-        re.compile(re.escape(ctx.report_path) + r"$"),
-        re.compile(re.escape(ctx.data_path) + r"$"),
-    ]
-    monthly = re.compile(paths.MONTHLY_RE)
-    quarterly = re.compile(paths.QUARTERLY_RE)
-    own = ctx.report_path
-    if monthly.fullmatch(own):
-        paths_out.append(monthly)
-    elif quarterly.fullmatch(own):
-        paths_out.append(quarterly)
-    return paths_out
+def weekly_paths(info: dict) -> tuple[str, str, str]:
+    from weeks import Week
+    week = Week.parse(info["week"])
+    expected = (paths.report(week.iso_year, week.label), paths.data(week.label), paths.state(week.label))
+    actual = (info["report_path"], info["data_path"], info.get("state_path", expected[2]))
+    if actual != expected:
+        raise ValueError("周报路径与期间不符")
+    return expected
 
 
 def collect_outputs(ctx: Ctx) -> tuple[dict[str, bytes], list[str]]:
     files, rejected = {}, []
     if ctx.out.exists():
-        patterns = allowed_paths(ctx)
+        report, data, _ = weekly_paths(vars(ctx))
         for path in sorted(p for p in ctx.out.rglob("*") if p.is_file()):
             rel = path.relative_to(ctx.out).as_posix()
-            if any(p.fullmatch(rel) for p in patterns):
+            if rel in (report, data) and not path.is_symlink():
                 files[rel] = path.read_bytes()
             else:
                 rejected.append(rel)

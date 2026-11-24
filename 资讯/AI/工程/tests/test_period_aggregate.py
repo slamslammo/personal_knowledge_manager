@@ -31,6 +31,7 @@ class PeriodAggregateTest(unittest.TestCase):
         self.assertEqual(result["coverage"], {"weeks_total": 5, "weeks_with_board": 5})
         self.assertEqual(result["missing_weeks"], [])
         self.assertGreater(len(result["ranked"]), 10)
+        self.assertNotIn("storytold/photocraft", {r["full_name"] for r in result["ranked"]})
         top = result["ranked"][0]
         self.assertEqual(top["full_name"], "morluto/rea")
         self.assertEqual(top["total"], 416739)
@@ -53,12 +54,12 @@ class PeriodAggregateTest(unittest.TestCase):
             d = pathlib.Path(td)
             (d / "2026-W40.json").write_text(json.dumps({
                 "week": "2026-W40",
-                "repos": [{"full_name": "a/b", "week_stars": 10, "days_covered": 7}],
+                "repos": [{"status": "candidate", "full_name": "a/b", "week_stars": 10, "days_covered": 7}],
             }), encoding="utf-8")
             (d / "2026-W41.json").write_text(json.dumps({
                 "week": "2026-W41",
-                "repos": [{"full_name": "a/b", "week_stars": None, "days_covered": 0},
-                          {"full_name": "c/d", "week_stars": 3, "days_covered": 2}],
+                "repos": [{"status": "candidate", "full_name": "a/b", "week_stars": None, "days_covered": 0},
+                          {"status": "candidate", "full_name": "c/d", "week_stars": 3, "days_covered": 2}],
             }), encoding="utf-8")
             r = pa.aggregate("2026-10", weeks=["2026-W40", "2026-W41", "2026-W42"],
                              weekly_dir=d)

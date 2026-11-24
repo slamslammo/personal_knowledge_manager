@@ -1,7 +1,2 @@
-# 调度入口保持不变，运行方式在项目内管理。
-# 验收完成、确认凭据跨任务可用后，再由维护者提交 mode: production。
-# acceptance 永不自动升级为 production；它真实生成周报，但只发布到本地沙箱，
-# 飞书只更新 [测试] 文档，通知由脚本跳过。
-# 2026-11-18：W45 回溯验收通过（ACCEPTANCE=passed、content_match=normalized_equal），
-# 经维护者批准切换生产；此后每次实际运行都会写 GitHub main、正式飞书文档并真实通知。
+# 正式交付写 Git、年度表并发通知。TEST_RUN=1 使用本地沙箱。
 mode: production

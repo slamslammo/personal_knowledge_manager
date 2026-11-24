@@ -12,3 +12,8 @@ notify:
 
 # lark-cli 路径（可选）。为空时自动探测：PATH → WorkBuddy 连接器路径。
 cli_path: ""
+
+annual_tables:
+  "2026":
+    base: Gz5ubGIZlak5VisZxX1cOxoDnyd
+    table: tblY38aAzLdUO9mh
