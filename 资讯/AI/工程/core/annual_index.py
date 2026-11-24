@@ -3,9 +3,9 @@ import argparse
 import fcntl
 import json
 import os
-import pathlib
 import re
 import subprocess
+import time
 from urllib.parse import quote
 
 import yaml
@@ -119,7 +119,12 @@ def sync(period, sha):
                 marker.touch(exist_ok=False)
             call("+record-upsert", *(["--record-id", rid] if rid else []),
                  "--json", json.dumps(fields, ensure_ascii=False))
-            if not same(lookup()[1]):
+            for delay in (0, 1, 3, 5):
+                if delay:
+                    time.sleep(delay)
+                if same(lookup()[1]):
+                    break
+            else:
                 raise ValueError("年度表读回尚未一致，可按同一提交补验")
         marker.unlink(missing_ok=True)
 
