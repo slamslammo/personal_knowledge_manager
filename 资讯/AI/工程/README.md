@@ -1,24 +1,28 @@
-# AI 周报工程
+# AI 资讯工程
 
-这里是 AI 周报的可执行部分。从采集上周资讯到发布 Git 周报、同步飞书，每次运行都由[执行手册](prompts/weekly.md)串起各阶段。
+这里维护周报、月报与季报的脚本、手册和测试。三类任务各自运行，正式全文发布到 GitHub，再更新飞书年度表摘要并通知。按任务查[周报手册](prompts/weekly.md)、[月报手册](prompts/monthly.md)或[季报手册](prompts/quarterly.md)。
 
 ## 目录
 
 | 位置 | 用途 |
 | --- | --- |
-| [core/](core/) | 共享工具与周报发布基座：路径、协调发布、校验、飞书交付与环境自检。 |
+| [core/](core/) | 共享路径、校验和 Git 发布工具，月季报准备与发布，飞书年度表索引与通知。 |
 | [weekly/](weekly/) | 周报专属脚本：采集、排名、草稿、整理与运行检查。 |
-| [monthly/](monthly/) · [quarterly/](quarterly/) | 月季报独立入口，准备和发布按同一期间执行。 |
+| [monthly/](monthly/) · [quarterly/](quarterly/) | 月季报导航，链接各自的固定入口、手册及数据目录。 |
 | [tests/](tests/) | 离线回归用例（必须用 `unittest discover` 整体运行）。 |
 | [prompts/](prompts/) | 任务入口、环境初始化指引和执行手册。 |
-| [config/](config/) · [templates/](templates/) | 信息源、榜单参数、运行配置和周报模板。 |
+| [config/](config/) · [templates/](templates/) | 信息源、榜单参数、运行配置和三类报告模板。 |
 | [requirements.txt](requirements.txt) | 本地开发和 CI 共用的 Python 依赖。 |
 
 ## 一期周报的流程
 
 1. **准备。** [prepare.py](weekly/prepare.py) 交出周编号、摘要和工作目录。它读取运行模式和当周状态，确定本次该生成、校验、等待还是退出。[deployment.py](weekly/deployment.py) · [coord.py](core/coord.py)
 2. **成稿。** 脚本采集、排名并生成草稿，模型核实来源、选题和写作。[采集](weekly/collect_all.py) · [排名](weekly/rank_github.py) · [草稿](weekly/draft.py)
-3. **检查与交付。** [deliver.py](weekly/deliver.py) 接收写好的周报和通知摘要，逐项报告 Git、飞书、通知与归档结果。它整理数据说明，校验正文和本次运行记录，经 `coord.py` 发布到 Git，再同步飞书并通知。[整理](weekly/finalize.py) · [内容校验](core/validate.py) · [运行检查](weekly/check_run.py) · [飞书交付](core/feishu_sync.py)
+3. **检查与交付。** [deliver.py](weekly/deliver.py) 接收写好的周报和通知摘要，先整理、校验并经 `coord.py` 发布到 Git。正式运行随后更新年度表、发通知并归档，分别给出结果。[整理](weekly/finalize.py) · [内容校验](core/validate.py) · [运行检查](weekly/check_run.py) · [年度表索引](core/annual_index.py) · [通知](core/feishu_sync.py)
+
+## 一期月报或季报的流程
+
+[期间脚本](core/period_report.py)的 `prepare` 从同一 Git 提交读取归属周报或三份月报，汇总周榜并输出本期工作目录。模型在目录内写 `body.md`。`publish` 复核输入版本与成稿，只提交当期文件，再更新年度表并通知。周报遇到月末或季末时提示到期，各期由对应入口单独触发。[期间回归](tests/test_period_publish.py)
 
 ## 本地开发
 
@@ -30,9 +34,9 @@ python3 资讯/AI/工程/core/workdir.py print
 python3 -m unittest discover -s 资讯/AI/工程/tests -t 资讯/AI/工程/tests
 ```
 
-第二条命令显示实际工作目录，默认是检出目录同级的 `.ai-weekly/work`。当次草稿和检查结果在该目录，发布后的周报、榜单与运行记录在[数据目录](../数据/)。
+第二条命令显示周报工作目录，默认是检出目录同级的 `.ai-weekly/work`。当次草稿和检查结果在该目录，发布后的各期报告、周榜与运行记录在[数据目录](../数据/)。
 
 - **修榜单**时可先运行 `python3 资讯/AI/工程/tests/test_rank.py`。涉及同分排序时，补一组 star 相同的样本，再核对名次。[榜单规格](../文档/方案.md#63-github-热度榜算法) · [榜单参数](config/ranking.yaml)
-- **修飞书交付**时用[离线用例](tests/test_feishu_sync.py)验证失败与重试。已有 Git 发布稿需要补交付时，按[部署指南](../文档/部署指南.md#补交付)使用原发布提交。
+- **修飞书交付**时按[周报交付](tests/test_deliver.py)、[期间发布](tests/test_period_publish.py)和[通知](tests/test_feishu_sync.py)定位离线用例。已有 Git 发布稿需要补交付时，按[部署指南](../文档/部署指南.md#补交付)使用原发布提交。
 
 提交改动前查[开发规范](../文档/开发规范.md)。其他规格、规划与提案见[文档目录](../文档/README.md)。
