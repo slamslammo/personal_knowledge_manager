@@ -73,3 +73,22 @@ class PeriodPublication(unittest.TestCase):
              mock.patch.object(sys, "argv", ["annual_index.py", "--period", self.period, "--sha", self.tip]):
             self.assertEqual(annual_index.main(), 0)
             sync.assert_not_called()
+
+    def test_config_missing_clears_pending_for_later_retry(self):
+        """发送前确定性失败（缺 CLI/接收人）不应留下 pending 阻塞补配置后的重试。"""
+        sha = self.tip
+        self.ctx.test = False  # 走正式分支才会尝试发通知
+        pending = self.work / "notification-pending.json"
+        seed = self.repo / paths.monthly(2025, 1)
+        seed.write_text(seed.read_text(encoding="utf-8").replace("coverage: {正文: 4周}",
+                        "coverage: {正文: 4周, 榜单: 0周}").replace("\n月报\n",
+                        "\n## 月度主线\n- 第一条有证据的结论 [来源](https://example.org/a)\n- 第二条有证据的结论\n"), encoding="utf-8")
+        (self.work / "notification.txt").write_text("通知", encoding="utf-8")
+        def fake_run(argv, **kw):
+            out = "NOTIFY=error CODE=FEISHU_CONFIG_MISSING\n"
+            return subprocess.CompletedProcess(argv, 1, out, "")
+        with mock.patch.object(pr.subprocess, "run", side_effect=fake_run), \
+             mock.patch.object(pr.coord, "read_at", return_value=("---\nmouth: 2025-01\nmonth: 2025-01\ncoverage: {正文: 4周, 榜单: 0周}\nquality: full\nsource: abc\n---\n\n## 季度主线\n\n- 第一条有证据的结论 [来源](https://example.org/a)\n- 第二条有证据的结论\n").encode()), \
+             mock.patch.object(pr, "read_json", side_effect=lambda p: json.loads(p.read_text())):
+            self.assertFalse(pr.deliver(self.ctx, self.period, sha))
+        self.assertFalse(pending.exists(), "配置缺失是发送前确定性失败，应清除 pending")
