@@ -2,16 +2,24 @@
   "schema": 1,
   "task": "ai-weekly",
   "week": "2026-W46",
-  "phase": "running",
-  "lock": {
-    "purpose": "run",
+  "phase": "produced",
+  "lock": null,
+  "attempts": 2,
+  "produced": {
     "run_id": "workbuddy-20261125-120547-2476",
     "platform": "workbuddy",
-    "acquired_at": "2026-11-25T12:05:47+08:00",
-    "lease_until": "2026-11-25T13:05:47+08:00"
+    "at": "2026-11-25T12:13:53+08:00",
+    "quality": "full",
+    "mode": "backfill",
+    "files": [
+      "资讯/AI/数据/github-weekly/2026-W46.json",
+      "资讯/AI/数据/周报/2026/2026-W46.md"
+    ],
+    "gates": {
+      "check_run": "pass",
+      "codes": []
+    }
   },
-  "attempts": 2,
-  "produced": null,
   "verified": null,
   "runs": [
     {
@@ -30,7 +38,25 @@
       "action": "run",
       "mode": "backfill",
       "reason": "workbuddy 的租约已于 2026-11-24T15:12:58+08:00 过期",
-      "outcome": "running"
+      "outcome": "produced:full",
+      "ended_at": "2026-11-25T12:13:53+08:00",
+      "codes": [],
+      "summary": {
+        "events": 44,
+        "by_status": {
+          "info": 21,
+          "ok": 7,
+          "warn": 15,
+          "error": 1
+        },
+        "codes": {
+          "SRC_SKIPPED": 1,
+          "ARTICLE_UNREADABLE": 12,
+          "SRC_TIMEOUT": 1,
+          "GATE_NOT_OFFICIAL": 1
+        },
+        "searches": 20
+      }
     }
   ],
   "events": [
@@ -115,6 +141,511 @@
         "run_id": "workbuddy-20261125-120547-2476",
         "test": false
       }
+    },
+    {
+      "ts": "2026-11-25T12:05:51+08:00",
+      "seq": 3,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "协调",
+      "event": "取得运行锁",
+      "status": "ok",
+      "detail": "workbuddy 的租约已于 2026-11-24T15:12:58+08:00 过期",
+      "data": {
+        "mode": "backfill",
+        "commit": "4f0017a43d2bb0f9e8d1ac4497b91cfda4a26cf7"
+      }
+    },
+    {
+      "ts": "2026-11-25T12:06:24+08:00",
+      "seq": 4,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "Trendshift",
+      "status": "ok",
+      "detail": "25 项，1 项每日数据不足 7 天",
+      "data": {
+        "seconds": 32.2
+      }
+    },
+    {
+      "ts": "2026-11-25T12:06:27+08:00",
+      "seq": 5,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "HN",
+      "status": "ok",
+      "detail": "460 条（不低于 100 分的 313 条）",
+      "data": {
+        "seconds": 3.3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:07:22+08:00",
+      "seq": 6,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "Hugging Face",
+      "status": "error",
+      "code": "SRC_SKIPPED",
+      "detail": "URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "seconds": 54.7
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 7,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://apnews.com/article/nvidia-megaspeed-china-singapore-huang-5403f152a601cf82ce939f1d24fffa0f：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 8,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://www.spacex.com/launches/starship-flight-15：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 9,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://www.nbcnews.com/news/us-news/faa-orders-nationwide-ground-stop-departing-flights-reasons-safety-rcna609247：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 10,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://www.wsj.com/business/nvidia-is-preparing-to-oust-nvidia-ceo-jensen-huang-30f421ad：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 11,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://www.techpowerup.com/354814/nvidia-allegedly-engineered-scarcity-by-funding-ai-startups-to-buy-its-gpus：HTTP 403",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 12,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://github.com/aws/aws-emulator：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 13,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://twitter.com/LibreOffice/status/2121205272479998268：URLError: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 14,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://twitter.com/shanemelaugh/status/2119192075505893695：URLError: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 15,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://ketchup3d.github.io/app/：HTTP 404",
+      "data": {
+        "attempts": 1
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 16,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://github.com/simpsoka/zigzag：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 17,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://github.com/thisisme6598/gemini_files/：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 18,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "code": "ARTICLE_UNREADABLE",
+      "detail": "https://github.com/janestreet/agent_skills/blob/master/socratic-tutor/SKILL.md：URLError: <urlopen error Tunnel connection failed: 502 Bad Gateway>",
+      "data": {
+        "attempts": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:08:45+08:00",
+      "seq": 19,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "采集",
+      "event": "原文读取",
+      "status": "warn",
+      "detail": "28/40 篇成功，官方来源 4 篇，不可读 12 篇",
+      "data": {
+        "seconds": 83.5
+      }
+    },
+    {
+      "ts": "2026-11-25T12:09:04+08:00",
+      "seq": 20,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "排名",
+      "event": "rank_github",
+      "status": "warn",
+      "code": "SRC_TIMEOUT",
+      "detail": "Top 5：morluto/rea, GoogleChrome/modern-web-guidance, meta/astryx, storytold/craft-anything, Ebony-Vinyl/dsh-our-free-model；OSS Insight 失败 1 个：NotRexed/Hookshot（HTTP 404）"
+    },
+    {
+      "ts": "2026-11-25T12:09:04+08:00",
+      "seq": 21,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "写作",
+      "event": "草稿",
+      "status": "ok",
+      "detail": "/Users/mojiawen/Documents/个人知识梳理/.ai-weekly/work/out/资讯/AI/数据/周报/2026/2026-W46.md"
+    },
+    {
+      "ts": "2026-11-25T12:10:17+08:00",
+      "seq": 22,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Claude Fable 5.2 Mythos 5.2 Anthropic",
+      "data": {
+        "n": 1
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:17+08:00",
+      "seq": 23,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Gemini 4 Hydrogen Orchestrator Antigravity",
+      "data": {
+        "n": 2
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:17+08:00",
+      "seq": 24,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：AlphaProof Code DeepMind Signal 验证",
+      "data": {
+        "n": 3
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:17+08:00",
+      "seq": 25,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Anthropic IPO Nasdaq ANT 定价",
+      "data": {
+        "n": 4
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:40+08:00",
+      "seq": 26,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播分析：United Airlines bans AI agents booking",
+      "data": {
+        "n": 5
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:40+08:00",
+      "seq": 27,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播分析：Goldman Sachs limits Claude Code",
+      "data": {
+        "n": 6
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:40+08:00",
+      "seq": 28,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播分析：Nvidia CEO transition Jensen Huang resigns",
+      "data": {
+        "n": 7
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:59+08:00",
+      "seq": 29,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "④ 核实文章：All AI generated code should be open source",
+      "data": {
+        "n": 8
+      }
+    },
+    {
+      "ts": "2026-11-25T12:10:59+08:00",
+      "seq": 30,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "④ 核实文章：Gemini Drive Gmail human annotators",
+      "data": {
+        "n": 9
+      }
+    },
+    {
+      "ts": "2026-11-25T12:11:18+08:00",
+      "seq": 31,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Apple Harbor local AI Mac app",
+      "data": {
+        "n": 10
+      }
+    },
+    {
+      "ts": "2026-11-25T12:11:18+08:00",
+      "seq": 32,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：Gemini Decisions API",
+      "data": {
+        "n": 11
+      }
+    },
+    {
+      "ts": "2026-11-25T12:11:18+08:00",
+      "seq": 33,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "② 核实：United Airlines AI agents ban",
+      "data": {
+        "n": 12
+      }
+    },
+    {
+      "ts": "2026-11-25T12:11:48+08:00",
+      "seq": 34,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播分析：Muse Ember Meta smallest efficient model",
+      "data": {
+        "n": 13
+      }
+    },
+    {
+      "ts": "2026-11-25T12:11:48+08:00",
+      "seq": 35,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播分析：AI bubble Wall Street November 2026",
+      "data": {
+        "n": 14
+      }
+    },
+    {
+      "ts": "2026-11-25T12:11:48+08:00",
+      "seq": 36,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "③ 传播分析：Nvidia engineered scarcity GPU funding",
+      "data": {
+        "n": 15
+      }
+    },
+    {
+      "ts": "2026-11-25T12:12:07+08:00",
+      "seq": 37,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "⑤ 洞察：Claude Code verification loops 90 percent",
+      "data": {
+        "n": 16
+      }
+    },
+    {
+      "ts": "2026-11-25T12:12:07+08:00",
+      "seq": 38,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "⑤ 洞察：United Airlines first airline AI agent ban",
+      "data": {
+        "n": 17
+      }
+    },
+    {
+      "ts": "2026-11-25T12:12:28+08:00",
+      "seq": 39,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "④ 核实文章：Godel notebooks Claude 663 theorems",
+      "data": {
+        "n": 18
+      }
+    },
+    {
+      "ts": "2026-11-25T12:12:28+08:00",
+      "seq": 40,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "④ 核实文章：Maya site AI agents LiDAR",
+      "data": {
+        "n": 19
+      }
+    },
+    {
+      "ts": "2026-11-25T12:12:40+08:00",
+      "seq": 41,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "搜索",
+      "event": "search",
+      "status": "info",
+      "detail": "④ 核实文章：AI usage generates fragile codebase",
+      "data": {
+        "n": 20
+      }
+    },
+    {
+      "ts": "2026-11-25T12:13:35+08:00",
+      "seq": 42,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "写作",
+      "event": "finalize",
+      "status": "ok",
+      "detail": "数据说明已刷新，联网搜索 20 次"
+    },
+    {
+      "ts": "2026-11-25T12:13:35+08:00",
+      "seq": 43,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "检查",
+      "event": "门槛",
+      "status": "warn",
+      "code": "GATE_NOT_OFFICIAL",
+      "detail": "② 缺少官方或一手来源链接"
+    },
+    {
+      "ts": "2026-11-25T12:13:53+08:00",
+      "seq": 44,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "写作",
+      "event": "finalize",
+      "status": "ok",
+      "detail": "数据说明已刷新，联网搜索 20 次"
     }
   ]
 }
