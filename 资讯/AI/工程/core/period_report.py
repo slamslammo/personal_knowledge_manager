@@ -34,7 +34,10 @@ def prepare(ctx, period, sha):
     weeks = weeks_for(period)
     reports = source_files(period, weeks)
     board_dir = ctx.work / "boards"
-    board_dir.mkdir(exist_ok=True)
+    # 某些宿主对 pathlib.mkdir 的 shim 即使带 exist_ok=True 也会抛 EEXIST，
+    # 先显式判断目录已存在再跳过，避免把本地环境差异当成发布失败。
+    if not board_dir.is_dir():
+        board_dir.mkdir(exist_ok=True)
     material = []
     blobs = {}
     notes = []
@@ -189,7 +192,10 @@ def deliver(ctx, period, sha):
         write_json(receipt, {"sha": sha})
         pending.unlink()
         return index.returncode == 0
-    if "NOTIFY=skipped" in notice.stdout or "NOTIFY=failed" in notice.stdout:
+    if ("NOTIFY=skipped" in notice.stdout or "NOTIFY=failed" in notice.stdout
+            or "CODE=FEISHU_CONFIG_MISSING" in notice.stdout):
+        # 发送前的确定性失败（缺 CLI / 接收人）永远不会被重试修好，除非配置先补好；
+        # 清除 pending 让补好配置后的下一次发布可以重试。真正的未知结果仍保留 pending。
         pending.unlink()
     return False
 
