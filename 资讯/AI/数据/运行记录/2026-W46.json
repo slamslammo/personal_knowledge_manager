@@ -5,12 +5,12 @@
   "phase": "running",
   "lock": {
     "purpose": "run",
-    "run_id": "workbuddy-20261120-185111-p8nu",
+    "run_id": "workbuddy-20261125-120547-2476",
     "platform": "workbuddy",
-    "acquired_at": "2026-11-24T14:12:58+08:00",
-    "lease_until": "2026-11-24T15:12:58+08:00"
+    "acquired_at": "2026-11-25T12:05:47+08:00",
+    "lease_until": "2026-11-25T13:05:47+08:00"
   },
-  "attempts": 1,
+  "attempts": 2,
   "produced": null,
   "verified": null,
   "runs": [
@@ -21,6 +21,15 @@
       "action": "run",
       "mode": "normal",
       "reason": "本周还没有运行",
+      "outcome": "running"
+    },
+    {
+      "run_id": "workbuddy-20261125-120547-2476",
+      "platform": "workbuddy",
+      "started_at": "2026-11-25T12:05:47+08:00",
+      "action": "run",
+      "mode": "backfill",
+      "reason": "workbuddy 的租约已于 2026-11-24T15:12:58+08:00 过期",
       "outcome": "running"
     }
   ],
@@ -84,6 +93,26 @@
       "detail": "workbuddy 2026-W46 远端 origin",
       "data": {
         "run_id": "workbuddy-20261120-185111-p8nu",
+        "test": false
+      }
+    },
+    {
+      "ts": "2026-11-25T12:05:47+08:00",
+      "seq": 1,
+      "step": "飞书",
+      "event": "预检",
+      "status": "ok"
+    },
+    {
+      "ts": "2026-11-25T12:05:47+08:00",
+      "seq": 2,
+      "run_id": "workbuddy-20261125-120547-2476",
+      "step": "协调",
+      "event": "start",
+      "status": "info",
+      "detail": "workbuddy 2026-W46 远端 origin",
+      "data": {
+        "run_id": "workbuddy-20261125-120547-2476",
         "test": false
       }
     }
