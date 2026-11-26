@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 import yaml
 
-from annual_index import published_row
+from annual_index import published_row, record_receipt_path
 
 import coord
 import paths
@@ -163,23 +163,61 @@ def publish(ctx, period, tip):
     return sha
 
 
+# 年度表「关键信息」用 ①②③ 逐行列出核心事实，通知里换成 1）2）3）。
+NOTICE_NUMBERS = {"①": "1）", "②": "2）", "③": "3）", "④": "4）", "⑤": "5）"}
+
+
+def notification_text(period, sha, fields, record_url=None, test=False):
+    """生成月/季报的飞书 Markdown 通知，与周报同款呈现。
+
+    全文唯一真值源仍是 Git：年度表当期行保留 GitHub 正文链接供检索，通知里
+    不再暴露它，也不重复贴原文链接；改放年度表当期记录的直达链接（年报：），
+    链接来自 annual_index.py 的运行时收据，取不到就不写这一行、不伪造。
+    """
+    layer = fields["层级"][0]
+    section = "季度主线" if layer == "季" else "月度主线"
+    target = "本地沙箱" if test else "main"
+    lines = [f"【AI {layer}报 {period}】", "", f"**{section}**"]
+    for line in fields["关键信息"].splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        marker, body = line[0], line[1:].strip()
+        num = NOTICE_NUMBERS.get(marker)
+        lines.append(f"{num}**{body}**" if num else f"- **{body}**")
+    lines += ["", f"提交：已推送到{target}（{sha[:7]}）"]
+    if record_url:
+        lines.append(f"年报：{record_url}")
+    return "\n".join(lines) + "\n"
+
+
 def deliver(ctx, period, sha):
     content = coord.read_at(ctx, sha, paths.period_report(period)).decode()
     fields = published_row(period, sha, content, False)
-    url = str(ctx.work / "published.md") if ctx.test else fields["报告链接"]
     (ctx.work / "published.md").write_bytes(content.encode())
     note = ctx.work / "notification.txt"
-    note.write_text(f"【AI{fields['层级'][0]}报 {period}】\n{fields['关键信息']}\n{url}\n")
     if ctx.test:
+        note.write_text(notification_text(period, sha, fields, test=True))
         print("INDEX=skipped NOTIFY=skipped")
         return True
     env = dict(os.environ, AI_WEEKLY_TMP=str(ctx.work))
     core = pathlib.Path(__file__).parent
+    # 先更新年度表，才有当期记录的直达链接；通知在索引之后生成，才能带上链接。
     index = subprocess.run([sys.executable, str(core / "annual_index.py"), "--period", period,
                             "--sha", sha], env=env)
+    record_url = None
+    receipt_path = record_receipt_path()
+    if receipt_path.is_file():
+        data = read_json(receipt_path) or {}
+        if data.get("period") == period and data.get("sha") == sha:
+            url = data.get("url")
+            if isinstance(url, str) and url.startswith("https://"):
+                record_url = url
     receipt = ctx.work / "notification-delivered.json"
     if receipt.exists() and read_json(receipt).get("sha") == sha:
+        # 通知已确认发出：只补索引，不重写通知文件、不重发。
         return index.returncode == 0
+    note.write_text(notification_text(period, sha, fields, record_url))
     pending = ctx.work / "notification-pending.json"
     if pending.exists():
         print("NOTIFY=unknown 请先核对上次收件")

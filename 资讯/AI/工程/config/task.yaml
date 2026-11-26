@@ -59,5 +59,9 @@ secrets:                      # 托管平台通常自动注入；自建调度时
     scope: 只对本仓库有内容写权限（细粒度 token 或部署密钥）
 
 notify:
+  # 通知用飞书 Markdown：标题只留栏目与期间，小节标题加粗、要点用 1）编号、
+  # 核心内容加粗。全文唯一源是 Git；通知不贴原文 URL 与 GitHub 全文链接，
+  # 尾部给年度表当期记录直达链接（年报：），由 annual_index.py 写收据后追加。
   banner_format: "【AI 周报 W{WNUM}】"
-  report_url: https://github.com/slamslammo/personal_knowledge_manager/blob/main/{URL 编码后的周报路径}
+  monthly_banner_format: "【AI 月报 {PERIOD}】"
+  quarterly_banner_format: "【AI 季报 {PERIOD}】"

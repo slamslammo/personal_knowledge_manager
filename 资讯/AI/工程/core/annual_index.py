@@ -54,6 +54,31 @@ def record_link(call, record_id):
         return None
 
 
+def record_receipt_path():
+    """年度表记录直达链接收据的位置；索引写入与通知读取共用同一路径契约。
+
+    刻意固定在运行时根/work 下、不随期间子目录变化：周报、月报、季报都按
+    period+sha 校验后读取，避免各链路各自猜路径导致取不到或读到过期链接。
+    """
+    return paths.runtime_root(REPO_DIR) / paths.WORK_DIR_NAME / paths.FILES["annual_index"]
+
+
+def write_receipt(period, sha, record_id, url):
+    """把当期记录直达链接写入运行时收据，供通知 footer 使用。
+
+    链接无效时不写；收据不在仓库内，清理时由 CLEAN_PRESERVE 保留。
+    """
+    if not (isinstance(url, str) and url.startswith("https://")):
+        return False
+    receipt = record_receipt_path()
+    # 某些宿主的 mkdir shim 带 exist_ok 仍抛 EEXIST，先判断再建。
+    if not receipt.parent.is_dir():
+        receipt.parent.mkdir(parents=True, exist_ok=True)
+    write_json(receipt, {"period": period, "sha": sha,
+                         "record_id": record_id, "url": url})
+    return True
+
+
 def published_row(period, sha, text, has_board):
     year, label = period.split("-")
     if label.startswith("W"):
@@ -163,12 +188,7 @@ def sync(period, sha):
         final_id = rid or lookup()[0]
         url = record_link(call, final_id) if final_id else None
         if url:
-            receipt = paths.runtime_root(REPO_DIR) / paths.WORK_DIR_NAME / paths.FILES["annual_index"]
-            # 某些宿主的 mkdir shim 带 exist_ok 仍抛 EEXIST，先判断再建。
-            if not receipt.parent.is_dir():
-                receipt.parent.mkdir(parents=True, exist_ok=True)
-            write_json(receipt, {"period": period, "sha": sha,
-                                 "record_id": final_id, "url": url})
+            write_receipt(period, sha, final_id, url)
         marker.unlink(missing_ok=True)
 
 
