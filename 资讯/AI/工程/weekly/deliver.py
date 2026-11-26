@@ -16,8 +16,6 @@ import pathlib
 import re
 import subprocess
 import sys
-from urllib.parse import quote
-
 _CORE = pathlib.Path(__file__).resolve().parents[1] / "core"
 if str(_CORE) not in sys.path:
     sys.path.insert(0, str(_CORE))
@@ -53,7 +51,7 @@ class Runner:
 
 def failure_notice(work: pathlib.Path, week: str, code: str, step: str, detail: str) -> pathlib.Path:
     path = work / "notification-failure.txt"
-    path.write_text(f"【AI周报 W{week[-2:]}｜失败】{code}。\n"
+    path.write_text(f"【AI 周报 W{week[-2:]}｜失败】{code}。\n"
                     f"停在：{step}\n原因：{detail}\n已完成：见 {work / 'checks.txt'}\n",
                     encoding="utf-8")
     return path
@@ -153,21 +151,29 @@ def deliver() -> int:
             return "error"
         return status or "unknown"
 
-    # 交付源收敛：GitHub 是唯一全文源，不再创建/更新/读回飞书 docx 副本。
-    # 通知仍走飞书 bot（送达渠道），正文链接指向本次已发布的 commit（不可变）。
+    # 全文仍只在 GitHub；通知不再附 GitHub 全文链接，改放年度表当期记录的直达链接。
+    # 链接由 annual_index.py 在索引成功后写入运行时收据；取不到就不写这一行，不伪造。
     target = "本地沙箱" if test else "main"
-    url = f"https://github.com/slamslammo/personal_knowledge_manager/blob/{sha}/{quote(ctx['report_path'])}"
-    if test:
-        url = str(work / "out" / ctx["report_path"])
     index = "skipped" if test else stage("annual_index.py", "INDEX", "--period", args.week, "--sha", sha)
+    record_url = None
+    if not test:
+        receipt = work / paths.FILES["annual_index"]
+        if receipt.is_file():
+            data = read_json(receipt) or {}
+            if data.get("period") == args.week and data.get("sha") == sha:
+                url = data.get("url")
+                if isinstance(url, str) and url.startswith("https://"):
+                    record_url = url
     quality_text = {"full": "通过", "degraded": "降级", "check_failed": "检查未通过"}[quality]
     completeness = "通过" if check.returncode == 0 else codes
     footer = (f"校验：{quality_text}\n完整性：{completeness}，联网搜索 {tracelog.search_count(work)} 次"
-              f"\n提交：已推送到{target}（{sha[:7]}）\n全文：{url}")
+              f"\n提交：已推送到{target}（{sha[:7]}）")
+    if record_url:
+        footer += f"\n年报：{record_url}"
     for path in (note, short):
         body = path.read_text(encoding="utf-8").rstrip()
         if quality != "full":
-            body = re.sub(r"^(【AI周报 W\d{2}[^】]*)】", rf"\1｜{quality_text}】", body, count=1)
+            body = re.sub(r"^(【AI\s*周报 W\d{2}[^】]*)】", rf"\1｜{quality_text}】", body, count=1)
         path.write_text(f"{body}\n\n{footer}\n", encoding="utf-8")
     notify = stage("feishu_sync.py", "NOTIFY", "notify", "--file", str(note), "--fallback-file", str(short))
     if notify != "sent":
@@ -175,7 +181,7 @@ def deliver() -> int:
     archive = stage("workdir.py", "ARCHIVE", "archive", "--week", args.week)
     ok = (index == ("skipped" if test else "updated") and archive == "ok" and notify == ("skipped" if test else "sent"))
     emit("ok" if ok else "partial", week=args.week, sha=sha, quality=quality,
-         notify=notify, archive=archive, index=index, url=url)
+         notify=notify, archive=archive, index=index, record_url=record_url or "none")
     return 0 if ok else 1
 
 
