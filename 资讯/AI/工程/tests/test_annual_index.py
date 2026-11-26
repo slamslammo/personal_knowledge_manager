@@ -8,6 +8,7 @@ CellValue 约定传裸 URL，但 +record-list --format json 读回时会渲染�
 import pathlib
 import sys
 import unittest
+from unittest import mock
 
 CORE = pathlib.Path(__file__).resolve().parents[1] / "core"
 sys.path.insert(0, str(CORE))
@@ -84,6 +85,63 @@ class RowMatching(unittest.TestCase):
     def test_other_field_mismatch_still_detected(self):
         row = dict(self.fields, **{"标题": "改过的标题"})
         self.assertFalse(annual_index.row_matches(row, self.fields))
+
+
+QUARTER_TEXT = """---
+quality: full
+coverage: {正文: 13周, 榜单: 13周}
+source: abc
+---
+
+## 季度主线
+
+- 第一条有证据的结论 [来源](https://example.org/a)
+- 第二条有证据的结论
+- 第三条有证据的结论
+"""
+
+
+class QuarterRow(unittest.TestCase):
+    def test_quarter_period_is_indexed_as_quarter_summary(self):
+        """季报也能生成年度表行，通知链路才能共用同一份记录链接收据。"""
+        fields = annual_index.published_row("2026-Q4", SHA, QUARTER_TEXT, False)
+        self.assertEqual(fields["层级"], ["季"])
+        self.assertEqual(fields["期间编号"], "Q4")
+        self.assertEqual(fields["归属月"], "00 · 季度汇总")
+        self.assertEqual(fields["归属季"], ["Q4"])
+        lines = fields["关键信息"].splitlines()
+        self.assertEqual(len(lines), 3)
+        self.assertTrue(all(line[0] in "①②③" for line in lines))
+
+
+class RecordReceipt(unittest.TestCase):
+    def test_path_uses_fixed_filename_under_runtime_work(self):
+        import paths
+        p = annual_index.record_receipt_path()
+        self.assertEqual(p.name, paths.FILES["annual_index"])
+        self.assertEqual(p.parent.name, paths.WORK_DIR_NAME)
+
+    def test_write_receipt_records_period_sha_and_url(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            target = pathlib.Path(tmp) / "annual-index.json"
+            with mock.patch.object(annual_index, "record_receipt_path", return_value=target):
+                self.assertTrue(annual_index.write_receipt(
+                    "2026-Q4", SHA, "rec1", "https://example.feishu.cn/record/abc"))
+            data = json.loads(target.read_text(encoding="utf-8"))
+            self.assertEqual(data["period"], "2026-Q4")
+            self.assertEqual(data["sha"], SHA)
+            self.assertEqual(data["record_id"], "rec1")
+            self.assertEqual(data["url"], "https://example.feishu.cn/record/abc")
+
+    def test_invalid_link_is_not_written(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            target = pathlib.Path(tmp) / "annual-index.json"
+            with mock.patch.object(annual_index, "record_receipt_path", return_value=target):
+                self.assertFalse(annual_index.write_receipt("2026-Q4", SHA, "rec1", "not-a-url"))
+            self.assertFalse(target.exists())
 
 
 if __name__ == "__main__":

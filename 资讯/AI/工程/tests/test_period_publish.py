@@ -89,6 +89,124 @@ class PeriodPublication(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 1, out, "")
         with mock.patch.object(pr.subprocess, "run", side_effect=fake_run), \
              mock.patch.object(pr.coord, "read_at", return_value=("---\nmouth: 2025-01\nmonth: 2025-01\ncoverage: {正文: 4周, 榜单: 0周}\nquality: full\nsource: abc\n---\n\n## 季度主线\n\n- 第一条有证据的结论 [来源](https://example.org/a)\n- 第二条有证据的结论\n").encode()), \
+             mock.patch.object(pr, "record_receipt_path", return_value=self.work / "no-receipt.json"), \
              mock.patch.object(pr, "read_json", side_effect=lambda p: json.loads(p.read_text())):
             self.assertFalse(pr.deliver(self.ctx, self.period, sha))
         self.assertFalse(pending.exists(), "配置缺失是发送前确定性失败，应清除 pending")
+
+
+NOTICE_SHA = "b" * 40
+MONTH_FIELDS = {
+    "层级": ["月"],
+    "关键信息": "①旗舰模型进入价格战：三连发\n②agent 竞争转向责任\n③开放权重与主权部署",
+}
+MONTH_TEXT = """---
+month: 2026-10
+quality: full
+coverage: {正文: 5周, 榜单: 5周}
+source: abc
+---
+
+## 月度主线
+
+- 第一条有证据的结论 [来源](https://example.org/a)
+- 第二条有证据的结论
+- 第三条有证据的结论
+"""
+
+
+class PeriodNotificationText(unittest.TestCase):
+    def test_markdown_notice_has_no_original_or_github_links(self):
+        text = pr.notification_text("2026-10", NOTICE_SHA, MONTH_FIELDS)
+        self.assertTrue(text.startswith("【AI 月报 2026-10】\n"))
+        self.assertIn("**月度主线**", text)
+        self.assertIn("1）**旗舰模型进入价格战：三连发**", text)
+        self.assertIn("2）**agent 竞争转向责任**", text)
+        self.assertIn("3）**开放权重与主权部署**", text)
+        self.assertNotIn("/blob/", text)
+        self.assertNotIn("全文：", text)
+        self.assertNotIn("年报：", text)
+        self.assertNotIn("https://", text)
+
+    def test_record_link_replaces_github_fulltext_link(self):
+        text = pr.notification_text("2026-10", NOTICE_SHA, MONTH_FIELDS,
+                                    "https://mcnx8y9g5bnw.feishu.cn/record/abc123")
+        self.assertIn("年报：https://mcnx8y9g5bnw.feishu.cn/record/abc123", text)
+        self.assertNotIn("/blob/", text)
+        self.assertNotIn("全文：", text)
+
+    def test_quarter_notice_title_and_section(self):
+        text = pr.notification_text("2026-Q4", NOTICE_SHA, dict(MONTH_FIELDS, **{"层级": ["季"]}))
+        self.assertTrue(text.startswith("【AI 季报 2026-Q4】\n"))
+        self.assertIn("**季度主线**", text)
+
+    def test_sandbox_notice_marks_local_target_and_has_no_link(self):
+        text = pr.notification_text("2026-10", NOTICE_SHA, MONTH_FIELDS, test=True)
+        self.assertIn("提交：已推送到本地沙箱", text)
+        self.assertNotIn("年报：", text)
+        self.assertNotIn("/blob/", text)
+
+
+class PeriodDeliverNotification(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = pathlib.Path(tmp.name)
+        self.work = self.root / "work"
+        self.work.mkdir()
+        self.ctx = SimpleNamespace(repo=self.root, work=self.work, test=False,
+                                   remote="origin", branch="main")
+        self.sha = "c" * 40
+        self.period = "2026-10"
+        self.receipt = self.work / "annual-index.json"
+        self.runs = []
+
+    def fake_run(self, argv, **kw):
+        self.runs.append(argv)
+        return subprocess.CompletedProcess(argv, 0, "NOTIFY=sent\n", "")
+
+    def deliver(self):
+        with mock.patch.object(pr.coord, "read_at", return_value=MONTH_TEXT.encode()), \
+             mock.patch.object(pr, "record_receipt_path", return_value=self.receipt), \
+             mock.patch.object(pr.subprocess, "run", side_effect=self.fake_run):
+            return pr.deliver(self.ctx, self.period, self.sha)
+
+    def write_receipt(self, period, sha, url):
+        self.receipt.write_text(json.dumps({
+            "period": period, "sha": sha, "record_id": "rec1", "url": url,
+        }, ensure_ascii=False), encoding="utf-8")
+
+    def test_notice_uses_receipt_record_link(self):
+        self.write_receipt(self.period, self.sha, "https://mcnx8y9g5bnw.feishu.cn/record/abc123")
+        self.assertTrue(self.deliver())
+        notice = (self.work / "notification.txt").read_text(encoding="utf-8")
+        self.assertIn("年报：https://mcnx8y9g5bnw.feishu.cn/record/abc123", notice)
+        self.assertNotIn("/blob/", notice)
+        self.assertNotIn("全文：", notice)
+        self.assertTrue((self.work / "notification-delivered.json").exists())
+
+    def test_no_receipt_does_not_fabricate_link(self):
+        self.assertTrue(self.deliver())
+        notice = (self.work / "notification.txt").read_text(encoding="utf-8")
+        self.assertNotIn("年报：", notice)
+        self.assertNotIn("/blob/", notice)
+        self.assertNotIn("https://", notice)
+
+    def test_stale_receipt_is_ignored(self):
+        self.write_receipt("2026-W47", "d" * 40, "https://mcnx8y9g5bnw.feishu.cn/record/stale")
+        self.assertTrue(self.deliver())
+        notice = (self.work / "notification.txt").read_text(encoding="utf-8")
+        self.assertNotIn("年报：", notice)
+        self.assertNotIn("/blob/", notice)
+
+    def test_index_runs_before_notice_is_built(self):
+        """通知必须晚于年度表索引，才能带上当期记录链接。"""
+        self.write_receipt(self.period, self.sha, "https://mcnx8y9g5bnw.feishu.cn/record/abc123")
+        self.assertTrue(self.deliver())
+        index_at = next(i for i, a in enumerate(self.runs) if "annual_index.py" in str(a[1]))
+        notify_at = next(i for i, a in enumerate(self.runs) if "feishu_sync.py" in str(a[1]))
+        self.assertLess(index_at, notify_at)
+
+
+if __name__ == "__main__":
+    unittest.main()
