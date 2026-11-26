@@ -33,6 +33,10 @@ class DeliverTest(unittest.TestCase):
         self.work = pathlib.Path(self.tmp.name)
         (self.work / paths.FILES["notification"]).write_text("通知", encoding="utf-8")
         (self.work / paths.FILES["notification_short"]).write_text("精简", encoding="utf-8")
+        (self.work / paths.FILES["annual_index"]).write_text(json.dumps({
+            "period": "2026-W43", "sha": SHA, "record_id": "rec1",
+            "url": "https://mcnx8y9g5bnw.feishu.cn/record/abc123",
+        }), encoding="utf-8")
         self.ctx = {"week": "2026-W43", "run_id": "r1", "test": False,
                     "report_path": paths.report(2026, "2026-W43")}
         self.calls = []
@@ -88,7 +92,9 @@ class DeliverTest(unittest.TestCase):
         feishu_args = [a for s, a in self.calls if s == "feishu_sync.py"]
         self.assertEqual([a[0] for a in feishu_args], ["notify"])
         notice = (self.work / paths.FILES["notification"]).read_text(encoding="utf-8")
-        self.assertIn("/blob/" + SHA, notice)
+        self.assertIn("年报：https://mcnx8y9g5bnw.feishu.cn/record/abc123", notice)
+        self.assertNotIn("/blob/", notice)
+        self.assertNotIn("全文：", notice)
         self.assertNotIn("飞书：同步", notice)
 
     def test_codes_triggers_rework_without_publish(self):
@@ -138,7 +144,8 @@ class DeliverTest(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("DELIVER=partial", out)
         self.assertIn("NOTIFY=unknown ARCHIVE=error", out)
-        self.assertIn("/blob/" + SHA, out)
+        self.assertIn("RECORD_URL=https://mcnx8y9g5bnw.feishu.cn/record/abc123", out)
+        self.assertNotIn("/blob/", out)
 
     def test_sandbox_context_without_flag_uses_test_h1(self):
         self.ctx["test"] = True
@@ -162,7 +169,18 @@ class DeliverTest(unittest.TestCase):
         self.responses["coord.py"] = done(f"ACTION=published\ncommit={SHA}；周报被手工修改过，未覆盖")
         self.assertEqual(self.run_deliver()[0], 0)
         notice = (self.work / paths.FILES["notification"]).read_text(encoding="utf-8")
-        self.assertIn("/blob/" + SHA, notice)
+        self.assertIn("年报：https://mcnx8y9g5bnw.feishu.cn/record/abc123", notice)
+        self.assertNotIn("/blob/", notice)
+
+    def test_missing_receipt_has_no_fabricated_link(self):
+        (self.work / paths.FILES["annual_index"]).unlink()
+        self.responses = self.ok_chain()
+        rc, out = self.run_deliver()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("RECORD_URL=none", out)
+        notice = (self.work / paths.FILES["notification"]).read_text(encoding="utf-8")
+        self.assertNotIn("年报：", notice)
+        self.assertNotIn("/blob/", notice)
 
     def test_missing_notification_files_fails_early(self):
         (self.work / paths.FILES["notification"]).unlink()

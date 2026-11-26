@@ -87,6 +87,7 @@ FILES = {
     "feishu_mode": "feishu-mode.json",
     "feishu_delivery_check": "feishu-delivery-check.json",
     "feishu_notify_receipt": "feishu-notify-receipt.json",
+    "annual_index": "annual-index.json",
     "manifest": "MANIFEST.json",
 }
 
@@ -95,6 +96,7 @@ CLEAN_PRESERVE = frozenset({
     FILES["feishu"],
     FILES["feishu_delivery_check"],
     FILES["feishu_notify_receipt"],
+    FILES["annual_index"],
     FILES["deployment"],
 })
 

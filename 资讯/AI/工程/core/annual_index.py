@@ -12,7 +12,7 @@ import yaml
 
 import feishu_sync
 import paths
-from common import REPO_DIR, load_config
+from common import REPO_DIR, load_config, write_json
 from weeks import Week
 
 
@@ -41,6 +41,17 @@ def row_matches(row, fields):
         if actual != value:
             return False
     return True
+
+
+def record_link(call, record_id):
+    """取年度表记录的直达链接；取不到返回 None，不阻塞索引主流程。"""
+    try:
+        data = call("+record-share-link-create", "--record-id", record_id)
+        links = data.get("record_share_links") or {}
+        url = links.get(record_id)
+        return url if isinstance(url, str) and url.startswith("https://") else None
+    except (ValueError, KeyError, TypeError):
+        return None
 
 
 def published_row(period, sha, text, has_board):
@@ -147,6 +158,17 @@ def sync(period, sha):
                     break
             else:
                 raise ValueError("年度表读回尚未一致，可按同一提交补验")
+        # 通知 footer 用年度表记录直达链接，而不是 GitHub 全文链接。
+        # 分享链接是只读命令；取不到时不让索引主流程失败。
+        final_id = rid or lookup()[0]
+        url = record_link(call, final_id) if final_id else None
+        if url:
+            receipt = paths.runtime_root(REPO_DIR) / paths.WORK_DIR_NAME / paths.FILES["annual_index"]
+            # 某些宿主的 mkdir shim 带 exist_ok 仍抛 EEXIST，先判断再建。
+            if not receipt.parent.is_dir():
+                receipt.parent.mkdir(parents=True, exist_ok=True)
+            write_json(receipt, {"period": period, "sha": sha,
+                                 "record_id": final_id, "url": url})
         marker.unlink(missing_ok=True)
 
 

@@ -42,6 +42,25 @@ class LinkNormalization(unittest.TestCase):
         self.assertEqual(annual_index.normalize_link("普通文本"), "普通文本")
 
 
+class RecordLink(unittest.TestCase):
+    def test_link_comes_from_the_requested_record(self):
+        def call(cmd, *args):
+            self.assertEqual(cmd, "+record-share-link-create")
+            self.assertEqual(args, ("--record-id", "rec1"))
+            return {"record_share_links": {"rec1": "https://example.feishu.cn/record/abc"}}
+
+        self.assertEqual(annual_index.record_link(call, "rec1"),
+                         "https://example.feishu.cn/record/abc")
+
+    def test_missing_or_failed_link_returns_none(self):
+        self.assertIsNone(annual_index.record_link(lambda *a: {}, "rec1"))
+
+        def failed(*a):
+            raise ValueError("share link unavailable")
+
+        self.assertIsNone(annual_index.record_link(failed, "rec1"))
+
+
 class RowMatching(unittest.TestCase):
     def setUp(self):
         self.fields = annual_index.published_row("2026-10", SHA, TEXT, False)
