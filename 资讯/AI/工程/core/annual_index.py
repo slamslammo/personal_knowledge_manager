@@ -16,6 +16,33 @@ from common import REPO_DIR, load_config
 from weeks import Week
 
 
+# lark-cli 对 type=text + style.type=url 的字段，读回时会把单元格渲染成
+# "[显示文本](链接)"；写入按 CLI 的 CellValue 约定传裸 URL。实测写入裸 URL 后
+# 读回仍是 markdown 形态，因此比较前先归一，避免把表现层差异当成索引未更新。
+LINK_PATTERN = re.compile(r"^\[[^\]]*\]\((https?://[^)]+)\)$")
+
+
+def normalize_link(value):
+    """把年度表读回的「报告链接」统一成裸 URL；非字符串原样返回。"""
+    if not isinstance(value, str):
+        return value
+    match = LINK_PATTERN.fullmatch(value.strip())
+    return match.group(1) if match else value
+
+
+def row_matches(row, fields):
+    """按期望字段核对读回行；链接字段按归一后的裸 URL 比较。"""
+    for key, value in fields.items():
+        actual = row.get(key)
+        if key == "报告链接":
+            if normalize_link(actual) != value:
+                return False
+            continue
+        if actual != value:
+            return False
+    return True
+
+
 def published_row(period, sha, text, has_board):
     year, label = period.split("-")
     if label.startswith("W"):
@@ -99,13 +126,7 @@ def sync(period, sha):
             raise ValueError("期间行重复，先核对记录")
         return matches[0] if matches else (None, {})
     def same(row):
-        for key, value in fields.items():
-            actual = row.get(key)
-            if key == "报告链接" and actual and actual.endswith("](" + value + ")"):
-                continue
-            if actual != value:
-                return False
-        return True
+        return row_matches(row, fields)
     state = paths.state_dir(REPO_DIR) / "annual-index" / year
     state.mkdir(parents=True, exist_ok=True)
     marker = state / (period + ".pending")

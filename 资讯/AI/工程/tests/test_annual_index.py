@@ -1,0 +1,71 @@
+"""年度表索引：报告链接的写入形态与读回归一化。
+
+背景：飞书「报告链接」是 type=text + style.type=url 字段。写入按 lark-cli 的
+CellValue 约定传裸 URL，但 +record-list --format json 读回时会渲染成
+"[显示文本](链接)"。此处锁定「写裸 URL、读回归一比较」这一约定，避免
+把 CLI 的表现层差异误判成索引未更新，也避免错误链接被悄悄放过。
+"""
+import pathlib
+import sys
+import unittest
+
+CORE = pathlib.Path(__file__).resolve().parents[1] / "core"
+sys.path.insert(0, str(CORE))
+import annual_index
+
+SHA = "8fb48768c28fa614e2e8af56de3228257ec8c080"
+TEXT = """---
+quality: full
+coverage: {正文: 5周, 榜单: 5周}
+source: abc
+---
+
+## 月度主线
+
+- 第一条有证据的结论 [来源](https://example.org/a)
+- 第二条有证据的结论
+"""
+
+
+class LinkNormalization(unittest.TestCase):
+    def test_bare_url_is_unchanged(self):
+        url = "https://github.com/slamslammo/personal_knowledge_manager/blob/main/a.md"
+        self.assertEqual(annual_index.normalize_link(url), url)
+
+    def test_cli_rendered_link_is_normalized(self):
+        url = "https://github.com/slamslammo/personal_knowledge_manager/blob/main/a.md"
+        self.assertEqual(annual_index.normalize_link(f"[{url}]({url})"), url)
+        self.assertEqual(annual_index.normalize_link(f"[报告正文]({url})"), url)
+
+    def test_non_link_values_pass_through(self):
+        self.assertIsNone(annual_index.normalize_link(None))
+        self.assertEqual(annual_index.normalize_link("普通文本"), "普通文本")
+
+
+class RowMatching(unittest.TestCase):
+    def setUp(self):
+        self.fields = annual_index.published_row("2026-10", SHA, TEXT, False)
+
+    def test_published_row_writes_bare_url(self):
+        link = self.fields["报告链接"]
+        self.assertTrue(link.startswith("https://github.com/"))
+        self.assertFalse(link.startswith("["), "写入必须是裸 URL，不能是 markdown 链接")
+
+    def test_cli_rendered_link_counts_as_match(self):
+        link = self.fields["报告链接"]
+        row = dict(self.fields, **{"报告链接": f"[{link}]({link})"})
+        self.assertTrue(annual_index.row_matches(row, self.fields))
+
+    def test_wrong_link_does_not_match(self):
+        link = self.fields["报告链接"]
+        row = dict(self.fields, **{"报告链接": f"[{link}](https://example.org/other)"})
+        self.assertFalse(annual_index.row_matches(row, self.fields),
+                         "链接目标不同必须判为不一致，触发重新写入")
+
+    def test_other_field_mismatch_still_detected(self):
+        row = dict(self.fields, **{"标题": "改过的标题"})
+        self.assertFalse(annual_index.row_matches(row, self.fields))
+
+
+if __name__ == "__main__":
+    unittest.main()
